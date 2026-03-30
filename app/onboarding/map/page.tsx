@@ -1,122 +1,149 @@
 import { requireAuth } from '@/lib/auth-server'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
-import Link from 'next/link'
-import NeummLogo from '@/components/NeummLogo'
+import MasteryMapView, { type MasteryEntry, type OutcomeTopic, type ProfileData } from './MasteryMapView'
 
-export default async function MapPage() {
-  const user = await requireAuth()
+// ─── Topic name + category map ─────────────────────────────────────────────────
+// Derived from seed-questions.ts topic list
+const TOPIC_META: Record<string, { name: string; category: string }> = {
+  'MA-CALC-D01': { name: 'Differentiation basics',       category: 'Calculus — Differentiation' },
+  'MA-CALC-D02': { name: 'Product & quotient rule',      category: 'Calculus — Differentiation' },
+  'MA-CALC-D03': { name: 'Chain rule',                   category: 'Calculus — Differentiation' },
+  'MA-CALC-D04': { name: 'Trig derivatives',             category: 'Calculus — Differentiation' },
+  'MA-CALC-D05': { name: 'Exp derivatives',              category: 'Calculus — Differentiation' },
+  'MA-CALC-D06': { name: 'Log derivatives',              category: 'Calculus — Differentiation' },
+  'MA-CALC-D07': { name: 'Tangents & normals',           category: 'Calculus — Differentiation' },
+  'MA-CALC-D08': { name: 'Stationary points',            category: 'Calculus — Differentiation' },
+  'MA-CALC-D09': { name: 'Optimisation',                 category: 'Calculus — Differentiation' },
+  'MA-CALC-D10': { name: 'Rates of change',              category: 'Calculus — Differentiation' },
+  'MA-CALC-D11': { name: 'Concavity',                    category: 'Calculus — Differentiation' },
+  'MA-CALC-D12': { name: 'Implicit diff',                category: 'Calculus — Differentiation' },
+  'MA-CALC-I01': { name: 'Antiderivatives',              category: 'Calculus — Integration' },
+  'MA-CALC-I02': { name: 'Polynomial integrals',        category: 'Calculus — Integration' },
+  'MA-CALC-I03': { name: 'Trig integration',             category: 'Calculus — Integration' },
+  'MA-CALC-I04': { name: 'Exp & log integration',        category: 'Calculus — Integration' },
+  'MA-CALC-I05': { name: 'Integration by substitution',  category: 'Calculus — Integration' },
+  'MA-CALC-I06': { name: 'Definite integrals',           category: 'Calculus — Integration' },
+  'MA-CALC-I07': { name: 'Area under curve',             category: 'Calculus — Integration' },
+  'MA-CALC-I08': { name: 'Area between curves',          category: 'Calculus — Integration' },
+  'MA-CALC-I09': { name: 'Volumes of revolution',        category: 'Calculus — Integration' },
+  'MA-CALC-I10': { name: 'Kinematics',                   category: 'Calculus — Integration' },
+  'MA-CALC-I11': { name: 'Numerical integration',        category: 'Calculus — Integration' },
+  'MA-CALC-I12': { name: 'Exp growth & decay',           category: 'Calculus — Integration' },
+  'MA-TRIG-01':  { name: 'Exact trig values',            category: 'Trigonometry' },
+  'MA-TRIG-02':  { name: 'Trig graphs',                  category: 'Trigonometry' },
+  'MA-TRIG-03':  { name: 'Trig identities',              category: 'Trigonometry' },
+  'MA-TRIG-04':  { name: 'Trig equations',               category: 'Trigonometry' },
+  'MA-TRIG-05':  { name: 'Inverse trig',                 category: 'Trigonometry' },
+  'MA-TRIG-06':  { name: 'Compound angles',              category: 'Trigonometry' },
+  'MA-TRIG-07':  { name: 'Sine & cosine rule',           category: 'Trigonometry' },
+  'MA-TRIG-08':  { name: 'Bearings & 3D trig',           category: 'Trigonometry' },
+  'MA-TRIG-09':  { name: 'Radians',                      category: 'Trigonometry' },
+  'MA-EXP-01':   { name: 'Exp graphs',                   category: 'Exponential & Logarithms' },
+  'MA-EXP-02':   { name: 'Exp equations',                category: 'Exponential & Logarithms' },
+  'MA-EXP-03':   { name: 'Log laws',                     category: 'Exponential & Logarithms' },
+  'MA-EXP-04':   { name: 'Log equations',                category: 'Exponential & Logarithms' },
+  'MA-EXP-05':   { name: 'Natural log',                  category: 'Exponential & Logarithms' },
+  'MA-EXP-06':   { name: 'Exp applications',             category: 'Exponential & Logarithms' },
+  'MA-FUNC-01':  { name: 'Domain & range',               category: 'Functions' },
+  'MA-FUNC-02':  { name: 'Types of functions',           category: 'Functions' },
+  'MA-FUNC-03':  { name: 'Composite functions',          category: 'Functions' },
+  'MA-FUNC-04':  { name: 'Inverse functions',            category: 'Functions' },
+  'MA-FUNC-05':  { name: 'Transformations',              category: 'Functions' },
+  'MA-FUNC-06':  { name: 'Absolute value',               category: 'Functions' },
+  'MA-FUNC-07':  { name: 'Polynomial graphs',            category: 'Functions' },
+  'MA-FUNC-08':  { name: 'Rational functions',           category: 'Functions' },
+  'MA-FUNC-09':  { name: 'Limits',                       category: 'Functions' },
+  'MA-ALG-01':   { name: 'Quadratics',                   category: 'Algebra' },
+  'MA-ALG-02':   { name: 'Quadratic graphs',             category: 'Algebra' },
+  'MA-ALG-03':   { name: 'Simultaneous equations',       category: 'Algebra' },
+  'MA-ALG-04':   { name: 'Polynomials',                  category: 'Algebra' },
+  'MA-ALG-05':   { name: 'Inequalities',                 category: 'Algebra' },
+  'MA-ALG-06':   { name: 'Arithmetic sequences',         category: 'Algebra' },
+  'MA-ALG-07':   { name: 'Geometric sequences',          category: 'Algebra' },
+  'MA-ALG-08':   { name: 'Surds',                        category: 'Algebra' },
+  'MA-STAT-01':  { name: 'Data representation',          category: 'Statistics & Probability' },
+  'MA-STAT-02':  { name: 'Central tendency',             category: 'Statistics & Probability' },
+  'MA-STAT-03':  { name: 'Spread',                       category: 'Statistics & Probability' },
+  'MA-STAT-04':  { name: 'Regression',                   category: 'Statistics & Probability' },
+  'MA-STAT-05':  { name: 'Normal distribution',          category: 'Statistics & Probability' },
+  'MA-STAT-06':  { name: 'Sampling',                     category: 'Statistics & Probability' },
+  'MA-PROB-01':  { name: 'Basic probability',            category: 'Statistics & Probability' },
+  'MA-PROB-02':  { name: 'Conditional probability',      category: 'Statistics & Probability' },
+  'MA-PROB-03':  { name: 'Discrete distributions',       category: 'Statistics & Probability' },
+  'MA-PROB-04':  { name: 'Binomial distribution',        category: 'Statistics & Probability' },
+  'MA-PROB-05':  { name: 'Counting techniques',          category: 'Statistics & Probability' },
+  'MA-FIN-01':   { name: 'Simple interest',              category: 'Financial Mathematics' },
+  'MA-FIN-02':   { name: 'Compound interest',            category: 'Financial Mathematics' },
+  'MA-FIN-03':   { name: 'Annuities',                    category: 'Financial Mathematics' },
+  'MA-FIN-04':   { name: 'Loans',                        category: 'Financial Mathematics' },
+  'MA-FIN-05':   { name: 'Investment analysis',          category: 'Financial Mathematics' },
+  'MA-COORD-01': { name: 'Distance & midpoint',          category: 'Coordinate Geometry' },
+  'MA-COORD-02': { name: 'Lines',                        category: 'Coordinate Geometry' },
+  'MA-COORD-03': { name: 'Circles',                      category: 'Coordinate Geometry' },
+  'MA-COORD-04': { name: 'Parabolas',                    category: 'Coordinate Geometry' },
+  'MA-COORD-05': { name: 'Locus',                        category: 'Coordinate Geometry' },
+  'MA-EXT-01':   { name: 'Induction',                    category: 'Extension Topics' },
+  'MA-EXT-02':   { name: 'Binomial theorem',             category: 'Extension Topics' },
+  'MA-EXT-03':   { name: 'Integration by parts',         category: 'Extension Topics' },
+  'MA-EXT-04':   { name: 'Diff equations',               category: 'Extension Topics' },
+  'MA-EXT-05':   { name: 'Projectile motion',            category: 'Extension Topics' },
+  'MA-EXT-06':   { name: 'Vectors',                      category: 'Extension Topics' },
+  'MA-EXT-07':   { name: 'Complex numbers',              category: 'Extension Topics' },
+  'MA-EXT-08':   { name: 'Further trig',                 category: 'Extension Topics' },
+}
+
+export default async function MasteryMapPage() {
+  const user     = await requireAuth()
   const supabase = createSupabaseServerClient()
 
-  // Load student profile + mastery_map summary
-  const [profileRes, masteryRes] = await Promise.all([
-    supabase.from('student_profiles').select('course, year_group, intent').eq('user_id', user.id).single(),
-    supabase.from('mastery_map').select('status, difficulty_band, outcome_id').eq('user_id', user.id),
-  ])
+  // 1 — Student profile
+  const { data: profileData } = await supabase
+    .from('student_profiles')
+    .select('course, year_group, intent')
+    .eq('user_id', user.id)
+    .single()
 
-  const profile  = profileRes.data
-  const mastery  = masteryRes.data ?? []
-  const learning = mastery.filter(m => m.status === 'learning').length
-  const needsWork = mastery.filter(m => m.status === 'needs_work').length
-
-  const courseColor: Record<string, string> = {
-    'Standard':    '#38B2AC',
-    'Advanced':    '#4A90D9',
-    'Extension 1': '#185FA5',
-    'Extension 2': '#1B3A6B',
+  const profile: ProfileData = {
+    course:     profileData?.course     ?? null,
+    year_group: profileData?.year_group ?? null,
+    intent:     profileData?.intent     ?? null,
   }
-  const color = profile?.course ? (courseColor[profile.course] ?? '#185FA5') : '#185FA5'
 
-  return (
-    <div className="min-h-screen bg-[#F4F6FA] flex flex-col items-center justify-center px-6 py-12">
-      <div className="w-full max-w-sm">
-        <div className="flex justify-center mb-6">
-          <NeummLogo size={44} />
-        </div>
+  // 2 — Mastery map entries for user
+  const { data: masteryRaw } = await supabase
+    .from('mastery_map')
+    .select('outcome_id, status, confidence_pct, difficulty_band')
+    .eq('user_id', user.id)
+    .order('confidence_pct', { ascending: true })
 
-        {/* Course card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-4">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
-            Your course
-          </p>
-          <div className="flex items-center gap-3 mb-4">
-            <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0"
-              style={{ backgroundColor: color }}
-            >
-              {profile?.course?.split(' ').map((w: string) => w[0]).join('') ?? 'MA'}
-            </div>
-            <div>
-              <p className="text-xl font-bold text-gray-900">
-                {profile?.course ?? 'Advanced'} Mathematics
-              </p>
-              <p className="text-xs text-gray-400">
-                {profile?.year_group?.replace('_', ' / ') ?? 'Year 12'}
-              </p>
-            </div>
-          </div>
+  const mastery: MasteryEntry[] = (masteryRaw ?? []).map(m => ({
+    outcome_id:     m.outcome_id,
+    status:         m.status,
+    confidence_pct: m.confidence_pct,
+    difficulty_band: m.difficulty_band,
+  }))
 
-          {/* Mastery summary */}
-          <div className="grid grid-cols-3 gap-3">
-            <StatBox value={mastery.length} label="Outcomes mapped" color={color} />
-            <StatBox value={learning}   label="In progress" color="#10B981" />
-            <StatBox value={needsWork}  label="Needs work"  color="#F59E0B" />
-          </div>
-        </div>
+  // 3 — Distinct topic prefixes from questions (what's in the DB)
+  const { data: prefixRaw } = await supabase
+    .rpc('get_outcome_prefixes')
+    .limit(200)
 
-        {/* What's next card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-          <p className="text-sm font-semibold text-gray-900 mb-3">{"What's next"}</p>
-          <div className="space-y-3">
-            <Step n={1} done label="Choose your goal" />
-            <Step n={2} done label="Set your year group" />
-            <Step n={3} done label="Placement probe" />
-            <Step n={4} label="Start your first practice session" />
-          </div>
-        </div>
+  // Fallback: if RPC not available, use known prefixes from TOPIC_META
+  // (will show all topics regardless of what's seeded)
+  const seededPrefixes: string[] = prefixRaw
+    ? Array.from(new Set(prefixRaw.map((r: { prefix: string }) => r.prefix)))
+    : Object.keys(TOPIC_META)
 
-        <Link
-          href="/dashboard"
-          className="block w-full py-4 rounded-2xl text-white font-bold text-base text-center transition-all active:scale-[0.98]"
-          style={{ backgroundColor: color }}
-        >
-          Go to my dashboard →
-        </Link>
+  const topics: OutcomeTopic[] = seededPrefixes
+    .filter(p => TOPIC_META[p])
+    .map(p => ({
+      prefix:           p,
+      nesa_outcome_code: '',           // populated from seed metadata
+      name:              TOPIC_META[p].name,
+      category:          TOPIC_META[p].category,
+    }))
+    // Sort by category then prefix
+    .sort((a, b) => a.category.localeCompare(b.category) || a.prefix.localeCompare(b.prefix))
 
-        <p className="mt-4 text-center text-xs text-gray-400">
-          Your mastery map will grow as you practice
-        </p>
-      </div>
-    </div>
-  )
-}
-
-function StatBox({ value, label, color }: { value: number; label: string; color: string }) {
-  return (
-    <div className="rounded-xl p-3 text-center" style={{ backgroundColor: '#F4F6FA' }}>
-      <p className="text-2xl font-bold" style={{ color }}>{value}</p>
-      <p className="text-xs text-gray-400 mt-0.5 leading-tight">{label}</p>
-    </div>
-  )
-}
-
-function Step({ n, done = false, label }: { n: number; done?: boolean; label: string }) {
-  return (
-    <div className="flex items-center gap-3">
-      <div
-        className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold"
-        style={{
-          backgroundColor: done ? '#185FA5' : '#E5E7EB',
-          color: done ? '#fff' : '#9CA3AF',
-        }}
-      >
-        {done ? '✓' : n}
-      </div>
-      <span
-        className="text-sm"
-        style={{ color: done ? '#111827' : '#9CA3AF', fontWeight: done ? 600 : 400 }}
-      >
-        {label}
-      </span>
-    </div>
-  )
+  return <MasteryMapView mastery={mastery} topics={topics} profile={profile} />
 }
