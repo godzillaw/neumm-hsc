@@ -98,12 +98,11 @@ export default async function DashboardPage() {
   const user     = await requireAuth()
   const supabase = createSupabaseServerClient()
 
-  // ── 1. Student profile ──────────────────────────────────────────────────────
-  const { data: profileRaw } = await supabase
-    .from('student_profiles')
-    .select('course, year_group, display_name')
-    .eq('user_id', user.id)
-    .single()
+  // ── 1. User row (tier) + Student profile ─────────────────────────────────────
+  const [{ data: userRow }, { data: profileRaw }] = await Promise.all([
+    supabase.from('users').select('tier, trial_end_date').eq('id', user.id).single(),
+    supabase.from('student_profiles').select('course, year_group, display_name').eq('user_id', user.id).single(),
+  ])
 
   // ── 2. Streak ───────────────────────────────────────────────────────────────
   const { data: streakRaw } = await supabase
@@ -171,6 +170,8 @@ export default async function DashboardPage() {
     ?? user.email?.split('@')[0]
     ?? 'Student'
 
+  const typedUserRow = userRow as { tier?: string; trial_end_date?: string | null } | null
+
   const dashboardData: DashboardData = {
     displayName,
     course:         rawProfile?.course ?? 'Advanced',
@@ -182,6 +183,8 @@ export default async function DashboardPage() {
     weakTopic,
     totalTopics,
     masteredCount,
+    tier:           typedUserRow?.tier         ?? 'basic_trial',
+    trialEndDate:   typedUserRow?.trial_end_date ?? null,
   }
 
   return <DashboardContent data={dashboardData} />

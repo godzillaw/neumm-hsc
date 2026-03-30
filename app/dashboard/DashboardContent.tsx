@@ -22,6 +22,8 @@ export interface DashboardData {
   weakTopic:      TopicStat | null
   totalTopics:    number
   masteredCount:  number
+  tier:           string
+  trialEndDate:   string | null  // ISO string
 }
 
 // ─── Colour helpers ─────────────────────────────────────────────────────────────
@@ -35,6 +37,91 @@ function masteryLabel(avg: number): string {
   if (avg >= 80) return 'Mastered'
   if (avg >= 50) return 'Shaky'
   return 'Gap'
+}
+
+// ─── Upgrade / payment banner ─────────────────────────────────────────────────
+
+function TierBanner({ tier, trialEndDate }: { tier: string; trialEndDate: string | null }) {
+  const router = useRouter()
+
+  if (tier === 'basic_trial') {
+    // Show days remaining if within 3 days
+    if (!trialEndDate) return null
+    const daysLeft = Math.ceil(
+      (new Date(trialEndDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+    )
+    if (daysLeft > 3) return null
+    return (
+      <div
+        className="flex items-center justify-between gap-3 rounded-2xl px-4 py-3 mb-5 border"
+        style={{ backgroundColor: '#FFFBEB', borderColor: '#FCD34D' }}
+      >
+        <div className="flex items-center gap-2">
+          <span>⏰</span>
+          <p className="text-sm font-semibold text-amber-800">
+            {daysLeft <= 0
+              ? 'Your trial has ended'
+              : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left in your trial`}
+          </p>
+        </div>
+        <button
+          onClick={() => router.push('/dashboard/account')}
+          className="shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg"
+          style={{ backgroundColor: '#F59E0B', color: '#fff' }}
+        >
+          Subscribe →
+        </button>
+      </div>
+    )
+  }
+
+  if (tier === 'basic_trial_expired') {
+    return (
+      <div
+        className="flex items-center justify-between gap-3 rounded-2xl px-4 py-3 mb-5 border"
+        style={{ backgroundColor: '#FEF2F2', borderColor: '#FCA5A5' }}
+      >
+        <div className="flex items-center gap-2">
+          <span>🔒</span>
+          <p className="text-sm font-semibold text-red-800">
+            Your trial has ended — subscribe to keep practising
+          </p>
+        </div>
+        <button
+          onClick={() => router.push('/dashboard/account')}
+          className="shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg"
+          style={{ backgroundColor: '#EF4444', color: '#fff' }}
+        >
+          Upgrade →
+        </button>
+      </div>
+    )
+  }
+
+  if (tier === 'payment_failed') {
+    return (
+      <div
+        className="flex items-center justify-between gap-3 rounded-2xl px-4 py-3 mb-5 border"
+        style={{ backgroundColor: '#FEF2F2', borderColor: '#FCA5A5' }}
+      >
+        <div className="flex items-center gap-2">
+          <span>⚠️</span>
+          <p className="text-sm font-semibold text-red-800">
+            Payment failed — please update your payment details
+          </p>
+        </div>
+        <button
+          onClick={() => router.push('/dashboard/account')}
+          className="shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg"
+          style={{ backgroundColor: '#EF4444', color: '#fff' }}
+        >
+          Fix now →
+        </button>
+      </div>
+    )
+  }
+
+  return null
 }
 
 // ─── Animated count-up hook ────────────────────────────────────────────────────
@@ -245,6 +332,9 @@ export default function DashboardContent({ data }: { data: DashboardData }) {
           <span>{data.streak}</span>
         </div>
       </div>
+
+      {/* ── Tier / billing banner (trial ending, expired, payment failed) ── */}
+      <TierBanner tier={data.tier} trialEndDate={data.trialEndDate} />
 
       {/* ── Streak card (prominent, animated) ── */}
       <StreakCard streak={data.streak} longestStreak={data.longestStreak} />
