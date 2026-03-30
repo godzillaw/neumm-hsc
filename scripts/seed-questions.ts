@@ -53,7 +53,7 @@ function loadProgress(): Set<string> {
 }
 
 function saveProgress(done: Set<string>) {
-  fs.writeFileSync(PROGRESS_FILE, JSON.stringify({ completed: [...done] }, null, 2))
+  fs.writeFileSync(PROGRESS_FILE, JSON.stringify({ completed: Array.from(done) }, null, 2))
 }
 
 // ─── Topic definitions ────────────────────────────────────────────────────────
