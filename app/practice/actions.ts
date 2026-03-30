@@ -1,6 +1,7 @@
 'use server'
 
 import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { updateStreak }               from '@/lib/actions/streak'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -31,6 +32,9 @@ export interface SubmitResult {
   explanation:    string
   step_by_step:   string[]
   correctAnswer:  string
+  streakUpdated:  boolean  // true when first answer of the AEST calendar day
+  newStreak:      number
+  longestStreak:  number
 }
 
 // ─── Topic display names ────────────────────────────────────────────────────────
@@ -333,39 +337,19 @@ export async function submitAnswer(params: {
     }).eq('id', sessionId)
   }
 
-  // ── 4. Update streak (fire-and-forget) ──
-  updateStreak(userId, supabase).catch(() => {})
+  // ── 4. Update streak ──
+  const streakResult = await updateStreak(userId)
 
-  return { isCorrect, newConfidence: newConf, delta, explanation, step_by_step, correctAnswer }
+  return {
+    isCorrect,
+    newConfidence: newConf,
+    delta,
+    explanation,
+    step_by_step,
+    correctAnswer,
+    streakUpdated:  streakResult.isNewDay,
+    newStreak:      streakResult.currentStreak,
+    longestStreak:  streakResult.longestStreak,
+  }
 }
 
-// ─── updateStreak (internal) ────────────────────────────────────────────────────
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function updateStreak(userId: string, supabase: any) {
-  const today = new Date()
-  const todayStr = `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, '0')}-${String(today.getUTCDate()).padStart(2, '0')}`
-
-  const { data: streak } = await supabase
-    .from('streaks')
-    .select('current_streak, longest_streak, last_active_date')
-    .eq('user_id', userId)
-    .single()
-
-  if (!streak) return
-
-  if (streak.last_active_date === todayStr) return  // already updated today
-
-  const yesterday = new Date(today)
-  yesterday.setUTCDate(yesterday.getUTCDate() - 1)
-  const yStr = `${yesterday.getUTCFullYear()}-${String(yesterday.getUTCMonth() + 1).padStart(2, '0')}-${String(yesterday.getUTCDate()).padStart(2, '0')}`
-
-  const newStreak  = streak.last_active_date === yStr ? (streak.current_streak ?? 0) + 1 : 1
-  const newLongest = Math.max(newStreak, streak.longest_streak ?? 0)
-
-  await supabase.from('streaks').update({
-    current_streak:  newStreak,
-    longest_streak:  newLongest,
-    last_active_date: todayStr,
-  }).eq('user_id', userId)
-}

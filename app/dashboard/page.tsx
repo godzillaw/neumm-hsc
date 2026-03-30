@@ -108,7 +108,7 @@ export default async function DashboardPage() {
   // ── 2. Streak ───────────────────────────────────────────────────────────────
   const { data: streakRaw } = await supabase
     .from('streaks')
-    .select('current_streak')
+    .select('current_streak, longest_streak')
     .eq('user_id', user.id)
     .single()
 
@@ -174,7 +174,8 @@ export default async function DashboardPage() {
   const dashboardData: DashboardData = {
     displayName,
     course:         rawProfile?.course ?? 'Advanced',
-    streak:         streakRaw?.current_streak ?? 0,
+    streak:         streakRaw?.current_streak  ?? 0,
+    longestStreak:  streakRaw?.longest_streak  ?? 0,
     todayQuestions: todayCount ?? 0,
     overallMastery,
     topTopics,

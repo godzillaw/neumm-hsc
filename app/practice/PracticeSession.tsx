@@ -10,6 +10,25 @@ import type { PracticeQuestion, SubmitResult }        from './actions'
 type Phase = 'loading' | 'ready' | 'submitting' | 'answered'
 type TutorMode = 'idle' | 'hint' | 'explanation'
 
+// ─── Streak toast ──────────────────────────────────────────────────────────────
+
+function StreakToast({ streak, visible }: { streak: number; visible: boolean }) {
+  if (!visible) return null
+  return (
+    <div
+      className="fixed bottom-24 md:bottom-8 left-1/2 z-50 flex items-center gap-2.5 px-5 py-3 rounded-full shadow-2xl text-white font-bold text-sm pointer-events-none"
+      style={{
+        transform: 'translateX(-50%)',
+        backgroundColor: '#EF4444',
+        animation: 'streakToastIn 0.4s cubic-bezier(.34,1.56,.64,1) forwards',
+      }}
+    >
+      <span style={{ fontSize: 20 }}>🔥</span>
+      <span>{streak} day streak!</span>
+    </div>
+  )
+}
+
 const OPTIONS: Array<{ key: 'a' | 'b' | 'c' | 'd'; label: string }> = [
   { key: 'a', label: 'A' },
   { key: 'b', label: 'B' },
@@ -190,6 +209,9 @@ export default function PracticeSession({
   const timerRef                            = useRef<ReturnType<typeof setInterval> | null>(null)
   const questionCount                       = useRef(0)
   const [showMobileTutor, setShowMobileTutor] = useState(false)
+  const [streakToastVisible, setStreakToastVisible] = useState(false)
+  const [toastStreak,        setToastStreak]        = useState(0)
+  const toastTimerRef                               = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // ── Load next question ──────────────────────────────────────────────────────
   const loadNext = useCallback(async () => {
@@ -219,7 +241,10 @@ export default function PracticeSession({
   useEffect(() => { loadNext() }, [loadNext])
 
   useEffect(() => {
-    return () => { if (timerRef.current) clearInterval(timerRef.current) }
+    return () => {
+      if (timerRef.current)      clearInterval(timerRef.current)
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+    }
   }, [])
 
   // ── Submit answer ───────────────────────────────────────────────────────────
@@ -247,6 +272,24 @@ export default function PracticeSession({
 
     setResult(res)
     setPhase('answered')
+
+    // ── Streak celebration ──────────────────────────────────────────────────────
+    if (res.streakUpdated && res.newStreak >= 1) {
+      // Write animation payload to localStorage for dashboard to pick up
+      try {
+        localStorage.setItem('neumm_streak_anim', JSON.stringify({
+          from: Math.max(0, res.newStreak - 1),
+          to:   res.newStreak,
+          ts:   Date.now(),
+        }))
+      } catch {}
+
+      // Show toast
+      setToastStreak(res.newStreak)
+      setStreakToastVisible(true)
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+      toastTimerRef.current = setTimeout(() => setStreakToastVisible(false), 3200)
+    }
   }
 
   // ── Hint ────────────────────────────────────────────────────────────────────
@@ -553,6 +596,18 @@ export default function PracticeSession({
           <TutorPanel mode={tutorMode} tutorText={tutorText} tutorLoading={tutorLoading} />
         </div>
       </aside>
+
+      {/* ── Streak toast (portal-like fixed overlay) ── */}
+      <StreakToast streak={toastStreak} visible={streakToastVisible} />
+
+      {/* ── Keyframe injection ── */}
+      <style>{`
+        @keyframes streakToastIn {
+          0%   { opacity: 0; transform: translateX(-50%) translateY(16px) scale(0.88); }
+          60%  { opacity: 1; transform: translateX(-50%) translateY(-4px)  scale(1.04); }
+          100% { opacity: 1; transform: translateX(-50%) translateY(0)     scale(1);    }
+        }
+      `}</style>
     </div>
   )
 }

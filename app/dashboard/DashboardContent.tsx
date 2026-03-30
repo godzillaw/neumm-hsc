@@ -1,6 +1,7 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useRouter }              from 'next/navigation'
+import { useState, useEffect, useRef } from 'react'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 export interface TopicStat {
@@ -14,6 +15,7 @@ export interface DashboardData {
   displayName:    string
   course:         string
   streak:         number
+  longestStreak:  number
   todayQuestions: number
   overallMastery: number   // 0-100
   topTopics:      TopicStat[]
@@ -33,6 +35,136 @@ function masteryLabel(avg: number): string {
   if (avg >= 80) return 'Mastered'
   if (avg >= 50) return 'Shaky'
   return 'Gap'
+}
+
+// ─── Animated count-up hook ────────────────────────────────────────────────────
+// Reads localStorage for a pending streak animation written by PracticeSession.
+// Starts at target (no hydration mismatch), then counts up on mount if needed.
+
+function useStreakCountUp(target: number): { count: number; isAnimating: boolean } {
+  const [count,       setCount]       = useState(target)
+  const [isAnimating, setIsAnimating] = useState(false)
+  const ranRef = useRef(false)
+
+  useEffect(() => {
+    if (ranRef.current) return
+    ranRef.current = true
+
+    try {
+      const stored = localStorage.getItem('neumm_streak_anim')
+      if (!stored) return
+      const { from, to, ts } = JSON.parse(stored) as { from: number; to: number; ts: number }
+      // Only animate if the animation was written within the last 5 minutes
+      if (to !== target || typeof from !== 'number' || from >= to) return
+      if (Date.now() - ts > 5 * 60 * 1000) return
+      localStorage.removeItem('neumm_streak_anim')
+
+      // Brief delay to let the page paint first
+      setTimeout(() => {
+        setCount(from)
+        setIsAnimating(true)
+        const duration   = 900
+        const startTime  = Date.now()
+
+        const tick = () => {
+          const elapsed  = Date.now() - startTime
+          const progress = Math.min(elapsed / duration, 1)
+          // Ease-out cubic
+          const eased = 1 - Math.pow(1 - progress, 3)
+          setCount(Math.round(from + (to - from) * eased))
+          if (progress < 1) {
+            requestAnimationFrame(tick)
+          } else {
+            setIsAnimating(false)
+          }
+        }
+        requestAnimationFrame(tick)
+      }, 400)
+    } catch {}
+  }, [target])
+
+  return { count, isAnimating }
+}
+
+// ─── Streak card ───────────────────────────────────────────────────────────────
+
+function StreakCard({
+  streak, longestStreak,
+}: {
+  streak:        number
+  longestStreak: number
+}) {
+  const { count, isAnimating } = useStreakCountUp(streak)
+  const isHot = count >= 3
+
+  return (
+    <div
+      className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4 mb-5"
+    >
+      {/* Flame icon — pulses while animating */}
+      <div
+        className="shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center text-2xl"
+        style={{
+          backgroundColor: count === 0 ? '#F3F4F6' : '#FEF2F2',
+          animation: isAnimating ? 'flamePulse 0.5s ease infinite alternate' : 'none',
+        }}
+      >
+        {count === 0 ? '🔥' : '🔥'}
+      </div>
+
+      {/* Count + label */}
+      <div className="flex-1">
+        <div className="flex items-baseline gap-1.5">
+          <span
+            className="text-4xl font-extrabold tabular-nums leading-none"
+            style={{
+              color: count === 0 ? '#9CA3AF' : isHot ? '#EF4444' : '#F97316',
+              transition: 'color 0.4s',
+            }}
+          >
+            {count}
+          </span>
+          <span className="text-sm font-semibold text-gray-400">
+            {count === 1 ? 'day streak' : 'day streak'}
+          </span>
+        </div>
+        <p className="text-xs text-gray-400 mt-1">
+          {count === 0
+            ? 'Practice today to start your streak!'
+            : longestStreak > count
+              ? `Personal best: ${longestStreak} days`
+              : count >= longestStreak && count > 1
+                ? '🏆 Personal best!'
+                : 'Keep going — practice every day!'}
+        </p>
+      </div>
+
+      {/* Mini 7-day dots */}
+      <div className="hidden sm:flex flex-col items-end gap-1">
+        <p className="text-xs text-gray-400 font-medium">7-day goal</p>
+        <div className="flex gap-1">
+          {Array.from({ length: 7 }).map((_, i) => {
+            const filled = i < Math.min(count, 7)
+            return (
+              <div
+                key={i}
+                className="w-3 h-3 rounded-full transition-colors"
+                style={{ backgroundColor: filled ? '#EF4444' : '#F3F4F6' }}
+              />
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Keyframes */}
+      <style>{`
+        @keyframes flamePulse {
+          from { transform: scale(1);    }
+          to   { transform: scale(1.12); }
+        }
+      `}</style>
+    </div>
+  )
 }
 
 // ─── Stat card ────────────────────────────────────────────────────────────────
@@ -94,22 +226,28 @@ export default function DashboardContent({ data }: { data: DashboardData }) {
     <div className="px-5 md:px-8 py-8 max-w-2xl">
 
       {/* ── Header ── */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex items-start justify-between mb-5">
         <div>
           <p className="text-sm text-gray-400 font-medium">{greeting}</p>
           <h1 className="text-2xl font-bold text-gray-900 mt-0.5">{firstName} 👋</h1>
           <p className="text-sm text-gray-400 mt-1">{data.course} Mathematics</p>
         </div>
 
-        {/* Streak pill */}
+        {/* Top-bar streak pill — stays visible at a glance */}
         <div
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white font-bold text-sm shadow-sm"
-          style={{ backgroundColor: '#EF4444' }}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full font-bold text-sm shadow-sm"
+          style={{
+            backgroundColor: data.streak === 0 ? '#F3F4F6' : '#FEF2F2',
+            color:            data.streak === 0 ? '#9CA3AF' : '#EF4444',
+          }}
         >
           <span>🔥</span>
           <span>{data.streak}</span>
         </div>
       </div>
+
+      {/* ── Streak card (prominent, animated) ── */}
+      <StreakCard streak={data.streak} longestStreak={data.longestStreak} />
 
       {/* ── Stat cards ── */}
       <div className="flex gap-3 mb-5">

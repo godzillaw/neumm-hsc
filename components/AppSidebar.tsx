@@ -1,8 +1,45 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import NeummLogo from './NeummLogo'
+import Link                          from 'next/link'
+import { usePathname }               from 'next/navigation'
+import { useState, useEffect }       from 'react'
+import NeummLogo                     from './NeummLogo'
+import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
+
+// ─── Sidebar streak badge (fetched client-side) ────────────────────────────────
+
+function SidebarStreak() {
+  const [streak, setStreak] = useState<number | null>(null)
+
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      supabase
+        .from('streaks')
+        .select('current_streak')
+        .eq('user_id', user.id)
+        .single()
+        .then(({ data }) => {
+          if (data) setStreak(data.current_streak ?? 0)
+        })
+    })
+  }, [])
+
+  if (streak === null) return null
+
+  return (
+    <div
+      className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold"
+      style={{
+        backgroundColor: streak === 0 ? '#F3F4F6' : '#FEF2F2',
+        color:            streak === 0 ? '#9CA3AF' : '#EF4444',
+      }}
+    >
+      🔥 {streak}
+    </div>
+  )
+}
 
 const NAV_ITEMS = [
   {
@@ -65,10 +102,13 @@ export default function AppSidebar() {
       className="hidden md:flex flex-col shrink-0 border-r border-gray-100 bg-white"
       style={{ width: 220, minHeight: '100vh' }}
     >
-      {/* Logo */}
-      <div className="flex items-center gap-2.5 px-5 pt-8 pb-6">
-        <NeummLogo size={36} />
-        <span className="font-bold text-gray-900 text-lg tracking-tight">neumm</span>
+      {/* Logo + streak badge */}
+      <div className="flex items-center justify-between px-5 pt-8 pb-6">
+        <div className="flex items-center gap-2.5">
+          <NeummLogo size={36} />
+          <span className="font-bold text-gray-900 text-lg tracking-tight">neumm</span>
+        </div>
+        <SidebarStreak />
       </div>
 
       {/* Nav */}
