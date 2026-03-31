@@ -280,7 +280,6 @@ export async function submitAnswer(params: {
   userId:           string
   sessionId:        string
   questionId:       string
-  outcomePrefix:    string   // for error_log.outcome_id
   masteryOutcomeId: string   // for mastery_map lookup (e.g. "MA-CALC-D01-B3")
   difficultyBand:   number   // 1–6, drives confidence gain
   selectedOption:   string   // 'a'|'b'|'c'|'d'
@@ -291,7 +290,7 @@ export async function submitAnswer(params: {
   step_by_step:     string[]
 }): Promise<SubmitResult> {
   const {
-    userId, sessionId, questionId, outcomePrefix, masteryOutcomeId,
+    userId, sessionId, questionId, masteryOutcomeId,
     difficultyBand, selectedOption, correctAnswer, hintUsed, timeMs,
     explanation, step_by_step,
   } = params

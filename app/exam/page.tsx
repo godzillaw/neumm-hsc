@@ -1,5 +1,5 @@
 import { redirect }          from 'next/navigation'
-import { requireAuth }        from '@/lib/auth'
+import { requireAuth }        from '@/lib/auth-server'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import AppSidebar             from '@/components/AppSidebar'
 import MobileBottomNav        from '@/components/MobileBottomNav'

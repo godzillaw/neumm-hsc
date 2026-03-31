@@ -67,7 +67,6 @@ const TRIAL_TIERS = new Set<string>([
 
 export async function checkTierAccess(
   userId:  string,
-  _feature?: string,
 ): Promise<TierAccess> {
   const supabase = createSupabaseServerClient()
 

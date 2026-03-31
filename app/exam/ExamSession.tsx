@@ -4,10 +4,10 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter }                                 from 'next/navigation'
 import {
   startExam, finalizeExam,
-  EXAM_CATEGORIES,
   type ExamQuestion, type ExamSubmission,
   type ExamResult, type TopicResult,
 } from './actions'
+import { EXAM_CATEGORIES } from './categories'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -397,7 +397,7 @@ function ActiveExam({
   const isCritical  = timeRemaining <= 60    // last 60 sec
 
   // ── Auto-submit when timer hits 0 ──────────────────────────────────────────
-  const handleSubmit = useCallback(async (forced = false) => {
+  const handleSubmit = useCallback(async () => {
     if (submitting || autoSubmitRef.current) return
     autoSubmitRef.current = true
     setSubmitting(true)
@@ -418,7 +418,7 @@ function ActiveExam({
       setTimeRemaining(prev => {
         if (prev <= 1) {
           clearInterval(timerRef.current!)
-          if (!autoSubmitRef.current) handleSubmit(true)
+          if (!autoSubmitRef.current) handleSubmit()
           return 0
         }
         return prev - 1
@@ -556,7 +556,7 @@ function ActiveExam({
             </button>
           ) : (
             <button
-              onClick={() => handleSubmit(false)}
+              onClick={() => handleSubmit()}
               disabled={submitting}
               className="flex-1 py-3 rounded-xl text-sm font-bold text-white transition-all min-h-[44px]"
               style={{ backgroundColor: submitting ? '#9CA3AF' : '#10B981' }}

@@ -384,7 +384,6 @@ export default function PracticeSession({
       userId,
       sessionId,
       questionId:       question.id,
-      outcomePrefix:    question.outcome_id,
       masteryOutcomeId: question.mastery_outcome_id,
       difficultyBand:   question.difficulty_band,
       selectedOption,
