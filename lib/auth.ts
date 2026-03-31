@@ -4,24 +4,21 @@ import { createSupabaseBrowserClient } from './supabase-browser'
 
 // ─── App base URL ─────────────────────────────────────────────────────────────
 //
-// NEXT_PUBLIC_APP_URL must include the basePath when set, e.g.:
-//   dev:        http://localhost:3000
-//   production: https://www.neumm.com.au/math-nsw/app
+// Always derive the base URL from the *current* browser origin + the known
+// basePath.  This ensures the PKCE code verifier cookie (set on the current
+// domain) is readable when Supabase redirects back to /auth/callback on the
+// same domain — whether that's neumm-hsc.vercel.app, localhost, or the
+// custom domain.  Hardcoding NEXT_PUBLIC_APP_URL breaks PKCE when the app
+// is accessed from a different domain (e.g. vercel.app preview vs custom domain).
 //
-// We MUST NOT use window.location.origin here because origin excludes the
-// basePath (/math-nsw/app), which would redirect OAuth/email confirmations
-// back to the root of the domain instead of the app.
-//
-// Fallback: construct from window.location.origin + the known basePath so
-// local dev without the env var still works correctly.
+const BASE_PATH = '/math-nsw/app'
 
 function appBaseUrl(): string {
-  if (process.env.NEXT_PUBLIC_APP_URL) {
-    return process.env.NEXT_PUBLIC_APP_URL
+  if (typeof window !== 'undefined') {
+    return `${window.location.origin}${BASE_PATH}`
   }
-  // Dev fallback: origin + basePath (empty in dev where basePath isn't active)
-  const base = typeof window !== 'undefined' ? window.location.origin : ''
-  return base
+  // SSR fallback (should not be reached for OAuth/signup flows)
+  return process.env.NEXT_PUBLIC_APP_URL ?? `http://localhost:3000${BASE_PATH}`
 }
 
 // ─── Current user (client) ────────────────────────────────────────────────────
