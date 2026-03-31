@@ -72,4 +72,44 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  /* Safe-area padding utilities for iPhone notch / home-indicator */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .pl-safe {
+    padding-left: env(safe-area-inset-left, 0px);
+  }
+  .pr-safe {
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+}
+
+/* ── Mobile touch experience ─────────────────────────────────────────────────── */
+@layer base {
+  /* Remove the blue flash that browsers add on tap */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Remove double-tap zoom delay on interactive elements */
+  button, a, input, select, textarea, label {
+    touch-action: manipulation;
+  }
+
+  /*
+    Prevent iOS Safari from auto-zooming when an input is focused.
+    Safari zooms in when font-size < 16px. This override keeps inputs
+    at 16px on mobile while Tailwind classes still apply on desktop.
+  */
+  @supports (-webkit-touch-callout: none) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
 }

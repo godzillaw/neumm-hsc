@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { getNextQuestion, submitAnswer }              from './actions'
 import { getHint, getExplanation }                   from '@/lib/actions/tutor'
+import { logLearningEvent }                          from '@/lib/actions/events'
 import type { PracticeQuestion, SubmitResult }        from './actions'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -62,31 +63,104 @@ function formatMs(ms: number): string {
   return m > 0 ? `${m}m ${s % 60}s` : `${s}s`
 }
 
-// ─── Confidence delta badge ────────────────────────────────────────────────────
+// ─── Mastery update panel ─────────────────────────────────────────────────────
+//
+// Shown after every submission. Animates from prevConf → newConf and
+// colour-codes the status chip. Also shows the predicted HSC band.
 
-function DeltaBadge({ delta, newConf }: { delta: number; newConf: number }) {
+const STATUS_META = {
+  mastered: { label: 'Mastered', bg: '#D1FAE5', color: '#065F46', dot: '#10B981' },
+  shaky:    { label: 'Shaky',    bg: '#FEF3C7', color: '#92400E', dot: '#F59E0B' },
+  gap:      { label: 'Gap',      bg: '#FEE2E2', color: '#991B1B', dot: '#EF4444' },
+} as const
+
+function MasteryUpdatePanel({
+  prevConf,
+  newConf,
+  delta,
+  newStatus,
+  predictedHscBand,
+}: {
+  prevConf:         number
+  newConf:          number
+  delta:            number
+  newStatus:        'mastered' | 'shaky' | 'gap'
+  predictedHscBand: number
+}) {
   const positive = delta > 0
+  const meta     = STATUS_META[newStatus]
+  const barColor = meta.dot
+
   return (
-    <div className="flex items-center gap-2">
-      <span
-        className="text-xs font-bold px-2 py-0.5 rounded-full"
-        style={{
-          backgroundColor: positive ? '#D1FAE5' : '#FEE2E2',
-          color:            positive ? '#065F46' : '#991B1B',
-        }}
-      >
-        {positive ? '+' : ''}{delta}%
-      </span>
-      <div className="flex items-center gap-1.5">
-        <div className="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-          <div
-            className="h-full rounded-full transition-all duration-700"
-            style={{ width: `${newConf}%`, backgroundColor: confidenceColor(newConf) }}
-          />
-        </div>
-        <span className="text-xs font-semibold" style={{ color: confidenceColor(newConf) }}>
-          {newConf}%
+    <div
+      className="rounded-xl p-3 flex flex-col gap-2.5"
+      style={{ backgroundColor: '#F9FAFB', border: '1px solid #F3F4F6' }}
+    >
+      {/* Row 1: delta chip + confidence bar */}
+      <div className="flex items-center gap-2.5">
+        {/* Delta */}
+        <span
+          className="text-xs font-bold px-2 py-0.5 rounded-full shrink-0"
+          style={{
+            backgroundColor: positive ? '#D1FAE5' : '#FEE2E2',
+            color:            positive ? '#065F46' : '#991B1B',
+          }}
+        >
+          {positive ? '+' : ''}{delta}
         </span>
+
+        {/* Bar: prev → new (CSS transition handles animation) */}
+        <div className="flex-1 flex items-center gap-1.5">
+          <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden relative">
+            {/* Previous confidence ghost */}
+            <div
+              className="absolute inset-y-0 left-0 rounded-full opacity-30"
+              style={{ width: `${prevConf}%`, backgroundColor: barColor }}
+            />
+            {/* New confidence (animates in) */}
+            <div
+              className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
+              style={{ width: `${newConf}%`, backgroundColor: barColor }}
+            />
+          </div>
+          <span className="text-xs font-bold shrink-0" style={{ color: barColor }}>
+            {newConf}%
+          </span>
+        </div>
+      </div>
+
+      {/* Row 2: status chip + HSC band */}
+      <div className="flex items-center justify-between">
+        {/* Status */}
+        <span
+          className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full"
+          style={{ backgroundColor: meta.bg, color: meta.color }}
+        >
+          <span
+            className="w-1.5 h-1.5 rounded-full"
+            style={{ backgroundColor: meta.dot }}
+          />
+          {meta.label}
+        </span>
+
+        {/* Predicted HSC band */}
+        <div className="flex items-center gap-1.5">
+          <p className="text-xs text-gray-400">Predicted band</p>
+          <div className="flex gap-0.5">
+            {[1, 2, 3, 4, 5, 6].map(b => (
+              <div
+                key={b}
+                className="w-3 h-3 rounded-sm transition-colors duration-500"
+                style={{
+                  backgroundColor: b <= predictedHscBand ? '#185FA5' : '#E5E7EB',
+                }}
+              />
+            ))}
+          </div>
+          <span className="text-xs font-bold text-gray-600">
+            Band {predictedHscBand}
+          </span>
+        </div>
       </div>
     </div>
   )
@@ -190,9 +264,13 @@ function TutorPanel({
 export default function PracticeSession({
   userId,
   sessionId: initialSessionId,
+  questionsRemaining: initialRemaining = -1,
+  dailyLimit = -1,
 }: {
-  userId:    string
-  sessionId: string
+  userId:              string
+  sessionId:           string
+  questionsRemaining?: number   // -1 = unlimited
+  dailyLimit?:         number
 }) {
   const [phase,          setPhase]          = useState<Phase>('loading')
   const [question,       setQuestion]       = useState<PracticeQuestion | null>(null)
@@ -212,6 +290,16 @@ export default function PracticeSession({
   const [streakToastVisible, setStreakToastVisible] = useState(false)
   const [toastStreak,        setToastStreak]        = useState(0)
   const toastTimerRef                               = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [remaining,          setRemaining]          = useState(initialRemaining)
+  const [limitReached,       setLimitReached]       = useState(false)
+
+  // ── Session-level event tracking refs ───────────────────────────────────────
+  // These live in refs (not state) so they're always current inside callbacks
+  // and cleanup handlers without causing re-renders.
+  const sessionStartMsRef    = useRef(Date.now())   // wall-clock start of session
+  const sessionAnswersRef    = useRef(0)             // questions answered this session
+  const sessionCorrectRef    = useRef(0)             // correct answers this session
+  const sessionEndedRef      = useRef(false)         // guard against double-firing
 
   // ── Load next question ──────────────────────────────────────────────────────
   const loadNext = useCallback(async () => {
@@ -226,6 +314,17 @@ export default function PracticeSession({
     setElapsed(0)
 
     const q = await getNextQuestion(userId)
+
+    // null can mean "daily limit hit" or "bank exhausted"
+    if (!q) {
+      // If we have a finite limit and remaining is 0, treat as daily cap
+      if (dailyLimit !== -1 && remaining === 0) {
+        setLimitReached(true)
+        setPhase('loading')
+        return
+      }
+    }
+
     setQuestion(q)
     setPhase(q ? 'ready' : 'loading')
 
@@ -240,12 +339,37 @@ export default function PracticeSession({
 
   useEffect(() => { loadNext() }, [loadNext])
 
+  // ── Session end logger ──────────────────────────────────────────────────────
+  //
+  // Fires session_ended exactly once — guarded by sessionEndedRef.
+  // Called from: component unmount, question bank exhausted, daily limit hit.
+
+  const endSession = useCallback(() => {
+    if (sessionEndedRef.current) return
+    sessionEndedRef.current = true
+
+    const duration_ms         = Date.now() - sessionStartMsRef.current
+    const questions_attempted = sessionAnswersRef.current
+    const correct             = sessionCorrectRef.current
+    const accuracy_pct        = questions_attempted > 0
+      ? Math.round((correct / questions_attempted) * 100)
+      : 0
+
+    void logLearningEvent(userId, 'session_ended', {
+      duration_ms,
+      questions_attempted,
+      accuracy_pct,
+    })
+  }, [userId])
+
   useEffect(() => {
     return () => {
       if (timerRef.current)      clearInterval(timerRef.current)
       if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+      // Best-effort: fires on unmount (navigation away, tab close, etc.)
+      endSession()
     }
-  }, [])
+  }, [endSession])
 
   // ── Submit answer ───────────────────────────────────────────────────────────
   async function handleSubmit() {
@@ -262,6 +386,7 @@ export default function PracticeSession({
       questionId:       question.id,
       outcomePrefix:    question.outcome_id,
       masteryOutcomeId: question.mastery_outcome_id,
+      difficultyBand:   question.difficulty_band,
       selectedOption,
       correctAnswer:    question.correct_answer,
       hintUsed,
@@ -272,6 +397,13 @@ export default function PracticeSession({
 
     setResult(res)
     setPhase('answered')
+
+    // ── Track remaining questions ───────────────────────────────────────────────
+    setRemaining(prev => (prev === -1 ? -1 : Math.max(0, prev - 1)))
+
+    // ── Update session-level accuracy refs for session_ended event ──────────────
+    sessionAnswersRef.current += 1
+    if (res.isCorrect) sessionCorrectRef.current += 1
 
     // ── Streak celebration ──────────────────────────────────────────────────────
     if (res.streakUpdated && res.newStreak >= 1) {
@@ -317,10 +449,55 @@ export default function PracticeSession({
     setTutorLoading(true)
     setShowMobileTutor(true)
 
+    // Log explanation_viewed immediately when the student requests it
+    void logLearningEvent(userId, 'explanation_viewed', {
+      question_id: question.id,
+      outcome_id:  question.mastery_outcome_id,
+    })
+
     const { explanation } = await getExplanation(question.id)
     setTutorText(explanation)
     setTutorLoading(false)
   }
+
+  // ── Visual event handlers ────────────────────────────────────────────────────
+  //
+  // Called by visual aid components (diagrams, worked examples, etc.) when built.
+  // Logging fires immediately; the component handles its own display state.
+
+  const handleVisualOpened = useCallback((visualType: string) => {
+    if (!question) return
+    void logLearningEvent(userId, 'visual_opened', {
+      visual_type: visualType,
+      outcome_id:  question.mastery_outcome_id,
+    })
+  }, [userId, question])
+
+  const handleVisualSkipped = useCallback((visualType: string, timeOnVisualMs: number) => {
+    void logLearningEvent(userId, 'visual_skipped', {
+      visual_type:        visualType,
+      time_on_visual_ms:  timeOnVisualMs,
+      outcome_id:         question?.mastery_outcome_id,
+    })
+  }, [userId, question])
+
+  // ── Topic override handler ───────────────────────────────────────────────────
+  //
+  // Called if a topic-selector UI is added. Logs the navigation decision with
+  // both source and target outcomes so the Intelligence Layer can measure
+  // self-directed learning patterns.
+
+  const handleTopicOverride = useCallback((fromOutcomeId: string, toOutcomeId: string) => {
+    void logLearningEvent(userId, 'topic_overridden', {
+      from_outcome_id: fromOutcomeId,
+      to_outcome_id:   toOutcomeId,
+    })
+  }, [userId])
+
+  // Suppress "unused" warnings — these are consumed by future child components
+  void handleVisualOpened
+  void handleVisualSkipped
+  void handleTopicOverride
 
   // ─── Render ───────────────────────────────────────────────────────────────
 
@@ -335,7 +512,34 @@ export default function PracticeSession({
     )
   }
 
+  // ── Daily limit reached mid-session ────────────────────────────────────────
+  if (limitReached) {
+    endSession()
+    return (
+      <div className="flex items-center justify-center min-h-screen px-6">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center max-w-sm w-full">
+          <span className="text-4xl mb-4 block">⚡</span>
+          <h2 className="text-lg font-bold text-gray-900 mb-2">
+            {"That's your lot for today!"}
+          </h2>
+          <p className="text-sm text-gray-500 mb-5">
+            {`You've used all ${dailyLimit} questions for today. Great work — come back tomorrow or upgrade for more.`}
+          </p>
+          <a
+            href="/account/upgrade"
+            className="inline-block w-full py-3 rounded-xl font-bold text-sm text-white text-center"
+            style={{ backgroundColor: '#185FA5' }}
+          >
+            Upgrade for unlimited →
+          </a>
+        </div>
+      </div>
+    )
+  }
+
   if (!question) {
+    // Bank fully exhausted — log session end
+    endSession()
     return (
       <div className="flex items-center justify-center min-h-screen px-6">
         <div className="text-center">
@@ -378,12 +582,27 @@ export default function PracticeSession({
             )}
           </div>
 
-          {/* Timer */}
-          <div className="flex items-center gap-1.5 text-xs text-gray-400 font-mono">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            {formatMs(elapsed * 1000)}
+          {/* Right-side controls: remaining pill + timer */}
+          <div className="flex items-center gap-3">
+            {/* Daily remaining pill — shown only when capped */}
+            {dailyLimit !== -1 && remaining !== -1 && (
+              <span
+                className="text-xs font-bold px-2.5 py-1 rounded-full"
+                style={{
+                  backgroundColor: remaining <= 2 ? '#FEF2F2' : '#F3F4F6',
+                  color:            remaining <= 2 ? '#EF4444'  : '#6B7280',
+                }}
+              >
+                ⚡ {remaining} left
+              </span>
+            )}
+            {/* Timer */}
+            <div className="flex items-center gap-1.5 text-xs text-gray-400 font-mono">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {formatMs(elapsed * 1000)}
+            </div>
           </div>
         </div>
 
@@ -454,7 +673,7 @@ export default function PracticeSession({
                 key={opt.key}
                 onClick={() => { if (isInteractive) setSelectedOption(opt.key) }}
                 disabled={!isInteractive}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all text-left"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all text-left min-h-[52px]"
                 style={{ borderColor, backgroundColor: bgColor, color: textColor }}
               >
                 {/* Option label bubble */}
@@ -488,7 +707,7 @@ export default function PracticeSession({
             {/* Hint */}
             <button
               onClick={handleHint}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:border-blue-300 hover:text-blue-700 transition-all"
+              className="flex items-center gap-1.5 px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:border-blue-300 hover:text-blue-700 transition-all min-h-[44px]"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -506,7 +725,7 @@ export default function PracticeSession({
             <button
               onClick={handleSubmit}
               disabled={!selectedOption}
-              className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-40"
+              className="flex-1 py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-40 min-h-[44px]"
               style={{ backgroundColor: '#185FA5', color: '#FFFFFF' }}
             >
               Submit Answer
@@ -521,21 +740,49 @@ export default function PracticeSession({
         ) : (
           /* Post-answer actions */
           <div className="space-y-2.5">
-            {/* Confidence delta */}
+            {/* Correct / incorrect banner + real-time mastery update */}
             {result && (
-              <div className="flex items-center justify-between bg-white border border-gray-100 rounded-xl px-4 py-3">
-                <span className="text-sm font-semibold" style={{ color: result.isCorrect ? '#065F46' : '#991B1B' }}>
-                  {result.isCorrect ? '✓ Correct!' : '✗ Incorrect'}
-                </span>
-                <DeltaBadge delta={result.delta} newConf={result.newConfidence} />
-              </div>
+              <>
+                {/* Banner */}
+                <div
+                  className="flex items-center gap-2 rounded-xl px-4 py-2.5"
+                  style={{
+                    backgroundColor: result.isCorrect ? '#F0FDF4' : '#FEF2F2',
+                    border: `1px solid ${result.isCorrect ? '#BBF7D0' : '#FECACA'}`,
+                  }}
+                >
+                  <span
+                    className="text-base font-bold"
+                    style={{ color: result.isCorrect ? '#15803D' : '#DC2626' }}
+                  >
+                    {result.isCorrect ? '✓ Correct!' : '✗ Incorrect'}
+                  </span>
+                  <span
+                    className="text-xs font-medium ml-auto"
+                    style={{ color: result.isCorrect ? '#15803D' : '#DC2626' }}
+                  >
+                    {result.isCorrect
+                      ? `+${result.delta} confidence`
+                      : `${result.delta} confidence`}
+                  </span>
+                </div>
+
+                {/* Real-time mastery update panel */}
+                <MasteryUpdatePanel
+                  prevConf={result.prevConfidence}
+                  newConf={result.newConfidence}
+                  delta={result.delta}
+                  newStatus={result.newStatus}
+                  predictedHscBand={result.predictedHscBand}
+                />
+              </>
             )}
 
             <div className="flex gap-3">
               {/* Explanation (AI) */}
               <button
                 onClick={handleExplanation}
-                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:border-blue-300 hover:text-blue-700 transition-all"
+                className="flex items-center gap-1.5 px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:border-blue-300 hover:text-blue-700 transition-all min-h-[44px]"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -547,7 +794,7 @@ export default function PracticeSession({
               {/* Next question */}
               <button
                 onClick={loadNext}
-                className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all"
+                className="flex-1 py-3 rounded-xl text-sm font-bold transition-all min-h-[44px]"
                 style={{ backgroundColor: '#185FA5', color: '#FFFFFF' }}
               >
                 Next Question →
@@ -556,31 +803,64 @@ export default function PracticeSession({
           </div>
         )}
 
-        {/* ── Mobile tutor bubble ── */}
+        {/* ── Mobile tutor: full-screen overlay (hidden on md+ where side panel takes over) ── */}
+        {/* Keyboard-aware: fixed inset-0 fills the visual viewport. On iOS the keyboard
+            shrinks the visual viewport, so the panel naturally sits above it.
+            Safe-area-inset-bottom keeps the close button clear of the home indicator. */}
         {showMobileTutor && (
-          <div className="md:hidden mt-5 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-50">
-              <p className="text-xs font-bold text-gray-700">
-                {tutorMode === 'hint' ? '💡 Tutor Hint' : '📖 Step-by-step'}
-              </p>
+          <div
+            className="md:hidden fixed inset-0 z-50 flex flex-col bg-white"
+            style={{ paddingBottom: 'env(safe-area-inset-bottom, 12px)' }}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-white">
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-7 h-7 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: '#185FA5' }}
+                >
+                  <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                </div>
+                <p className="text-sm font-bold text-gray-800">
+                  {tutorMode === 'hint' ? 'Tutor Hint' : 'Step-by-step Explanation'}
+                </p>
+              </div>
               <button
                 onClick={() => setShowMobileTutor(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-100 active:bg-gray-200"
+                aria-label="Close tutor"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            <div className="p-4 max-h-64 overflow-y-auto">
+            {/* Scrollable content area */}
+            <div className="flex-1 overflow-y-auto">
               <TutorPanel mode={tutorMode} tutorText={tutorText} tutorLoading={tutorLoading} />
+            </div>
+            {/* Footer CTA: go back to question */}
+            <div className="px-5 py-4 border-t border-gray-100 bg-white">
+              <button
+                onClick={() => setShowMobileTutor(false)}
+                className="w-full py-3 rounded-xl text-sm font-bold text-white min-h-[44px]"
+                style={{ backgroundColor: '#185FA5' }}
+              >
+                Back to question
+              </button>
             </div>
           </div>
         )}
 
         {/* ── Session progress (subtle footer) ── */}
         <p className="text-xs text-gray-300 text-center mt-6">
-          Question {questionCount.current} this session
+          {sessionAnswersRef.current > 0
+            ? `${sessionAnswersRef.current} answered · ${Math.round((sessionCorrectRef.current / sessionAnswersRef.current) * 100)}% accurate this session`
+            : `Question ${questionCount.current} this session`
+          }
         </p>
       </div>
 

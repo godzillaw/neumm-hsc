@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
@@ -17,7 +17,18 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "Neumm HSC",
   description: "Neumm HSC — your study companion",
-};
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Neumm HSC',
+  },
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+}
 
 export default function RootLayout({
   children,

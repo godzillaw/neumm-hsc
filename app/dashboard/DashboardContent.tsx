@@ -53,12 +53,12 @@ function TierBanner({ tier, trialEndDate }: { tier: string; trialEndDate: string
     if (daysLeft > 3) return null
     return (
       <div
-        className="flex items-center justify-between gap-3 rounded-2xl px-4 py-3 mb-5 border"
+        className="flex flex-wrap items-center justify-between gap-2 rounded-2xl px-4 py-3 mb-5 border"
         style={{ backgroundColor: '#FFFBEB', borderColor: '#FCD34D' }}
       >
-        <div className="flex items-center gap-2">
-          <span>⏰</span>
-          <p className="text-sm font-semibold text-amber-800">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="shrink-0">⏰</span>
+          <p className="text-sm font-semibold text-amber-800 leading-snug">
             {daysLeft <= 0
               ? 'Your trial has ended'
               : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left in your trial`}
@@ -66,7 +66,7 @@ function TierBanner({ tier, trialEndDate }: { tier: string; trialEndDate: string
         </div>
         <button
           onClick={() => router.push('/dashboard/account')}
-          className="shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg"
+          className="shrink-0 text-xs font-bold px-3 py-2 rounded-lg min-h-[36px]"
           style={{ backgroundColor: '#F59E0B', color: '#fff' }}
         >
           Subscribe →
@@ -78,18 +78,18 @@ function TierBanner({ tier, trialEndDate }: { tier: string; trialEndDate: string
   if (tier === 'basic_trial_expired') {
     return (
       <div
-        className="flex items-center justify-between gap-3 rounded-2xl px-4 py-3 mb-5 border"
+        className="flex flex-wrap items-center justify-between gap-2 rounded-2xl px-4 py-3 mb-5 border"
         style={{ backgroundColor: '#FEF2F2', borderColor: '#FCA5A5' }}
       >
-        <div className="flex items-center gap-2">
-          <span>🔒</span>
-          <p className="text-sm font-semibold text-red-800">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="shrink-0">🔒</span>
+          <p className="text-sm font-semibold text-red-800 leading-snug">
             Your trial has ended — subscribe to keep practising
           </p>
         </div>
         <button
           onClick={() => router.push('/dashboard/account')}
-          className="shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg"
+          className="shrink-0 text-xs font-bold px-3 py-2 rounded-lg min-h-[36px]"
           style={{ backgroundColor: '#EF4444', color: '#fff' }}
         >
           Upgrade →
@@ -101,18 +101,18 @@ function TierBanner({ tier, trialEndDate }: { tier: string; trialEndDate: string
   if (tier === 'payment_failed') {
     return (
       <div
-        className="flex items-center justify-between gap-3 rounded-2xl px-4 py-3 mb-5 border"
+        className="flex flex-wrap items-center justify-between gap-2 rounded-2xl px-4 py-3 mb-5 border"
         style={{ backgroundColor: '#FEF2F2', borderColor: '#FCA5A5' }}
       >
-        <div className="flex items-center gap-2">
-          <span>⚠️</span>
-          <p className="text-sm font-semibold text-red-800">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="shrink-0">⚠️</span>
+          <p className="text-sm font-semibold text-red-800 leading-snug">
             Payment failed — please update your payment details
           </p>
         </div>
         <button
           onClick={() => router.push('/dashboard/account')}
-          className="shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg"
+          className="shrink-0 text-xs font-bold px-3 py-2 rounded-lg min-h-[36px]"
           style={{ backgroundColor: '#EF4444', color: '#fff' }}
         >
           Fix now →
@@ -411,24 +411,7 @@ export default function DashboardContent({ data }: { data: DashboardData }) {
         )}
       </div>
 
-      {/* ── Mobile bottom nav ── */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex items-center justify-around px-2 pb-safe pt-2 z-50">
-        {[
-          { href: '/dashboard', label: 'Home', icon: '🏠' },
-          { href: '/practice',  label: 'Practice', icon: '⚡' },
-          { href: '/dashboard/progress', label: 'Progress', icon: '📈' },
-          { href: '/dashboard/account', label: 'Account', icon: '👤' },
-        ].map(item => (
-          <button
-            key={item.href}
-            onClick={() => router.push(item.href)}
-            className="flex flex-col items-center gap-0.5 px-3 py-1"
-          >
-            <span className="text-lg">{item.icon}</span>
-            <span className="text-xs text-gray-500 font-medium">{item.label}</span>
-          </button>
-        ))}
-      </div>
+      {/* Mobile bottom nav is rendered by the parent DashboardLayout — not here */}
     </div>
   )
 }

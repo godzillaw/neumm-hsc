@@ -133,7 +133,7 @@ function CategorySection({
           </span>
         )}
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
+      <div className="grid grid-cols-3 md:grid-cols-4 gap-2.5">
         {topics.map(t => (
           <TopicTile key={t.prefix} topic={t} />
         ))}
@@ -212,11 +212,14 @@ export default function ProgressView({
     <div>
       {/* ── Hero: circular indicator + stats ── */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
-        <div className="flex items-center gap-6">
-          <CircularProgress pct={overallMastery} />
-          <div className="flex-1">
-            <h2 className="text-base font-bold text-gray-900">Overall Mastery</h2>
-            <p className="text-sm text-gray-400 mt-0.5">
+        {/* Stack vertically on mobile (168px circle would crush the stat row at 390px) */}
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 sm:gap-6">
+          <div className="shrink-0">
+            <CircularProgress pct={overallMastery} />
+          </div>
+          <div className="flex-1 w-full">
+            <h2 className="text-base font-bold text-gray-900 text-center sm:text-left">Overall Mastery</h2>
+            <p className="text-sm text-gray-400 mt-0.5 text-center sm:text-left">
               Across all {topics.length} tracked topics
             </p>
             <SummaryStats mastered={mastered} shaky={shaky} gap={gap} untested={untested} />

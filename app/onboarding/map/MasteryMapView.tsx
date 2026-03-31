@@ -150,7 +150,7 @@ export default function MasteryMapView({ mastery, topics, profile }: Props) {
 
         {/* ── Overview card ── */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-          <div className="flex items-center gap-5">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
             <CircularProgress pct={overallPct} size={110} />
 
             <div className="flex-1 space-y-3">
@@ -192,7 +192,7 @@ export default function MasteryMapView({ mastery, topics, profile }: Props) {
         {categories.map(cat => (
           <div key={cat}>
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2 px-1">{cat}</p>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
               {topics
                 .filter(t => t.category === cat)
                 .map(t => {

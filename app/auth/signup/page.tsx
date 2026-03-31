@@ -109,7 +109,7 @@ export default function SignupPage() {
           <button
             onClick={handleGoogleSignup}
             disabled={googleLoading || loading}
-            className="w-full flex items-center justify-center gap-3 px-4 py-2.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {googleLoading ? <Spinner /> : <GoogleIcon />}
             Continue with Google
@@ -134,7 +134,7 @@ export default function SignupPage() {
                 onChange={(e) => setDisplayName(e.target.value)}
                 required
                 placeholder="Alex Smith"
-                className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-lg outline-none focus:border-[#185FA5] focus:ring-2 focus:ring-[#185FA5]/10 transition-all placeholder:text-gray-400"
+                className="w-full px-3.5 py-3 text-sm border border-gray-200 rounded-lg outline-none focus:border-[#185FA5] focus:ring-2 focus:ring-[#185FA5]/10 transition-all placeholder:text-gray-400"
               />
             </div>
 
@@ -148,7 +148,7 @@ export default function SignupPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="you@example.com"
-                className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-lg outline-none focus:border-[#185FA5] focus:ring-2 focus:ring-[#185FA5]/10 transition-all placeholder:text-gray-400"
+                className="w-full px-3.5 py-3 text-sm border border-gray-200 rounded-lg outline-none focus:border-[#185FA5] focus:ring-2 focus:ring-[#185FA5]/10 transition-all placeholder:text-gray-400"
               />
             </div>
 
@@ -163,7 +163,7 @@ export default function SignupPage() {
                 required
                 minLength={8}
                 placeholder="8+ characters"
-                className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-lg outline-none focus:border-[#185FA5] focus:ring-2 focus:ring-[#185FA5]/10 transition-all placeholder:text-gray-400"
+                className="w-full px-3.5 py-3 text-sm border border-gray-200 rounded-lg outline-none focus:border-[#185FA5] focus:ring-2 focus:ring-[#185FA5]/10 transition-all placeholder:text-gray-400"
               />
             </div>
 
@@ -176,7 +176,7 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={loading || googleLoading}
-              className="w-full py-2.5 px-4 text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 px-4 text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ backgroundColor: '#185FA5' }}
             >
               {loading ? (

@@ -2,6 +2,8 @@
 
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { updateStreak }               from '@/lib/actions/streak'
+import { checkTierAccess }            from '@/lib/tier'
+import { logLearningEvent }           from '@/lib/actions/events'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -26,15 +28,19 @@ export interface PracticeQuestion {
 }
 
 export interface SubmitResult {
-  isCorrect:      boolean
-  newConfidence:  number
-  delta:          number   // +15 or -10
-  explanation:    string
-  step_by_step:   string[]
-  correctAnswer:  string
-  streakUpdated:  boolean  // true when first answer of the AEST calendar day
-  newStreak:      number
-  longestStreak:  number
+  isCorrect:        boolean
+  newConfidence:    number
+  prevConfidence:   number
+  delta:            number          // positive = gain, negative = loss
+  newStatus:        'mastered' | 'shaky' | 'gap'
+  masteryOutcomeId: string
+  explanation:      string
+  step_by_step:     string[]
+  correctAnswer:    string
+  streakUpdated:    boolean         // true when first answer of the AEST calendar day
+  newStreak:        number
+  longestStreak:    number
+  predictedHscBand: number          // 1–6, computed from top-3 outcome confidences
 }
 
 // ─── Topic display names ────────────────────────────────────────────────────────
@@ -163,8 +169,17 @@ export async function createPracticeSession(userId: string): Promise<string | nu
     .insert({ user_id: userId })
     .select('id')
     .single()
+
   if (error) console.error('[createPracticeSession]', error.message)
-  return data?.id ?? null
+
+  const sessionId = data?.id ?? null
+
+  // Fire-and-forget: don't block session creation on logging
+  if (sessionId) {
+    void logLearningEvent(userId, 'session_started', { session_id: sessionId })
+  }
+
+  return sessionId
 }
 
 // ─── getNextQuestion ────────────────────────────────────────────────────────────
@@ -174,6 +189,10 @@ export async function createPracticeSession(userId: string): Promise<string | nu
 // Falls back to any unanswered question → then any question if all answered.
 
 export async function getNextQuestion(userId: string): Promise<PracticeQuestion | null> {
+  // ── Server-side tier guard (defence-in-depth) ─────────────────────────────────
+  const access = await checkTierAccess(userId)
+  if (!access.canAnswer) return null
+
   const supabase = createSupabaseServerClient()
   const now      = new Date().toISOString()
 
@@ -263,6 +282,7 @@ export async function submitAnswer(params: {
   questionId:       string
   outcomePrefix:    string   // for error_log.outcome_id
   masteryOutcomeId: string   // for mastery_map lookup (e.g. "MA-CALC-D01-B3")
+  difficultyBand:   number   // 1–6, drives confidence gain
   selectedOption:   string   // 'a'|'b'|'c'|'d'
   correctAnswer:    string
   hintUsed:         boolean
@@ -272,23 +292,27 @@ export async function submitAnswer(params: {
 }): Promise<SubmitResult> {
   const {
     userId, sessionId, questionId, outcomePrefix, masteryOutcomeId,
-    selectedOption, correctAnswer, hintUsed, timeMs, explanation, step_by_step,
+    difficultyBand, selectedOption, correctAnswer, hintUsed, timeMs,
+    explanation, step_by_step,
   } = params
 
   const isCorrect = selectedOption.toLowerCase() === correctAnswer.toLowerCase()
   const supabase  = createSupabaseServerClient()
 
-  // ── 1. Record in error_log ──
-  await supabase.from('error_log').insert({
-    user_id:           userId,
-    question_id:       questionId,
-    outcome_id:        outcomePrefix,
-    error_type:        isCorrect ? null : `chose_${selectedOption}`,
-    hint_used:         hintUsed,
-    time_to_respond_ms: timeMs,
-  })
+  // ── 1. Update mastery_map confidence ──────────────────────────────────────
+  //
+  // Must happen BEFORE logLearningEvent so the mastery_map row exists when the
+  // ILM updater tries to write individual_learning_model into it.
+  //
+  // Formula:
+  //   Correct → +( difficulty_band × 3 )   e.g. Band 6 = +18, Band 1 = +3
+  //   Wrong   → −10 (flat penalty, regardless of difficulty)
+  //
+  // SM-2 spaced repetition intervals:
+  //   Mastered (≥ 80) → 14 days
+  //   Shaky   (50–79) →  7 days
+  //   Gap     (< 50)  →  3 days
 
-  // ── 2. Update mastery_map ──
   const { data: currentEntry } = await supabase
     .from('mastery_map')
     .select('confidence_pct')
@@ -296,15 +320,16 @@ export async function submitAnswer(params: {
     .eq('outcome_id', masteryOutcomeId)
     .single()
 
-  const prevConf   = currentEntry?.confidence_pct ?? 50
-  const delta      = isCorrect ? 15 : -10
-  const newConf    = Math.max(0, Math.min(100, prevConf + delta))
-  const newStatus  =
+  const prevConf  = currentEntry?.confidence_pct ?? 50
+  const delta     = isCorrect
+    ? Math.round(difficultyBand * 3)   // variable gain: harder questions give more credit
+    : -10
+  const newConf   = Math.max(0, Math.min(100, prevConf + delta))
+  const newStatus: 'mastered' | 'shaky' | 'gap' =
     newConf >= 80 ? 'mastered' :
     newConf >= 50 ? 'shaky'    : 'gap'
 
-  // Spaced repetition: review interval based on new confidence
-  const daysToNext = newConf >= 80 ? 7 : newConf >= 50 ? 2 : 1
+  const daysToNext = newConf >= 80 ? 14 : newConf >= 50 ? 7 : 3
   const nextReview = new Date()
   nextReview.setDate(nextReview.getDate() + daysToNext)
 
@@ -317,7 +342,21 @@ export async function submitAnswer(params: {
     next_review_at: nextReview.toISOString(),
   }, { onConflict: 'user_id,outcome_id' })
 
-  // ── 3. Update session stats ──
+  // ── 2. Log event (error_log write + ILM update) ──────────────────────────
+  //
+  // Replaces the previous direct error_log insert. Now includes full structured
+  // payload and updates mastery_map.individual_learning_model in one call.
+
+  await logLearningEvent(userId, 'question_submitted', {
+    question_id: questionId,
+    outcome_id:  masteryOutcomeId,
+    correct:     isCorrect,
+    error_type:  isCorrect ? null : `chose_${selectedOption}`,
+    time_ms:     timeMs,
+    hint_used:   hintUsed,
+  })
+
+  // ── 3. Update session stats ─────────────────────────────────────────────────
   const { data: sess } = await supabase
     .from('sessions')
     .select('questions_attempted, accuracy_pct')
@@ -337,19 +376,53 @@ export async function submitAnswer(params: {
     }).eq('id', sessionId)
   }
 
-  // ── 4. Update streak ──
+  // ── 4. Compute predicted HSC band ───────────────────────────────────────────
+  //
+  // Takes the top-3 highest confidence_pct values in the user's mastery_map
+  // and maps their average to the HSC band scale (1–6).
+  //
+  // Mapping: avg 0 → band 1, avg 100 → band 6
+  //   formula: round( 1 + (avg / 100) × 5 )  clamped to [1, 6]
+  //
+  // Also persists the band to student_profiles so it can be read elsewhere
+  // (dashboard, progress screen) without re-computing.
+
+  const { data: topEntries } = await supabase
+    .from('mastery_map')
+    .select('confidence_pct')
+    .eq('user_id', userId)
+    .order('confidence_pct', { ascending: false })
+    .limit(3)
+
+  let predictedHscBand = 1
+  if (topEntries && topEntries.length > 0) {
+    const avgConf = topEntries.reduce((s: number, r: { confidence_pct: number }) => s + (r.confidence_pct ?? 0), 0) / topEntries.length
+    predictedHscBand = Math.max(1, Math.min(6, Math.round(1 + (avgConf / 100) * 5)))
+  }
+
+  // Persist to student_profiles (fire-and-forget — not critical path)
+  void supabase
+    .from('student_profiles')
+    .update({ predicted_hsc_band: predictedHscBand })
+    .eq('user_id', userId)
+
+  // ── 5. Update streak ─────────────────────────────────────────────────────────
   const streakResult = await updateStreak(userId)
 
   return {
     isCorrect,
-    newConfidence: newConf,
+    prevConfidence:   prevConf,
+    newConfidence:    newConf,
     delta,
+    newStatus,
+    masteryOutcomeId,
     explanation,
     step_by_step,
     correctAnswer,
-    streakUpdated:  streakResult.isNewDay,
-    newStreak:      streakResult.currentStreak,
-    longestStreak:  streakResult.longestStreak,
+    streakUpdated:    streakResult.isNewDay,
+    newStreak:        streakResult.currentStreak,
+    longestStreak:    streakResult.longestStreak,
+    predictedHscBand,
   }
 }
 
