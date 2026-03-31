@@ -30,15 +30,18 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Redirect unauthenticated users away from protected routes
-  const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p)) || pathname === '/'
   const isProtected = PROTECTED_AUTH_PATHS.some((p) => pathname.startsWith(p))
   if (!user && isProtected) {
-    return NextResponse.redirect(new URL('/auth/login', request.url))
+    const url = request.nextUrl.clone()
+    url.pathname = '/auth/login'
+    return NextResponse.redirect(url)
   }
 
   // Redirect authenticated users away from auth pages
   if (user && (pathname.startsWith('/auth/login') || pathname.startsWith('/auth/signup'))) {
-    return NextResponse.redirect(new URL('/onboarding/intent', request.url))
+    const url = request.nextUrl.clone()
+    url.pathname = '/onboarding/intent'
+    return NextResponse.redirect(url)
   }
 
   return supabaseResponse
