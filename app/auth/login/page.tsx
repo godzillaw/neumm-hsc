@@ -1,151 +1,97 @@
 'use client'
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import NeummLogo from '@/components/NeummLogo'
+import { useState }                        from 'react'
+import Link                                from 'next/link'
+import { useRouter }                       from 'next/navigation'
 import { signInWithEmail, signInWithGoogle } from '@/lib/auth'
 
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [email,         setEmail]         = useState('')
+  const [password,      setPassword]      = useState('')
+  const [loading,       setLoading]       = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error,         setError]         = useState<string | null>(null)
 
   async function handleEmailLogin(e: React.FormEvent) {
     e.preventDefault()
-    setError(null)
-    setLoading(true)
+    setError(null); setLoading(true)
     const { error } = await signInWithEmail(email, password)
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-    } else {
-      router.push('/dashboard')
-      router.refresh()
-    }
+    if (error) { setError(error.message); setLoading(false) }
+    else { router.push('/dashboard'); router.refresh() }
   }
 
   async function handleGoogleLogin() {
-    setError(null)
-    setGoogleLoading(true)
+    setError(null); setGoogleLoading(true)
     const { error } = await signInWithGoogle()
-    if (error) {
-      setError(error.message)
-      setGoogleLoading(false)
-    }
-    // On success Supabase redirects to /auth/callback automatically
+    if (error) { setError(error.message); setGoogleLoading(false) }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F4F6FA] px-4">
+    <div className="min-h-screen flex items-center justify-center px-4 py-8"
+      style={{ background: 'linear-gradient(135deg, #F7F3FF 0%, #FDF2F8 50%, #F0FDF4 100%)' }}>
       <div className="w-full max-w-[400px]">
-        {/* Card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-          {/* Logo */}
-          <div className="flex flex-col items-center mb-8">
-            <NeummLogo size={48} />
-            <h1 className="mt-4 text-2xl font-semibold text-gray-900 tracking-tight">
-              Welcome back
-            </h1>
-            <p className="mt-1 text-sm text-gray-500">
-              Sign in to continue your HSC prep
-            </p>
-          </div>
 
-          {/* Google button */}
-          <button
-            onClick={handleGoogleLogin}
-            disabled={googleLoading || loading}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {googleLoading ? (
-              <Spinner />
-            ) : (
-              <GoogleIcon />
-            )}
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 rounded-3xl flex items-center justify-center text-3xl font-black text-white mx-auto mb-4 shadow-lg"
+            style={{ background: 'linear-gradient(135deg, #7C3AED, #EC4899)' }}>N</div>
+          <h1 className="text-2xl font-black text-gray-900">Welcome back! 👋</h1>
+          <p className="text-sm text-gray-500 mt-1">Ready to crush some HSC prep?</p>
+        </div>
+
+        {/* Card */}
+        <div className="bg-white rounded-3xl shadow-sm border border-purple-100 p-7">
+
+          {/* Google */}
+          <button onClick={handleGoogleLogin} disabled={googleLoading || loading}
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-200 rounded-2xl text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 min-h-[48px]">
+            {googleLoading ? <Spinner /> : <GoogleIcon />}
             Continue with Google
           </button>
 
-          {/* Divider */}
           <div className="flex items-center gap-3 my-5">
             <div className="flex-1 h-px bg-gray-100" />
             <span className="text-xs text-gray-400 font-medium">or</span>
             <div className="flex-1 h-px bg-gray-100" />
           </div>
 
-          {/* Email / password form */}
           <form onSubmit={handleEmailLogin} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
                 placeholder="you@example.com"
-                className="w-full px-3.5 py-3 text-sm border border-gray-200 rounded-lg outline-none focus:border-[#185FA5] focus:ring-2 focus:ring-[#185FA5]/10 transition-all placeholder:text-gray-400"
-              />
+                className="w-full px-4 py-3 text-sm border border-gray-200 rounded-2xl outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 transition-all placeholder:text-gray-300" />
             </div>
-
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-sm font-medium text-gray-700">Password</label>
-                <Link
-                  href="/auth/reset-password"
-                  className="text-xs text-[#185FA5] hover:underline"
-                >
-                  Forgot password?
+                <label className="text-sm font-semibold text-gray-700">Password</label>
+                <Link href="/auth/reset-password" className="text-xs font-medium" style={{ color: '#7C3AED' }}>
+                  Forgot?
                 </Link>
               </div>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} required
                 placeholder="••••••••"
-                className="w-full px-3.5 py-3 text-sm border border-gray-200 rounded-lg outline-none focus:border-[#185FA5] focus:ring-2 focus:ring-[#185FA5]/10 transition-all placeholder:text-gray-400"
-              />
+                className="w-full px-4 py-3 text-sm border border-gray-200 rounded-2xl outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 transition-all placeholder:text-gray-300" />
             </div>
 
             {error && (
-              <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
-                {error}
-              </div>
+              <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-2xl px-4 py-3">{error}</div>
             )}
 
-            <button
-              type="submit"
-              disabled={loading || googleLoading}
-              className="w-full py-3 px-4 bg-[#185FA5] hover:bg-[#1452910] active:bg-[#124a87] text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-1"
-              style={{ backgroundColor: loading ? '#124a87' : undefined }}
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <Spinner light /> Signing in…
-                </span>
-              ) : (
-                'Sign in'
-              )}
+            <button type="submit" disabled={loading || googleLoading}
+              className="btn-gradient w-full py-3 rounded-2xl text-sm font-black min-h-[48px]">
+              {loading ? <span className="flex items-center justify-center gap-2"><Spinner light />Signing in…</span> : 'Sign in ✨'}
             </button>
           </form>
 
-          {/* Sign up link */}
-          <p className="mt-6 text-center text-sm text-gray-500">
-            Don&apos;t have an account?{' '}
-            <Link href="/auth/signup" className="text-[#185FA5] font-medium hover:underline">
-              Create one free
+          <p className="mt-5 text-center text-sm text-gray-500">
+            No account?{' '}
+            <Link href="/auth/signup" className="font-black" style={{ color: '#7C3AED' }}>
+              Start free trial 🚀
             </Link>
           </p>
         </div>
-
-        <p className="mt-6 text-center text-xs text-gray-400">
-          © {new Date().getFullYear()} Neumm Education Pty Ltd
-        </p>
       </div>
     </div>
   )
@@ -161,17 +107,11 @@ function GoogleIcon() {
     </svg>
   )
 }
-
 function Spinner({ light = false }: { light?: boolean }) {
   return (
-    <svg
-      className="animate-spin h-4 w-4"
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-    >
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke={light ? 'white' : 'currentColor'} strokeWidth="4" />
-      <path className="opacity-75" fill={light ? 'white' : 'currentColor'} d="M4 12a8 8 0 018-8v8H4z" />
+    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke={light ? 'white' : 'currentColor'} strokeWidth="4"/>
+      <path className="opacity-75" fill={light ? 'white' : 'currentColor'} d="M4 12a8 8 0 018-8v8H4z"/>
     </svg>
   )
 }

@@ -154,3 +154,51 @@ Respond with the explanation only — no preamble.`.trim()
     return { explanation: 'Unable to load explanation. The correct answer was ' + correctLetter + '.' }
   }
 }
+
+// ─── chatWithTutor ─────────────────────────────────────────────────────────────
+//
+// Free-form chat: student can ask follow-up questions about the current problem.
+
+export interface ChatMessage {
+  role:    'user' | 'assistant'
+  content: string
+}
+
+export async function chatWithTutor(
+  questionId: string,
+  messages:   ChatMessage[],
+): Promise<{ reply: string }> {
+  const supabase = createSupabaseServerClient()
+
+  const { data: q } = await supabase
+    .from('questions')
+    .select('content_json, correct_answer, explanation, nesa_outcome_code, outcome_id, difficulty_band')
+    .eq('id', questionId)
+    .single()
+
+  const content     = (q?.content_json ?? {}) as Record<string, string>
+  const questionCtx = q
+    ? `Current HSC question (${q.nesa_outcome_code ?? q.outcome_id}, Band ${q.difficulty_band}):\n${content.question_text ?? ''}\nA. ${content.option_a ?? ''}\nB. ${content.option_b ?? ''}\nC. ${content.option_c ?? ''}\nD. ${content.option_d ?? ''}`
+    : 'An HSC Mathematics question.'
+
+  const systemWithCtx = `${SYSTEM_PROMPT}
+
+Context for this conversation:
+${questionCtx}
+
+The student is asking follow-up questions. Continue in Socratic mode — guide them, don't just give the answer. Be warm, concise, and encouraging. Use emojis sparingly to keep it friendly.`
+
+  try {
+    const response = await anthropic.messages.create({
+      model:      'claude-sonnet-4-6',
+      max_tokens: 300,
+      system:     systemWithCtx,
+      messages:   messages.map(m => ({ role: m.role, content: m.content })),
+    })
+    const text = response.content[0].type === 'text' ? response.content[0].text : ''
+    return { reply: text.trim() }
+  } catch (err) {
+    console.error('[chatWithTutor] error:', err)
+    return { reply: "I'm having trouble connecting right now. Try rephrasing your question!" }
+  }
+}
