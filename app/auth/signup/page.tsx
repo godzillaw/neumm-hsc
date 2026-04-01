@@ -22,7 +22,7 @@ export default function SignupPage() {
     const { data, error } = await signUp(email, password, displayName)
     if (error) { setError(error.message); setLoading(false); return }
     if (data.user && !data.session) { setSuccess(true); setLoading(false) }
-    else { router.push('/dashboard'); router.refresh() }
+    else { router.push('/onboarding/intent'); router.refresh() }
   }
 
   async function handleGoogleSignup() {

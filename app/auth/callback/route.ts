@@ -17,10 +17,13 @@ export async function GET(request: Request) {
   const error = searchParams.get('error')
   const errorDescription = searchParams.get('error_description')
 
+  // basePath must be included in all redirects — origin alone drops the prefix
+  const appBase = process.env.NEXT_PUBLIC_APP_URL ?? `${origin}/math-nsw/app`
+
   // OAuth provider returned an error (e.g. user cancelled)
   if (error) {
     const msg = encodeURIComponent(errorDescription ?? error)
-    return NextResponse.redirect(`${origin}/auth/login?error=${msg}`)
+    return NextResponse.redirect(`${appBase}/auth/login?error=${msg}`)
   }
 
   if (code) {
@@ -28,15 +31,13 @@ export async function GET(request: Request) {
     const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!exchangeError) {
-      // Redirect to dashboard (Next.js will prepend basePath automatically
-      // because we use a relative path here — origin already includes it)
-      return NextResponse.redirect(`${origin}${next}`)
+      return NextResponse.redirect(`${appBase}${next}`)
     }
 
     const msg = encodeURIComponent(exchangeError.message)
-    return NextResponse.redirect(`${origin}/auth/login?error=${msg}`)
+    return NextResponse.redirect(`${appBase}/auth/login?error=${msg}`)
   }
 
   // No code present — redirect to login
-  return NextResponse.redirect(`${origin}/auth/login`)
+  return NextResponse.redirect(`${appBase}/auth/login`)
 }

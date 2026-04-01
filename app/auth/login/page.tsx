@@ -18,7 +18,7 @@ export default function LoginPage() {
     setError(null); setLoading(true)
     const { error } = await signInWithEmail(email, password)
     if (error) { setError(error.message); setLoading(false) }
-    else { router.push('/dashboard'); router.refresh() }
+    else { router.push('/dashboard'); router.refresh() }  // basePath prepended automatically by Next.js
   }
 
   async function handleGoogleLogin() {
