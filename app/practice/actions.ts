@@ -226,55 +226,84 @@ export async function getNextQuestion(userId: string, topicFilter?: string): Pro
   )
   const answeredIds = Array.from(answeredSet)
 
-  // 3. Try each priority entry
+  // Helper: build a topic filter clause for the questions table
+  // topicFilter is an exact outcome_id prefix like 'MA-TRIG-01'
+  // Questions store outcome_id as the prefix exactly, so we use eq + like for safety
+  const topicClause = (topicFilter: string) =>
+    `outcome_id.eq.${topicFilter},outcome_id.like.${topicFilter}-%`
+
+  // 3. Try each mastery-priority entry
   for (const entry of (masteryRows ?? [])) {
     const prefix     = entry.outcome_id.replace(/-B(\d+)$/, '')
     const bandMatch  = entry.outcome_id.match(/-B(\d+)$/)
     const band       = bandMatch ? parseInt(bandMatch[1], 10) : (entry.difficulty_band ?? 3)
     const confidence = entry.confidence_pct ?? 0
 
-    let q = supabase
-      .from('questions')
-      .select('id, outcome_id, difficulty_band, content_json, correct_answer, explanation, step_by_step, nesa_outcome_code')
-      .eq('outcome_id', prefix)
-      .eq('difficulty_band', band)
-
-    if (answeredIds.length > 0) {
-      q = q.not('id', 'in', `(${answeredIds.join(',')})`)
+    // 3a. Ideal: exact topic + exact band
+    {
+      let q = supabase
+        .from('questions')
+        .select('id, outcome_id, difficulty_band, content_json, correct_answer, explanation, step_by_step, nesa_outcome_code')
+        .eq('outcome_id', prefix)
+        .eq('difficulty_band', band)
+      if (answeredIds.length > 0) q = q.not('id', 'in', `(${answeredIds.join(',')})`)
+      const { data: candidates } = await q.limit(8)
+      if (candidates && candidates.length > 0) {
+        const row = candidates[Math.floor(Math.random() * candidates.length)]
+        return shapeQuestion(row, entry.outcome_id, confidence)
+      }
     }
 
-    const { data: candidates } = await q.limit(8)
-
-    if (candidates && candidates.length > 0) {
-      const row = candidates[Math.floor(Math.random() * candidates.length)]
-      return shapeQuestion(row, entry.outcome_id, confidence)
+    // 3b. Band mismatch fallback: same topic, any band
+    {
+      let q = supabase
+        .from('questions')
+        .select('id, outcome_id, difficulty_band, content_json, correct_answer, explanation, step_by_step, nesa_outcome_code')
+        .eq('outcome_id', prefix)
+      if (answeredIds.length > 0) q = q.not('id', 'in', `(${answeredIds.join(',')})`)
+      const { data: anyBand } = await q.limit(8)
+      if (anyBand && anyBand.length > 0) {
+        const row = anyBand[Math.floor(Math.random() * anyBand.length)]
+        return shapeQuestion(row, entry.outcome_id, confidence)
+      }
     }
   }
 
-  // 4. Fallback A: any unanswered question (topic-filtered if specified)
+  // 4. Fallback A: any unanswered question, respecting topicFilter
   {
     let q = supabase
       .from('questions')
       .select('id, outcome_id, difficulty_band, content_json, correct_answer, explanation, step_by_step, nesa_outcome_code')
-    if (topicFilter) { q = q.like('outcome_id', `${topicFilter}%`) }
-    if (answeredIds.length > 0) {
-      q = q.not('id', 'in', `(${answeredIds.join(',')})`)
-    }
+    if (topicFilter) q = q.or(topicClause(topicFilter))
+    if (answeredIds.length > 0) q = q.not('id', 'in', `(${answeredIds.join(',')})`)
     const { data: fallback } = await q.limit(20)
     if (fallback && fallback.length > 0) {
       const row = fallback[Math.floor(Math.random() * fallback.length)]
-      return shapeQuestion(row, row.outcome_id ?? 'MA-CALC-D01', 50)
+      return shapeQuestion(row, row.outcome_id ?? topicFilter ?? 'MA-CALC-D01', 50)
     }
   }
 
-  // 5. Fallback B: truly any question (all answered — restart the bank)
+  // 5. Fallback B: all answered — restart the bank BUT keep topicFilter
   {
-    const { data: any_ } = await supabase
+    let q = supabase
+      .from('questions')
+      .select('id, outcome_id, difficulty_band, content_json, correct_answer, explanation, step_by_step, nesa_outcome_code')
+    if (topicFilter) q = q.or(topicClause(topicFilter))
+    const { data: any_ } = await q.limit(20)
+    if (any_ && any_.length > 0) {
+      const row = any_[Math.floor(Math.random() * any_.length)]
+      return shapeQuestion(row, row.outcome_id ?? topicFilter ?? 'MA-CALC-D01', 50)
+    }
+  }
+
+  // 6. Absolute last resort (no questions at all for topic): any question
+  {
+    const { data: last } = await supabase
       .from('questions')
       .select('id, outcome_id, difficulty_band, content_json, correct_answer, explanation, step_by_step, nesa_outcome_code')
       .limit(20)
-    if (any_ && any_.length > 0) {
-      const row = any_[Math.floor(Math.random() * any_.length)]
+    if (last && last.length > 0) {
+      const row = last[Math.floor(Math.random() * last.length)]
       return shapeQuestion(row, row.outcome_id ?? 'MA-CALC-D01', 50)
     }
   }
