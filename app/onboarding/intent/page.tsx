@@ -54,7 +54,7 @@ export default function IntentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F6FA] flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#FFFBF0', fontFamily: "'Nunito', sans-serif" }}>
       {/* Header */}
       <div className="flex items-center justify-between px-6 pt-12 pb-2">
         <NeummLogo size={32} />
@@ -63,13 +63,13 @@ export default function IntentPage() {
 
       {/* Progress bar */}
       <div className="mx-6 mt-3 h-1 rounded-full bg-gray-200">
-        <div className="h-1 rounded-full bg-[#185FA5] transition-all" style={{ width: '50%' }} />
+        <div className="h-1 rounded-full transition-all" style={{ width: '50%', backgroundColor: '#FFDA00' }} />
       </div>
 
       {/* Content */}
       <div className="flex-1 flex flex-col px-6 pt-10 pb-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 leading-tight">
+          <h1 className="text-2xl font-bold leading-tight" style={{ color: '#0F0F14' }}>
             What are you trying to do right now?
           </h1>
           <p className="mt-2 text-sm text-gray-500">
@@ -88,8 +88,8 @@ export default function IntentPage() {
                 className="w-full text-left rounded-2xl border-2 transition-all duration-150 active:scale-[0.98]"
                 style={{
                   minHeight: 72,
-                  borderColor: isSelected ? '#185FA5' : '#E5E7EB',
-                  backgroundColor: isSelected ? '#EEF4FB' : '#FFFFFF',
+                  borderColor: isSelected ? '#FFDA00' : '#E5E7EB',
+                  backgroundColor: isSelected ? '#FFFBF0' : '#FFFFFF',
                 }}
               >
                 <div className="flex items-center gap-4 px-5 py-4">
@@ -100,7 +100,7 @@ export default function IntentPage() {
                   <div className="flex-1 min-w-0">
                     <p
                       className="font-semibold text-base leading-tight"
-                      style={{ color: isSelected ? '#185FA5' : '#111827' }}
+                      style={{ color: isSelected ? '#0F0F14' : '#111827' }}
                     >
                       {opt.label}
                     </p>
@@ -111,12 +111,12 @@ export default function IntentPage() {
                   <div
                     className="shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all"
                     style={{
-                      borderColor: isSelected ? '#185FA5' : '#D1D5DB',
-                      backgroundColor: isSelected ? '#185FA5' : 'transparent',
+                      borderColor: isSelected ? '#FFDA00' : '#D1D5DB',
+                      backgroundColor: isSelected ? '#FFDA00' : 'transparent',
                     }}
                   >
                     {isSelected && (
-                      <div className="w-2 h-2 rounded-full bg-white" />
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#0F0F14' }} />
                     )}
                   </div>
                 </div>
@@ -130,8 +130,8 @@ export default function IntentPage() {
           <button
             onClick={handleContinue}
             disabled={!selected || saving}
-            className="w-full py-4 rounded-2xl text-white font-semibold text-base transition-all active:scale-[0.98] disabled:opacity-40"
-            style={{ backgroundColor: '#185FA5', minHeight: 56 }}
+            className="w-full py-4 rounded-2xl font-black text-base transition-all active:scale-[0.98] disabled:opacity-40"
+            style={{ backgroundColor: '#FFDA00', color: '#0F0F14', minHeight: 56 }}
           >
             {saving ? (
               <span className="flex items-center justify-center gap-2">
@@ -144,7 +144,8 @@ export default function IntentPage() {
 
           <button
             onClick={() => router.push('/onboarding/year')}
-            className="w-full mt-3 py-3 text-sm text-gray-400 font-medium hover:text-gray-600 transition-colors"
+            className="w-full mt-3 py-3 text-sm font-medium hover:text-gray-600 transition-colors"
+            style={{ color: '#666672' }}
           >
             Skip for now
           </button>
@@ -157,8 +158,8 @@ export default function IntentPage() {
 function Spinner() {
   return (
     <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="white" strokeWidth="4" />
-      <path className="opacity-75" fill="white" d="M4 12a8 8 0 018-8v8H4z" />
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="#0F0F14" strokeWidth="4" />
+      <path className="opacity-75" fill="#0F0F14" d="M4 12a8 8 0 018-8v8H4z" />
     </svg>
   )
 }

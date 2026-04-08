@@ -29,7 +29,7 @@ function SidebarStreak() {
 
 const NAV_ITEMS = [
   { href: '/dashboard',            label: 'Home',        emoji: '🏠' },
-  { href: '/practice',             label: 'Practice',    emoji: '⚡' },
+  { href: '/practice',             label: 'Topic Mastery', emoji: '⚡' },
   { href: '/exam',                 label: 'Exam',        emoji: '📝' },
   { href: '/dashboard/progress',   label: 'Progress',    emoji: '📈' },
   { href: '/dashboard/leaderboard',label: 'Leaderboard', emoji: '🏆' },

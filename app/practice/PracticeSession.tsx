@@ -76,7 +76,7 @@ function ChatWindow({
         {messages.length === 0 && !loading && (
           <div className="flex flex-col items-center justify-center h-full text-center px-6 py-8">
             <div className="text-4xl mb-3">🤖</div>
-            <p className="font-black text-gray-800 text-base">Neumm AI Tutor</p>
+            <p className="font-black text-gray-800 text-base">Neumm Helper</p>
             <p className="text-sm text-gray-400 mt-1 leading-relaxed">
               Ask me anything about this question,<br/>or hit <strong>💡 Hint</strong> for a nudge!
             </p>
@@ -221,6 +221,7 @@ export default function PracticeSession({
   const [hintUsed,       setHintUsed]       = useState(false)
   const [hintCount,      setHintCount]      = useState(0)
   const [sessionId]                         = useState(initialSessionId)
+  const [sessionCount,   setSessionCount]   = useState(0)
   const [elapsed,        setElapsed]        = useState(0)
   const startMsRef                          = useRef<number>(0)
   const timerRef                            = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -292,6 +293,7 @@ export default function PracticeSession({
     })
     setResult(res)
     setPhase('answered')
+    setSessionCount(c => c + 1)
     sessionAnswersRef.current += 1
     if (res.isCorrect) sessionCorrectRef.current += 1
     if (res.streakUpdated && res.newStreak >= 1) {
@@ -436,6 +438,28 @@ export default function PracticeSession({
           </div>
         )}
 
+        {/* Topic + progress bar */}
+        {question && (
+          <div className="pb-3">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="px-3 py-1 rounded-full text-xs font-black"
+                  style={{ background: '#FFDA00', color: '#0F0F14' }}>
+                  ⚡ {question.outcome_id.replace(/-B\d+$/, '')}
+                </div>
+                {topicFilter && (
+                  <span className="text-xs font-semibold" style={{ color: '#666672' }}>
+                    filtered
+                  </span>
+                )}
+              </div>
+              <span className="text-xs font-black" style={{ color: '#666672' }}>
+                {sessionCount} done
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Question card */}
         <div className="bg-white rounded-3xl shadow-sm border border-purple-50 p-5 mb-4 animate-fade-in-up">
           <p className="text-base md:text-lg font-semibold text-gray-900 leading-relaxed">
@@ -547,7 +571,7 @@ export default function PracticeSession({
               style={{ background: 'linear-gradient(135deg,#7C3AED,#EC4899)' }}>
               <div className="flex items-center gap-2">
                 <span className="text-xl">🤖</span>
-                <p className="text-sm font-black text-white">Neumm AI Tutor</p>
+                <p className="text-sm font-black text-white">Neumm Helper</p>
               </div>
               <button onClick={() => setShowChatPanel(false)}
                 className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/20 text-white font-bold hover:bg-white/30 transition-colors">

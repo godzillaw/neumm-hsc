@@ -103,22 +103,25 @@ async function RecommendationCard({ weakTopics }: { weakTopics: WeakTopic[] }) {
   return (
     <div
       className="rounded-2xl p-5 border mt-2"
-      style={{ backgroundColor: '#EEF4FB', borderColor: '#B3D0F0' }}
+      style={{ backgroundColor: '#FFFBF0', borderColor: '#F0E980', fontFamily: "'Nunito', sans-serif" }}
     >
       <div className="flex items-start gap-3">
         <div
           className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-lg"
-          style={{ backgroundColor: '#185FA5' }}
+          style={{ backgroundColor: '#FFDA00' }}
         >
           🎯
         </div>
         <div>
-          <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: '#185FA5' }}>
+          <p
+            className="text-xs font-bold uppercase tracking-wide mb-1"
+            style={{ color: '#0F0F14' }}
+          >
             AI Recommendation
           </p>
-          <p className="text-sm font-semibold text-gray-800 leading-relaxed">{text}</p>
+          <p className="text-sm font-semibold leading-relaxed" style={{ color: '#0F0F14' }}>{text}</p>
           {weakTopics.length > 1 && (
-            <p className="text-xs text-gray-400 mt-2">
+            <p className="text-xs mt-2" style={{ color: '#666672' }}>
               Also consider: {weakTopics.slice(1).map(t => t.name).join(', ')}
             </p>
           )}
@@ -132,14 +135,14 @@ function RecommendationSkeleton() {
   return (
     <div
       className="rounded-2xl p-5 border mt-2 animate-pulse"
-      style={{ backgroundColor: '#F9FAFB', borderColor: '#E5E7EB' }}
+      style={{ backgroundColor: '#FFFBF0', borderColor: '#F0E980' }}
     >
       <div className="flex items-start gap-3">
-        <div className="w-9 h-9 rounded-xl bg-gray-200 shrink-0" />
+        <div className="w-9 h-9 rounded-xl shrink-0" style={{ backgroundColor: '#F0E980' }} />
         <div className="flex-1">
-          <div className="h-3 bg-gray-200 rounded w-28 mb-2" />
-          <div className="h-4 bg-gray-200 rounded w-full mb-1.5" />
-          <div className="h-4 bg-gray-200 rounded w-3/4" />
+          <div className="h-3 rounded w-28 mb-2" style={{ backgroundColor: '#F0E980' }} />
+          <div className="h-4 rounded w-full mb-1.5" style={{ backgroundColor: '#F0E980' }} />
+          <div className="h-4 rounded w-3/4" style={{ backgroundColor: '#F0E980' }} />
         </div>
       </div>
     </div>
@@ -201,12 +204,22 @@ export default async function ProgressPage() {
     .map(t => ({ prefix: t.prefix, name: t.name, avg: t.avg ?? 0 }))
 
   return (
-    <div className="px-5 md:px-8 py-8 max-w-5xl">
+    <div
+      className="px-5 md:px-8 py-8 max-w-5xl"
+      style={{ fontFamily: "'Nunito', sans-serif" }}
+    >
 
       {/* ── Page header ── */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Progress</h1>
-        <p className="text-sm text-gray-400 mt-0.5">Your HSC Mathematics mastery at a glance</p>
+        <h1
+          className="text-2xl font-bold"
+          style={{ color: '#0F0F14', fontFamily: "'Nunito', sans-serif" }}
+        >
+          Progress
+        </h1>
+        <p className="text-sm mt-0.5" style={{ color: '#666672' }}>
+          Your HSC Mathematics mastery at a glance
+        </p>
       </div>
 
       {/* ── Main mastery view (circular indicator + tiles) ── */}
@@ -221,16 +234,21 @@ export default async function ProgressPage() {
 
       {/* ── AI Recommendation (streamed via Suspense) ── */}
       <div className="mt-4 mb-8">
-        <h2 className="text-sm font-bold text-gray-700 mb-2">Next focus area</h2>
+        <h2
+          className="text-sm font-bold mb-2"
+          style={{ color: '#0F0F14', fontFamily: "'Nunito', sans-serif" }}
+        >
+          Next focus area
+        </h2>
         <Suspense fallback={<RecommendationSkeleton />}>
           {weakTopics.length > 0 ? (
             <RecommendationCard weakTopics={weakTopics} />
           ) : (
             <div
               className="rounded-2xl p-5 border"
-              style={{ backgroundColor: '#F9FAFB', borderColor: '#E5E7EB' }}
+              style={{ backgroundColor: '#FFFBF0', borderColor: '#F0E980' }}
             >
-              <p className="text-sm text-gray-500">
+              <p className="text-sm" style={{ color: '#666672' }}>
                 Complete the placement probe to unlock personalised recommendations.
               </p>
             </div>

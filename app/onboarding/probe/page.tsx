@@ -154,19 +154,6 @@ export default function ProbePage() {
       },
     ]
     setAnswers(newAnswers)
-
-    // Auto-advance after 1.6 s
-    setTimeout(() => {
-      const next = currentIdx + 1
-      if (next < questions.length) {
-        setCurrentIdx(next)
-        setSelected(null)
-        setPhase('active')
-        startRef.current = Date.now()
-      } else {
-        finishProbe(newAnswers)
-      }
-    }, 1600)
   }
 
   // ── Finish & save ─────────────────────────────────────────────────────────
@@ -239,7 +226,7 @@ export default function ProbePage() {
         <div className="flex flex-col items-center gap-4">
           <NeummLogo size={44} />
           <div className="flex items-center gap-2 text-gray-500 text-sm">
-            <SpinnerIcon className="text-[#185FA5]" />
+            <SpinnerIcon color="#FFDA00" />
             Preparing your placement probe…
           </div>
         </div>
@@ -251,14 +238,17 @@ export default function ProbePage() {
   if (phase === 'error') {
     return (
       <Screen>
-        <div className="bg-white rounded-2xl p-8 text-center max-w-sm w-full shadow-sm border border-gray-100">
+        <div
+          className="bg-white rounded-2xl p-8 text-center max-w-sm w-full shadow-sm"
+          style={{ border: '1.5px solid #F0E980' }}
+        >
           <div className="text-4xl mb-4">⚠️</div>
           <h2 className="text-lg font-semibold text-gray-900 mb-2">Something went wrong</h2>
           <p className="text-sm text-gray-500 mb-6">{loadError}</p>
           <button
             onClick={() => { setPhase('loading'); loadProbeQuestions() }}
-            className="w-full py-3 rounded-xl text-white font-semibold text-sm"
-            style={{ backgroundColor: '#185FA5' }}
+            className="w-full py-3 rounded-xl font-semibold text-sm"
+            style={{ background: '#FFDA00', color: '#0F0F14' }}
           >
             Try again
           </button>
@@ -273,7 +263,10 @@ export default function ProbePage() {
     const correct = answers.filter(a => a.is_correct).length
     return (
       <Screen>
-        <div className="bg-white rounded-2xl p-8 text-center max-w-sm w-full shadow-sm border border-gray-100">
+        <div
+          className="bg-white rounded-2xl p-8 text-center max-w-sm w-full shadow-sm"
+          style={{ border: '1.5px solid #F0E980' }}
+        >
           <div className="text-5xl mb-4">🎉</div>
           <h2 className="text-xl font-bold text-gray-900 mb-1">Probe complete!</h2>
           <p className="text-sm text-gray-500 mb-6">
@@ -281,16 +274,16 @@ export default function ProbePage() {
           </p>
           <div
             className="rounded-xl px-6 py-4 mb-6"
-            style={{ backgroundColor: '#EEF4FB' }}
+            style={{ backgroundColor: '#FFFBF0', border: '1.5px solid #F0E980' }}
           >
-            <p className="text-xs font-semibold text-[#185FA5] uppercase tracking-wide mb-1">
+            <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#0F0F14' }}>
               Recommended course
             </p>
-            <p className="text-2xl font-bold text-[#185FA5]">{course}</p>
+            <p className="text-2xl font-bold" style={{ color: '#0F0F14' }}>{course}</p>
             <p className="text-xs text-gray-500 mt-1">Mathematics</p>
           </div>
           <div className="flex items-center justify-center gap-2 text-gray-400 text-sm">
-            <SpinnerIcon className="text-[#185FA5]" />
+            <SpinnerIcon color="#FFDA00" />
             Building your mastery map…
           </div>
         </div>
@@ -314,15 +307,22 @@ export default function ProbePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F6FA] flex flex-col">
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ backgroundColor: '#FFFBF0', fontFamily: "'Nunito', sans-serif" }}
+    >
       {/* Header */}
       <div className="px-6 pt-10 pb-0">
         <div className="flex items-center justify-between mb-3">
           <NeummLogo size={28} />
-          <span className="text-xs font-semibold text-gray-400">
+          <span className="text-xs font-black" style={{ color: '#0F0F14' }}>
             {currentIdx + 1} / {questions.length}
           </span>
-          <span className="text-xs font-medium text-gray-400">
+          {/* Band pill */}
+          <span
+            className="text-xs font-black px-2.5 py-1 rounded-full"
+            style={{ backgroundColor: '#FFDA00', color: '#0F0F14' }}
+          >
             Band {q.difficulty_band}
           </span>
         </div>
@@ -331,7 +331,7 @@ export default function ProbePage() {
         <div className="h-1.5 rounded-full bg-gray-200 overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-500"
-            style={{ width: `${progress}%`, backgroundColor: '#185FA5' }}
+            style={{ width: `${progress}%`, backgroundColor: '#FFDA00' }}
           />
         </div>
       </div>
@@ -339,14 +339,29 @@ export default function ProbePage() {
       {/* Content */}
       <div className="flex-1 flex flex-col px-6 pt-6 pb-8 gap-6">
 
-        {/* Metadata chip */}
+        {/* Metadata chips */}
         <div className="flex gap-2 flex-wrap">
-          <Chip label={q.nesa_outcome_code} color="#4A90D9" />
-          <Chip label={`Difficulty ${q.difficulty_band}`} color="#6B7A99" />
+          {/* Outcome chip: dark bg so white text is readable */}
+          <span
+            className="text-xs font-semibold px-2.5 py-1 rounded-full text-white"
+            style={{ backgroundColor: '#0F0F14' }}
+          >
+            {q.nesa_outcome_code}
+          </span>
+          {/* Difficulty chip: yellow bg with dark text */}
+          <span
+            className="text-xs font-semibold px-2.5 py-1 rounded-full"
+            style={{ backgroundColor: '#F0E980', color: '#0F0F14' }}
+          >
+            Difficulty {q.difficulty_band}
+          </span>
         </div>
 
         {/* Question */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-5">
+        <div
+          className="bg-white rounded-2xl shadow-sm px-5 py-5"
+          style={{ border: '1.5px solid #F0E980' }}
+        >
           <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-2">Question</p>
           <p className="text-gray-900 text-base leading-relaxed font-medium">
             {q.content_json.question_text}
@@ -383,8 +398,8 @@ export default function ProbePage() {
                         ? '#EF4444'
                         : selected
                         ? '#F3F4F6'
-                        : '#EEF4FB',
-                      color: isCorrectSelected || isWrongSelected ? '#FFFFFF' : '#185FA5',
+                        : '#FFFBF0',
+                      color: isCorrectSelected || isWrongSelected ? '#FFFFFF' : '#0F0F14',
                     }}
                   >
                     {OPTION_LABELS[i]}
@@ -434,11 +449,25 @@ export default function ProbePage() {
           </div>
         )}
 
-        {/* Tap-to-continue hint */}
+        {/* Next question button */}
         {selected && (
-          <p className="text-center text-xs text-gray-400 animate-pulse">
-            {currentIdx + 1 < questions.length ? 'Moving to next question…' : 'Calculating your course…'}
-          </p>
+          <button
+            onClick={() => {
+              const next = currentIdx + 1
+              if (next < questions.length) {
+                setCurrentIdx(next)
+                setSelected(null)
+                setPhase('active')
+                startRef.current = Date.now()
+              } else {
+                finishProbe(answers)
+              }
+            }}
+            className="w-full py-3.5 rounded-2xl text-sm font-black transition-all active:scale-[0.98]"
+            style={{ background: '#FFDA00', color: '#0F0F14' }}
+          >
+            {currentIdx + 1 < questions.length ? 'Next question →' : 'See my results →'}
+          </button>
         )}
 
         {/* Tap prompt (no answer yet) */}
@@ -455,26 +484,18 @@ export default function ProbePage() {
 // ─── Sub-components ────────────────────────────────────────────────────────────
 function Screen({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#F4F6FA] flex items-center justify-center px-6">
+    <div
+      className="min-h-screen flex items-center justify-center px-6"
+      style={{ backgroundColor: '#FFFBF0', fontFamily: "'Nunito', sans-serif" }}
+    >
       {children}
     </div>
   )
 }
 
-function Chip({ label, color }: { label: string; color: string }) {
+function SpinnerIcon({ color = 'currentColor', className = '' }: { color?: string; className?: string }) {
   return (
-    <span
-      className="text-xs font-semibold px-2.5 py-1 rounded-full text-white"
-      style={{ backgroundColor: color }}
-    >
-      {label}
-    </span>
-  )
-}
-
-function SpinnerIcon({ className = '' }: { className?: string }) {
-  return (
-    <svg className={`animate-spin h-4 w-4 ${className}`} fill="none" viewBox="0 0 24 24">
+    <svg className={`animate-spin h-4 w-4 ${className}`} fill="none" viewBox="0 0 24 24" style={{ color }}>
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
     </svg>

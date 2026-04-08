@@ -150,20 +150,34 @@ export async function startExam(
   // ── Fetch questions at difficulty bands 4–6 ────────────────────────────────
   // Fetch a larger pool then sample to get random variety.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let query: any = supabase
-    .from('questions')
-    .select('id, outcome_id, difficulty_band, content_json, correct_answer, explanation, nesa_outcome_code')
-    .in('difficulty_band', [4, 5, 6])
-
-  if (prefixes.length > 0) {
-    query = query.in('outcome_id', prefixes)
+  type QRow = Record<string, unknown>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const buildQuery = async (bandFilter: number[] | null): Promise<{ data: QRow[] | null; error: { message: string } | null }> => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let q: any = supabase
+      .from('questions')
+      .select('id, outcome_id, difficulty_band, content_json, correct_answer, explanation, nesa_outcome_code')
+    if (bandFilter) q = q.in('difficulty_band', bandFilter)
+    if (prefixes.length > 0) {
+      // Match by outcome_id prefix — questions may store exact prefix or prefix-Bn form
+      q = q.or(prefixes.map((p: string) => `outcome_id.eq.${p},outcome_id.like.${p}-%`).join(','))
+    }
+    return q.limit(300)
   }
 
-  const { data: rawQ, error: qErr } = await query.limit(300)
+  const { data: rawQ0, error: qErr } = await buildQuery([4, 5, 6])
   if (qErr) return { error: `Question fetch: ${qErr.message}` }
+  let rawQ = rawQ0
+
+  // Fallback: no band-4-6 questions → fetch any band
+  if (!rawQ || rawQ.length === 0) {
+    const fallback = await buildQuery(null)
+    if (fallback.error) return { error: `Question fetch: ${fallback.error.message}` }
+    rawQ = fallback.data
+  }
 
   if (!rawQ || rawQ.length === 0) {
-    return { error: 'No exam-level questions found for the selected topics. Try adding more topics first.' }
+    return { error: 'No questions found for the selected topics. Try selecting different topics or completing practice sessions first.' }
   }
 
   // Sample, shuffle, take N
