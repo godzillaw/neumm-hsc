@@ -69,23 +69,19 @@ function ChatWindow({
     onSend(text)
   }
 
-  if (messages.length === 0 && !loading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-center px-6 py-10">
-        <div className="text-4xl mb-3">🤖</div>
-        <p className="font-black text-gray-800 text-base">Neumm AI Tutor</p>
-        <p className="text-sm text-gray-400 mt-1 leading-relaxed">
-          Stuck? Hit <strong>Hint</strong> and I&apos;ll guide you — no spoilers 😏<br/>
-          Or ask me anything about this question!
-        </p>
-      </div>
-    )
-  }
-
   return (
     <div className="flex flex-col h-full">
-      {/* Messages */}
+      {/* Messages or empty state */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 no-scrollbar">
+        {messages.length === 0 && !loading && (
+          <div className="flex flex-col items-center justify-center h-full text-center px-6 py-8">
+            <div className="text-4xl mb-3">🤖</div>
+            <p className="font-black text-gray-800 text-base">Neumm AI Tutor</p>
+            <p className="text-sm text-gray-400 mt-1 leading-relaxed">
+              Ask me anything about this question,<br/>or hit <strong>💡 Hint</strong> for a nudge!
+            </p>
+          </div>
+        )}
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in-up`}>
             {m.role === 'assistant' && (
@@ -210,9 +206,11 @@ function MasteryPanel({ prevConf, newConf, delta, newStatus, predictedHscBand }:
 export default function PracticeSession({
   userId,
   sessionId: initialSessionId,
+  topicFilter,
 }: {
-  userId:    string
-  sessionId: string
+  userId:       string
+  sessionId:    string
+  topicFilter?: string | null
   questionsRemaining?: number
   dailyLimit?:         number
 }) {
@@ -263,7 +261,7 @@ export default function PracticeSession({
     setChatMessages([])
     setShowChatPanel(false)
     setElapsed(0)
-    const q = await getNextQuestion(userId)
+    const q = await getNextQuestion(userId, topicFilter ?? undefined)
     setQuestion(q)
     setPhase(q ? 'ready' : 'loading')
     startMsRef.current = Date.now()
@@ -540,47 +538,43 @@ export default function PracticeSession({
             : `Question ${questionCount.current}`}
         </p>
 
-        {/* Mobile chat overlay */}
+        {/* Chat popup — full-screen on mobile, floating on desktop */}
         {showChatPanel && (
-          <div className="md:hidden fixed inset-0 z-50 flex flex-col"
-            style={{ background: 'linear-gradient(135deg,#F7F3FF,#FDF2F8)', paddingBottom: 'env(safe-area-inset-bottom,12px)' }}>
-            <div className="flex items-center justify-between px-5 py-4 border-b border-purple-100 bg-white/80"
-              style={{ backdropFilter: 'blur(12px)' }}>
+          <div className="fixed inset-0 md:inset-auto md:bottom-6 md:right-6 md:w-[360px] md:h-[520px] z-50 flex flex-col rounded-none md:rounded-3xl shadow-2xl overflow-hidden"
+            style={{ background: 'white', border: '1px solid #EDE9FE' }}>
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 shrink-0"
+              style={{ background: 'linear-gradient(135deg,#7C3AED,#EC4899)' }}>
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center text-base"
-                  style={{ background: 'linear-gradient(135deg,#7C3AED,#EC4899)' }}>🤖</div>
-                <p className="text-sm font-black text-gray-800">Neumm AI Tutor</p>
+                <span className="text-xl">🤖</span>
+                <p className="text-sm font-black text-white">Neumm AI Tutor</p>
               </div>
               <button onClick={() => setShowChatPanel(false)}
-                className="w-10 h-10 flex items-center justify-center rounded-2xl bg-gray-100 active:bg-gray-200 font-bold text-gray-500">
+                className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/20 text-white font-bold hover:bg-white/30 transition-colors">
                 ✕
               </button>
             </div>
-            <div className="flex-1 overflow-hidden flex flex-col">
+            {/* Messages */}
+            <div className="flex-1 overflow-hidden flex flex-col" style={{ paddingBottom: 'env(safe-area-inset-bottom,0px)' }}>
               {chatPanel}
-            </div>
-            <div className="px-5 py-4 border-t border-purple-100 bg-white/80">
-              <button onClick={() => setShowChatPanel(false)}
-                className="btn-gradient w-full py-3 rounded-2xl text-sm font-black min-h-[48px]">
-                Back to question ←
-              </button>
             </div>
           </div>
         )}
-      </div>
 
-      {/* ── Right: Chat Panel (desktop) ──────────────────────────── */}
-      <aside className="hidden md:flex flex-col shrink-0 bg-white/70 border-l border-purple-100"
-        style={{ width: 300, minHeight: '100vh', backdropFilter: 'blur(12px)' }}>
-        <div className="px-5 py-4 border-b border-purple-50 flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center text-base"
-            style={{ background: 'linear-gradient(135deg,#7C3AED,#EC4899)' }}>🤖</div>
-          <p className="text-sm font-black text-gray-800">Neumm AI Tutor</p>
-        </div>
-        <div className="flex-1 overflow-hidden flex flex-col">
-          {chatPanel}
-        </div>
-      </aside>
+        {/* Floating chat button (desktop only, hidden on mobile since header button handles it) */}
+        {!showChatPanel && (
+          <button onClick={() => setShowChatPanel(true)}
+            className="hidden md:flex fixed bottom-6 right-6 z-40 items-center gap-2 px-4 py-3 rounded-2xl text-white text-sm font-black shadow-lg hover:scale-105 active:scale-95 transition-transform"
+            style={{ background: 'linear-gradient(135deg,#7C3AED,#EC4899)' }}>
+            🤖 AI Tutor
+            {chatMessages.length > 0 && (
+              <span className="bg-white text-violet-700 rounded-full w-5 h-5 flex items-center justify-center text-xs font-black">
+                {chatMessages.length}
+              </span>
+            )}
+          </button>
+        )}
+      </div>
 
       <StreakToast streak={toastStreak} visible={streakToastVisible} />
     </div>

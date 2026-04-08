@@ -203,7 +203,8 @@ export default function MasteryMapView({ mastery, topics, profile }: Props) {
                   return (
                     <button
                       key={t.prefix}
-                      className="rounded-xl p-2 flex flex-col items-center gap-1 transition-all active:scale-95"
+                      onClick={() => router.push(`/practice?topic=${encodeURIComponent(t.prefix)}`)}
+                      className="rounded-xl p-2 flex flex-col items-center gap-1 transition-all active:scale-95 hover:ring-2 hover:ring-violet-300 cursor-pointer"
                       style={{ backgroundColor: isLight ? '#F3F4F6' : `${color}18`, minHeight: 72 }}
                     >
                       {/* Colour dot */}

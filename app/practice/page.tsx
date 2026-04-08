@@ -6,9 +6,14 @@ import AppSidebar                from '@/components/AppSidebar'
 import TrialExpiredModal         from '@/components/TrialExpiredModal'
 import MobileBottomNav           from '@/components/MobileBottomNav'
 
-export default async function PracticePage() {
+export default async function PracticePage({
+  searchParams,
+}: {
+  searchParams: { topic?: string }
+}) {
   const user   = await requireAuth()
   const access = await checkTierAccess(user.id)
+  const topic  = searchParams.topic ?? null
 
   // Trial expired / payment failed — hard block
   if (access.isBlocked) {
@@ -41,7 +46,7 @@ export default async function PracticePage() {
     <div className="flex min-h-screen" style={{ background: 'linear-gradient(135deg,#F7F3FF,#FDF2F8,#F0FDF4)' }}>
       <AppSidebar />
       <div className="flex-1 min-w-0 flex flex-col pb-20 md:pb-0">
-        <PracticeSession userId={user.id} sessionId={sessionId} />
+        <PracticeSession userId={user.id} sessionId={sessionId} topicFilter={topic} />
       </div>
       <MobileBottomNav />
     </div>

@@ -357,31 +357,35 @@ export default function DashboardContent({ data }: { data: DashboardData }) {
 
       {/* ── Continue Practice CTA ── */}
       <div
-        className="rounded-2xl p-5 mb-5 shadow-sm"
-        style={{ background: 'linear-gradient(135deg, #185FA5 0%, #1a74c8 100%)' }}
+        className="rounded-3xl p-5 mb-5 shadow-sm"
+        style={{ background: 'linear-gradient(135deg,#7C3AED 0%,#EC4899 100%)' }}
       >
-        <p className="text-xs font-semibold text-blue-200 uppercase tracking-wide mb-1">Recommended</p>
+        <p className="text-xs font-bold text-white/70 uppercase tracking-wide mb-1">
+          {data.weakTopic ? '🎯 Focus area' : data.todayQuestions === 0 ? '🚀 Ready to go?' : '🔥 Keep it up'}
+        </p>
         {data.weakTopic ? (
           <>
-            <h2 className="text-lg font-bold text-white mb-0.5">{data.weakTopic.name}</h2>
-            <p className="text-sm text-blue-200 mb-4">
-              Your lowest topic at {data.weakTopic.avg}% — a focused session here will boost your score fast.
-            </p>
+            <h2 className="text-lg font-black text-white mb-0.5">{data.weakTopic.name}</h2>
+            <p className="text-sm text-white/80 mb-4">Your lowest topic at {data.weakTopic.avg}% — crush it today! 💪</p>
           </>
         ) : (
           <>
-            <h2 className="text-lg font-bold text-white mb-0.5">Start your first session</h2>
-            <p className="text-sm text-blue-200 mb-4">
-              {"Practice questions are tailored to your mastery map."}
+            <h2 className="text-lg font-black text-white mb-0.5">
+              {data.todayQuestions === 0 ? "Let's smash some questions! 🔥" : `${data.todayQuestions} questions done today!`}
+            </h2>
+            <p className="text-sm text-white/80 mb-4">
+              {data.todayQuestions === 0
+                ? "Your AI tutor is ready — get started and build that streak."
+                : "Keep practising to climb the leaderboard and nail your HSC!"}
             </p>
           </>
         )}
         <button
           onClick={() => router.push('/practice')}
-          className="w-full py-3 rounded-xl bg-white font-bold text-sm transition-all active:scale-[0.98]"
-          style={{ color: '#185FA5' }}
+          className="w-full py-3 rounded-2xl bg-white font-black text-sm transition-all active:scale-[0.98]"
+          style={{ color: '#7C3AED' }}
         >
-          Continue Practice →
+          {data.todayQuestions === 0 ? 'Start practising 🎯' : 'Keep going →'}
         </button>
       </div>
 
@@ -399,9 +403,18 @@ export default function DashboardContent({ data }: { data: DashboardData }) {
         </div>
 
         {data.topTopics.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-4">
-            Complete the placement probe to see your topic mastery.
-          </p>
+          <div className="text-center py-6">
+            <div className="text-4xl mb-3">🗺️</div>
+            <p className="text-sm font-bold text-gray-700 mb-1">Your mastery map is loading up!</p>
+            <p className="text-xs text-gray-400 mb-4">Answer a few questions to unlock your personalised topic map.</p>
+            <button
+              onClick={() => router.push('/practice')}
+              className="px-6 py-2.5 rounded-full text-sm font-black text-white"
+              style={{ background: 'linear-gradient(135deg,#7C3AED,#EC4899)' }}
+            >
+              Start practising 🚀
+            </button>
+          </div>
         ) : (
           <div className="space-y-4">
             {data.topTopics.map(t => (

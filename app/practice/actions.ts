@@ -188,7 +188,7 @@ export async function createPracticeSession(userId: string): Promise<string | nu
 // Excludes questions the user has already answered (error_log).
 // Falls back to any unanswered question → then any question if all answered.
 
-export async function getNextQuestion(userId: string): Promise<PracticeQuestion | null> {
+export async function getNextQuestion(userId: string, topicFilter?: string): Promise<PracticeQuestion | null> {
   // ── Server-side tier guard (defence-in-depth) ─────────────────────────────────
   const access = await checkTierAccess(userId)
   if (!access.canAnswer) return null
@@ -197,13 +197,20 @@ export async function getNextQuestion(userId: string): Promise<PracticeQuestion 
   const now      = new Date().toISOString()
 
   // 1. Load mastery map — eligible entries (review due or untested)
-  const { data: masteryRows } = await supabase
+  let masteryQuery = supabase
     .from('mastery_map')
     .select('outcome_id, confidence_pct, difficulty_band, next_review_at')
     .eq('user_id', userId)
     .or(`next_review_at.is.null,next_review_at.lte.${now}`)
-    .order('confidence_pct', { ascending: true })  // red first, then yellow, then green
+    .order('confidence_pct', { ascending: true })
     .limit(30)
+
+  // If a specific topic is requested, filter mastery map to that topic
+  if (topicFilter) {
+    masteryQuery = masteryQuery.like('outcome_id', `${topicFilter}%`)
+  }
+
+  const { data: masteryRows } = await masteryQuery
 
   // 2. Get recently answered question IDs (for exclusion)
   const { data: answeredRows } = await supabase
@@ -244,11 +251,12 @@ export async function getNextQuestion(userId: string): Promise<PracticeQuestion 
     }
   }
 
-  // 4. Fallback A: any unanswered question in the entire bank
+  // 4. Fallback A: any unanswered question (topic-filtered if specified)
   {
     let q = supabase
       .from('questions')
       .select('id, outcome_id, difficulty_band, content_json, correct_answer, explanation, step_by_step, nesa_outcome_code')
+    if (topicFilter) { q = q.like('outcome_id', `${topicFilter}%`) }
     if (answeredIds.length > 0) {
       q = q.not('id', 'in', `(${answeredIds.join(',')})`)
     }

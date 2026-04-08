@@ -69,7 +69,7 @@ export default function SignupPage() {
             style={{ background: 'linear-gradient(135deg, #EDE9FE, #FCE7F3)' }}>
             <span className="text-lg">⭐</span>
             <span className="text-xs font-bold" style={{ color: '#7C3AED' }}>
-              Full access free for 7 days — then from $9.99/mo
+              Full access free for 7 days — then from $29.99/mo
             </span>
           </div>
 
