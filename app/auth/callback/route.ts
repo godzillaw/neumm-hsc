@@ -13,12 +13,12 @@ import { createSupabaseServerClient }  from '@/lib/supabase-server'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code  = searchParams.get('code')
-  const next  = searchParams.get('next') ?? '/dashboard'
+  const next  = searchParams.get('next') ?? '/onboarding/intent'
   const error = searchParams.get('error')
   const errorDescription = searchParams.get('error_description')
 
-  // basePath must be included in all redirects — origin alone drops the prefix
-  const appBase = process.env.NEXT_PUBLIC_APP_URL ?? `${origin}/math-nsw/app`
+  // Always use request origin — stays on the same domain (www vs non-www, vercel preview, etc.)
+  const appBase = `${origin}/math-nsw/app`
 
   // OAuth provider returned an error (e.g. user cancelled)
   if (error) {

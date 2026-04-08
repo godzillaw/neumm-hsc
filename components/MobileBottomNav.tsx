@@ -17,11 +17,10 @@ export default function MobileBottomNav() {
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40"
       style={{
-        background: 'rgba(255,255,255,0.95)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        borderTop: '1px solid #F3F0FF',
+        background: '#0F0F14',
+        borderTop: '1.5px solid rgba(255,218,0,0.15)',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        fontFamily: "'Nunito', sans-serif",
       }}>
       <div className="flex items-center justify-around px-1 pt-1 pb-1">
         {NAV_ITEMS.map(item => {
@@ -32,13 +31,14 @@ export default function MobileBottomNav() {
               className="flex flex-col items-center justify-center gap-0.5 flex-1 py-2 min-h-[52px] relative">
               {isActive && (
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full"
-                  style={{ background: 'linear-gradient(135deg, #7C3AED, #EC4899)' }} />
+                  style={{ background: '#FFDA00' }} />
               )}
-              <span className="text-xl leading-none" style={{ filter: isActive ? 'none' : 'grayscale(0.4) opacity(0.6)' }}>
+              <span className="text-xl leading-none"
+                style={{ filter: isActive ? 'none' : 'grayscale(0.5) opacity(0.4)' }}>
                 {item.icon}
               </span>
-              <span className="text-[10px] font-bold leading-none"
-                style={{ color: isActive ? '#7C3AED' : '#9CA3AF' }}>
+              <span className="text-[10px] font-black leading-none"
+                style={{ color: isActive ? '#FFDA00' : 'rgba(255,251,240,0.35)' }}>
                 {item.label}
               </span>
             </Link>

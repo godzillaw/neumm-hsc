@@ -13,7 +13,7 @@ export default async function DashboardLayout({
   const access = await checkTierAccess(user.id)
 
   return (
-    <div className="flex min-h-screen bg-[#F4F6FA]">
+    <div className="flex min-h-screen" style={{ background: '#FFFBF0' }}>
       <AppSidebar />
       <main className="flex-1 min-w-0 pb-20 md:pb-0">
         {/*

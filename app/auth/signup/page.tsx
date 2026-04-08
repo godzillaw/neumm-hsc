@@ -34,14 +34,18 @@ export default function SignupPage() {
   if (success) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4"
-        style={{ background: 'linear-gradient(135deg, #F7F3FF 0%, #FDF2F8 50%, #F0FDF4 100%)' }}>
-        <div className="bg-white rounded-3xl shadow-sm border border-purple-100 p-8 text-center max-w-sm w-full animate-pop-in">
-          <div className="text-5xl mb-4">🎉</div>
-          <h2 className="text-xl font-black text-gray-900 mb-2">You&apos;re in!</h2>
-          <p className="text-sm text-gray-500 mb-6">
-            Check <strong>{email}</strong> for a confirmation link, then start your free trial!
+        style={{ background: '#FFFBF0', fontFamily: "'Nunito', sans-serif" }}>
+        <div className="rounded-3xl shadow-xl text-center p-10 max-w-sm w-full animate-pop-in"
+          style={{ background: '#FFFFFF', border: '1.5px solid #F0E980' }}>
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4"
+            style={{ background: '#FFDA00' }}>🎉</div>
+          <h2 className="text-2xl font-black mb-2" style={{ color: '#0F0F14' }}>You&apos;re in!</h2>
+          <p className="text-sm font-semibold mb-6" style={{ color: '#666672' }}>
+            Check <strong style={{ color: '#0F0F14' }}>{email}</strong> for a confirmation link, then start your free trial!
           </p>
-          <Link href="/auth/login" className="text-sm font-bold" style={{ color: '#7C3AED' }}>
+          <Link href="/auth/login"
+            className="inline-block px-6 py-2.5 rounded-2xl text-sm font-black"
+            style={{ background: '#FFDA00', color: '#0F0F14' }}>
             Back to sign in →
           </Link>
         </div>
@@ -50,82 +54,117 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8"
-      style={{ background: 'linear-gradient(135deg, #F7F3FF 0%, #FDF2F8 50%, #F0FDF4 100%)' }}>
-      <div className="w-full max-w-[400px]">
+    <div className="min-h-screen flex items-center justify-center px-4 py-10"
+      style={{ background: '#FFFBF0', fontFamily: "'Nunito', sans-serif" }}>
+
+      {/* Decorative blobs */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-24 -left-24 w-80 h-80 rounded-full opacity-25"
+          style={{ background: '#FFDA00', filter: 'blur(70px)' }} />
+        <div className="absolute -bottom-20 -right-20 w-64 h-64 rounded-full opacity-20"
+          style={{ background: '#FF6B35', filter: 'blur(60px)' }} />
+      </div>
+
+      <div className="w-full max-w-[400px] relative z-10">
 
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-3xl flex items-center justify-center text-3xl font-black text-white mx-auto mb-4 shadow-lg"
-            style={{ background: 'linear-gradient(135deg, #7C3AED, #EC4899)' }}>N</div>
-          <h1 className="text-2xl font-black text-gray-900">Start for free 🚀</h1>
-          <p className="text-sm text-gray-500 mt-1">7 days free — no card needed</p>
+          <div className="relative inline-flex items-center justify-center mb-4">
+            <div className="w-20 h-20 rounded-[2rem] flex items-center justify-center text-4xl font-black shadow-xl"
+              style={{ background: '#FFDA00', color: '#0F0F14', boxShadow: '0 8px 32px rgba(255,218,0,0.5)' }}>
+              N
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-4 border-[#FFFBF0]"
+              style={{ background: '#FF6B35' }} />
+          </div>
+          <h1 className="text-3xl font-black tracking-tight" style={{ color: '#0F0F14' }}>
+            Start for free 🚀
+          </h1>
+          <p className="text-sm mt-1 font-semibold" style={{ color: '#666672' }}>
+            7 days free — no card needed
+          </p>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-sm border border-purple-100 p-7">
+        <div className="rounded-3xl p-7 shadow-xl"
+          style={{ background: '#FFFFFF', border: '1.5px solid #F0E980' }}>
 
           {/* Trial badge */}
           <div className="flex items-center gap-2 rounded-2xl px-3 py-2.5 mb-5"
-            style={{ background: 'linear-gradient(135deg, #EDE9FE, #FCE7F3)' }}>
+            style={{ background: '#FFFBF0', border: '1.5px solid #F0E980' }}>
             <span className="text-lg">⭐</span>
-            <span className="text-xs font-bold" style={{ color: '#7C3AED' }}>
+            <span className="text-xs font-extrabold" style={{ color: '#0F0F14' }}>
               Full access free for 7 days — then from $29.99/mo
             </span>
           </div>
 
+          {/* Google */}
           <button onClick={handleGoogleSignup} disabled={googleLoading || loading}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-200 rounded-2xl text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 min-h-[48px]">
-            {googleLoading ? <Spinner /> : <GoogleIcon />}
+            className="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all disabled:opacity-50 min-h-[50px]"
+            style={{ background: '#0F0F14', color: '#FFFFFF', border: 'none' }}>
+            {googleLoading ? <Spinner light /> : <GoogleIcon />}
             Continue with Google
           </button>
 
           <div className="flex items-center gap-3 my-5">
-            <div className="flex-1 h-px bg-gray-100" />
-            <span className="text-xs text-gray-400 font-medium">or</span>
-            <div className="flex-1 h-px bg-gray-100" />
+            <div className="flex-1 h-px" style={{ background: '#F0E980' }} />
+            <span className="text-xs font-bold" style={{ color: '#999' }}>or</span>
+            <div className="flex-1 h-px" style={{ background: '#F0E980' }} />
           </div>
 
           <form onSubmit={handleSignup} className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Your name</label>
+              <label className="block text-sm font-extrabold mb-1.5" style={{ color: '#0F0F14' }}>Your name</label>
               <input type="text" value={displayName} onChange={e => setDisplayName(e.target.value)} required
                 placeholder="Alex Smith"
-                className="w-full px-4 py-3 text-sm border border-gray-200 rounded-2xl outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 transition-all placeholder:text-gray-300"/>
+                className="w-full px-4 py-3 text-sm rounded-2xl outline-none transition-all placeholder:text-gray-300"
+                style={{ background: '#FFFBF0', border: '1.5px solid #F0E980', color: '#0F0F14', fontFamily: 'inherit' }}
+                onFocus={e => (e.target.style.borderColor = '#FFDA00')}
+                onBlur={e => (e.target.style.borderColor = '#F0E980')} />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email</label>
+              <label className="block text-sm font-extrabold mb-1.5" style={{ color: '#0F0F14' }}>Email</label>
               <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
                 placeholder="you@example.com"
-                className="w-full px-4 py-3 text-sm border border-gray-200 rounded-2xl outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 transition-all placeholder:text-gray-300"/>
+                className="w-full px-4 py-3 text-sm rounded-2xl outline-none transition-all placeholder:text-gray-300"
+                style={{ background: '#FFFBF0', border: '1.5px solid #F0E980', color: '#0F0F14', fontFamily: 'inherit' }}
+                onFocus={e => (e.target.style.borderColor = '#FFDA00')}
+                onBlur={e => (e.target.style.borderColor = '#F0E980')} />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
+              <label className="block text-sm font-extrabold mb-1.5" style={{ color: '#0F0F14' }}>Password</label>
               <input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={8}
                 placeholder="8+ characters"
-                className="w-full px-4 py-3 text-sm border border-gray-200 rounded-2xl outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 transition-all placeholder:text-gray-300"/>
+                className="w-full px-4 py-3 text-sm rounded-2xl outline-none transition-all placeholder:text-gray-300"
+                style={{ background: '#FFFBF0', border: '1.5px solid #F0E980', color: '#0F0F14', fontFamily: 'inherit' }}
+                onFocus={e => (e.target.style.borderColor = '#FFDA00')}
+                onBlur={e => (e.target.style.borderColor = '#F0E980')} />
             </div>
 
             {error && (
-              <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-2xl px-4 py-3">{error}</div>
+              <div className="text-sm rounded-2xl px-4 py-3 font-semibold"
+                style={{ color: '#CC2200', background: '#FFF0EE', border: '1px solid #FFCDC8' }}>{error}</div>
             )}
 
             <button type="submit" disabled={loading || googleLoading}
-              className="btn-gradient w-full py-3 rounded-2xl text-sm font-black min-h-[48px]">
+              className="btn-gradient w-full py-3.5 rounded-2xl text-sm min-h-[50px] font-black">
               {loading
-                ? <span className="flex items-center justify-center gap-2"><Spinner light />Creating account…</span>
+                ? <span className="flex items-center justify-center gap-2"><Spinner />Creating account…</span>
                 : 'Create free account 🎉'}
             </button>
 
-            <p className="text-xs text-gray-400 text-center">
+            <p className="text-xs font-semibold text-center" style={{ color: '#999' }}>
               By signing up you agree to our{' '}
-              <Link href="/terms" className="underline">Terms</Link> &amp;{' '}
-              <Link href="/privacy" className="underline">Privacy Policy</Link>.
+              <Link href="/terms" className="underline" style={{ color: '#666672' }}>Terms</Link> &amp;{' '}
+              <Link href="/privacy" className="underline" style={{ color: '#666672' }}>Privacy Policy</Link>.
             </p>
           </form>
 
-          <p className="mt-5 text-center text-sm text-gray-500">
+          <p className="mt-5 text-center text-sm font-bold" style={{ color: '#666672' }}>
             Already have an account?{' '}
-            <Link href="/auth/login" className="font-black" style={{ color: '#7C3AED' }}>Sign in</Link>
+            <Link href="/auth/login" className="font-black"
+              style={{ color: '#0F0F14', textDecoration: 'underline', textDecorationColor: '#FFDA00', textUnderlineOffset: '3px' }}>
+              Sign in
+            </Link>
           </p>
         </div>
       </div>
@@ -146,8 +185,8 @@ function GoogleIcon() {
 function Spinner({ light = false }: { light?: boolean }) {
   return (
     <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke={light ? 'white' : 'currentColor'} strokeWidth="4"/>
-      <path className="opacity-75" fill={light ? 'white' : 'currentColor'} d="M4 12a8 8 0 018-8v8H4z"/>
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke={light ? 'white' : '#0F0F14'} strokeWidth="4"/>
+      <path className="opacity-75" fill={light ? 'white' : '#0F0F14'} d="M4 12a8 8 0 018-8v8H4z"/>
     </svg>
   )
 }

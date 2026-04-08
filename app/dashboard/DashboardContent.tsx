@@ -67,7 +67,7 @@ function TierBanner({ tier, trialEndDate }: { tier: string; trialEndDate: string
         <button
           onClick={() => router.push('/dashboard/account')}
           className="shrink-0 text-xs font-bold px-3 py-2 rounded-lg min-h-[36px]"
-          style={{ backgroundColor: '#F59E0B', color: '#fff' }}
+          style={{ backgroundColor: '#FFDA00', color: '#0F0F14' }}
         >
           Subscribe →
         </button>
@@ -186,13 +186,14 @@ function StreakCard({
 
   return (
     <div
-      className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4 mb-5"
+      className="rounded-2xl p-5 flex items-center gap-4 mb-5"
+      style={{ background: '#FFFFFF', border: '1.5px solid #F0E980' }}
     >
       {/* Flame icon — pulses while animating */}
       <div
         className="shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center text-2xl"
         style={{
-          backgroundColor: count === 0 ? '#F3F4F6' : '#FEF2F2',
+          backgroundColor: count === 0 ? '#F3F4F6' : '#FFFBF0',
           animation: isAnimating ? 'flamePulse 0.5s ease infinite alternate' : 'none',
         }}
       >
@@ -205,7 +206,7 @@ function StreakCard({
           <span
             className="text-4xl font-extrabold tabular-nums leading-none"
             style={{
-              color: count === 0 ? '#9CA3AF' : isHot ? '#EF4444' : '#F97316',
+              color: count === 0 ? '#9CA3AF' : isHot ? '#FF6B35' : '#FFDA00',
               transition: 'color 0.4s',
             }}
           >
@@ -236,7 +237,7 @@ function StreakCard({
               <div
                 key={i}
                 className="w-3 h-3 rounded-full transition-colors"
-                style={{ backgroundColor: filled ? '#EF4444' : '#F3F4F6' }}
+                style={{ backgroundColor: filled ? '#FFDA00' : '#F3F4F6' }}
               />
             )
           })}
@@ -264,7 +265,8 @@ function StatCard({
   accent?: string
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex-1">
+    <div className="rounded-2xl p-5 flex-1"
+      style={{ background: '#FFFFFF', border: '1.5px solid #F0E980' }}>
       <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{label}</p>
       <p className="text-3xl font-bold" style={{ color: accent ?? '#111827' }}>{value}</p>
       {sub && <p className="text-xs text-gray-400 mt-1">{sub}</p>}
@@ -324,8 +326,8 @@ export default function DashboardContent({ data }: { data: DashboardData }) {
         <div
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-full font-bold text-sm shadow-sm"
           style={{
-            backgroundColor: data.streak === 0 ? '#F3F4F6' : '#FEF2F2',
-            color:            data.streak === 0 ? '#9CA3AF' : '#EF4444',
+            backgroundColor: data.streak === 0 ? '#F3F4F6' : '#FFFBF0',
+            color:            data.streak === 0 ? '#9CA3AF' : '#FF6B35',
           }}
         >
           <span>🔥</span>
@@ -357,23 +359,26 @@ export default function DashboardContent({ data }: { data: DashboardData }) {
 
       {/* ── Continue Practice CTA ── */}
       <div
-        className="rounded-3xl p-5 mb-5 shadow-sm"
-        style={{ background: 'linear-gradient(135deg,#7C3AED 0%,#EC4899 100%)' }}
+        className="rounded-3xl p-5 mb-5"
+        style={{ background: '#0F0F14' }}
       >
-        <p className="text-xs font-bold text-white/70 uppercase tracking-wide mb-1">
+        <p className="text-xs font-black uppercase tracking-wide mb-1"
+          style={{ color: 'rgba(255,218,0,0.6)' }}>
           {data.weakTopic ? '🎯 Focus area' : data.todayQuestions === 0 ? '🚀 Ready to go?' : '🔥 Keep it up'}
         </p>
         {data.weakTopic ? (
           <>
-            <h2 className="text-lg font-black text-white mb-0.5">{data.weakTopic.name}</h2>
-            <p className="text-sm text-white/80 mb-4">Your lowest topic at {data.weakTopic.avg}% — crush it today! 💪</p>
+            <h2 className="text-lg font-black mb-0.5" style={{ color: '#FFFBF0' }}>{data.weakTopic.name}</h2>
+            <p className="text-sm mb-4" style={{ color: 'rgba(255,251,240,0.65)' }}>
+              Your lowest topic at {data.weakTopic.avg}% — crush it today! 💪
+            </p>
           </>
         ) : (
           <>
-            <h2 className="text-lg font-black text-white mb-0.5">
+            <h2 className="text-lg font-black mb-0.5" style={{ color: '#FFFBF0' }}>
               {data.todayQuestions === 0 ? "Let's smash some questions! 🔥" : `${data.todayQuestions} questions done today!`}
             </h2>
-            <p className="text-sm text-white/80 mb-4">
+            <p className="text-sm mb-4" style={{ color: 'rgba(255,251,240,0.65)' }}>
               {data.todayQuestions === 0
                 ? "Your AI tutor is ready — get started and build that streak."
                 : "Keep practising to climb the leaderboard and nail your HSC!"}
@@ -382,21 +387,21 @@ export default function DashboardContent({ data }: { data: DashboardData }) {
         )}
         <button
           onClick={() => router.push('/practice')}
-          className="w-full py-3 rounded-2xl bg-white font-black text-sm transition-all active:scale-[0.98]"
-          style={{ color: '#7C3AED' }}
+          className="w-full py-3 rounded-2xl font-black text-sm transition-all active:scale-[0.98]"
+          style={{ background: '#FFDA00', color: '#0F0F14' }}
         >
           {data.todayQuestions === 0 ? 'Start practising 🎯' : 'Keep going →'}
         </button>
       </div>
 
       {/* ── Topic mastery list ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+      <div className="rounded-2xl p-5" style={{ background: '#FFFFFF', border: '1.5px solid #F0E980' }}>
         <div className="flex items-center justify-between mb-4">
-          <p className="text-sm font-bold text-gray-900">Your topics</p>
+          <p className="text-sm font-black" style={{ color: '#0F0F14' }}>Your topics</p>
           <button
             onClick={() => router.push('/onboarding/map')}
-            className="text-xs font-semibold"
-            style={{ color: '#185FA5' }}
+            className="text-xs font-black"
+            style={{ color: '#FF6B35' }}
           >
             Full map →
           </button>
@@ -409,8 +414,8 @@ export default function DashboardContent({ data }: { data: DashboardData }) {
             <p className="text-xs text-gray-400 mb-4">Answer a few questions to unlock your personalised topic map.</p>
             <button
               onClick={() => router.push('/practice')}
-              className="px-6 py-2.5 rounded-full text-sm font-black text-white"
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#EC4899)' }}
+              className="px-6 py-2.5 rounded-full text-sm font-black"
+              style={{ background: '#FFDA00', color: '#0F0F14' }}
             >
               Start practising 🚀
             </button>

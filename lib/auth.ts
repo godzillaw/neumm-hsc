@@ -37,7 +37,7 @@ export async function signInWithGoogle() {
   return supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${appBaseUrl()}/auth/callback`,
+      redirectTo: `${appBaseUrl()}/auth/callback?next=/onboarding/intent`,
       queryParams: { access_type: 'offline', prompt: 'consent' },
     },
   })
@@ -61,7 +61,7 @@ export async function signUp(
     password,
     options: {
       data: { display_name: displayName, full_name: displayName },
-      emailRedirectTo: `${appBaseUrl()}/auth/callback`,
+      emailRedirectTo: `${appBaseUrl()}/auth/callback?next=/onboarding/intent`,
     },
   })
   // DB trigger (002_auth_trigger.sql) auto-creates users + streaks rows
