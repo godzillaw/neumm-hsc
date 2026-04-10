@@ -147,36 +147,35 @@ export async function startExam(
     return { error: sessErr?.message ?? 'Could not create exam session' }
   }
 
-  // ── Fetch questions at difficulty bands 4–6 ────────────────────────────────
-  // Fetch a larger pool then sample to get random variety.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // ── Fetch questions ────────────────────────────────────────────────────────
+  // KEY: questions table stores outcome_id as "MA-STAT-01-B3" (prefix + "-B" + band).
+  // We fetch a large pool then filter in JS — avoids complex .or() PostgREST syntax
+  // issues that silently return empty results.
   type QRow = Record<string, unknown>
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const buildQuery = async (bandFilter: number[] | null): Promise<{ data: QRow[] | null; error: { message: string } | null }> => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let q: any = supabase
-      .from('questions')
-      .select('id, outcome_id, difficulty_band, content_json, correct_answer, explanation, nesa_outcome_code')
-    if (bandFilter) q = q.in('difficulty_band', bandFilter)
-    if (prefixes.length > 0) {
-      // Match by outcome_id prefix — questions may store exact prefix or prefix-Bn form
-      q = q.or(prefixes.map((p: string) => `outcome_id.eq.${p},outcome_id.like.${p}-%`).join(','))
-    }
-    return q.limit(300)
-  }
+  const baseQuery: any = supabase
+    .from('questions')
+    .select('id, outcome_id, difficulty_band, content_json, correct_answer, explanation, nesa_outcome_code')
+    .limit(1000)
 
-  const { data: rawQ0, error: qErr } = await buildQuery([4, 5, 6])
+  const { data: allRows, error: qErr } = await baseQuery
   if (qErr) return { error: `Question fetch: ${qErr.message}` }
-  let rawQ = rawQ0
 
-  // Fallback: no band-4-6 questions → fetch any band
-  if (!rawQ || rawQ.length === 0) {
-    const fallback = await buildQuery(null)
-    if (fallback.error) return { error: `Question fetch: ${fallback.error.message}` }
-    rawQ = fallback.data
+  // Filter by topic prefixes in JS (prefixes is empty for full exam = all topics)
+  let pool = (allRows ?? []) as QRow[]
+  if (prefixes.length > 0) {
+    pool = pool.filter(r => {
+      const oid = (r.outcome_id as string) ?? ''
+      return prefixes.some(p => oid === p || oid.startsWith(`${p}-`))
+    })
   }
 
-  if (!rawQ || rawQ.length === 0) {
+  // Prefer bands 4–6; fall back to all bands if none exist
+  const highBand = pool.filter(r => [4, 5, 6].includes(r.difficulty_band as number))
+  const rawQ     = highBand.length > 0 ? highBand : pool
+
+  if (rawQ.length === 0) {
     return { error: 'No questions found for the selected topics. Try selecting different topics or completing practice sessions first.' }
   }
 

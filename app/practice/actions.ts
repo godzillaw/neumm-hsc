@@ -226,11 +226,10 @@ export async function getNextQuestion(userId: string, topicFilter?: string): Pro
   )
   const answeredIds = Array.from(answeredSet)
 
-  // Helper: build a topic filter clause for the questions table
-  // topicFilter is an exact outcome_id prefix like 'MA-TRIG-01'
-  // Questions store outcome_id as the prefix exactly, so we use eq + like for safety
-  const topicClause = (topicFilter: string) =>
-    `outcome_id.eq.${topicFilter},outcome_id.like.${topicFilter}-%`
+  // ── KEY: questions table stores outcome_id as "MA-TRIG-02-B3" (prefix + band) ──
+  // Never use .eq('outcome_id', prefix) — use .eq('outcome_id', `${prefix}-B${band}`)
+  // or .like('outcome_id', `${prefix}-B%`) for any band on that topic.
+  // For topicFilter: .like('outcome_id', `${topicFilter}-%`) matches all bands.
 
   // 3. Try each mastery-priority entry
   for (const entry of (masteryRows ?? [])) {
@@ -239,13 +238,12 @@ export async function getNextQuestion(userId: string, topicFilter?: string): Pro
     const band       = bandMatch ? parseInt(bandMatch[1], 10) : (entry.difficulty_band ?? 3)
     const confidence = entry.confidence_pct ?? 0
 
-    // 3a. Ideal: exact topic + exact band
+    // 3a. Ideal: exact outcome_id as stored in questions table (e.g. "MA-TRIG-02-B3")
     {
       let q = supabase
         .from('questions')
         .select('id, outcome_id, difficulty_band, content_json, correct_answer, explanation, step_by_step, nesa_outcome_code')
-        .eq('outcome_id', prefix)
-        .eq('difficulty_band', band)
+        .eq('outcome_id', `${prefix}-B${band}`)
       if (answeredIds.length > 0) q = q.not('id', 'in', `(${answeredIds.join(',')})`)
       const { data: candidates } = await q.limit(8)
       if (candidates && candidates.length > 0) {
@@ -254,12 +252,12 @@ export async function getNextQuestion(userId: string, topicFilter?: string): Pro
       }
     }
 
-    // 3b. Band mismatch fallback: same topic, any band
+    // 3b. Any band for the same topic prefix (e.g. "MA-TRIG-02-B%")
     {
       let q = supabase
         .from('questions')
         .select('id, outcome_id, difficulty_band, content_json, correct_answer, explanation, step_by_step, nesa_outcome_code')
-        .eq('outcome_id', prefix)
+        .like('outcome_id', `${prefix}-B%`)
       if (answeredIds.length > 0) q = q.not('id', 'in', `(${answeredIds.join(',')})`)
       const { data: anyBand } = await q.limit(8)
       if (anyBand && anyBand.length > 0) {
@@ -269,26 +267,26 @@ export async function getNextQuestion(userId: string, topicFilter?: string): Pro
     }
   }
 
-  // 4. Fallback A: any unanswered question, respecting topicFilter
+  // 4. Fallback A: any unanswered question for this topic (e.g. "MA-TRIG-02-%")
   {
     let q = supabase
       .from('questions')
       .select('id, outcome_id, difficulty_band, content_json, correct_answer, explanation, step_by_step, nesa_outcome_code')
-    if (topicFilter) q = q.or(topicClause(topicFilter))
+    if (topicFilter) q = q.like('outcome_id', `${topicFilter}-%`)
     if (answeredIds.length > 0) q = q.not('id', 'in', `(${answeredIds.join(',')})`)
     const { data: fallback } = await q.limit(20)
     if (fallback && fallback.length > 0) {
       const row = fallback[Math.floor(Math.random() * fallback.length)]
-      return shapeQuestion(row, row.outcome_id ?? topicFilter ?? 'MA-CALC-D01', 50)
+      return shapeQuestion(row, row.outcome_id ?? topicFilter ?? 'MA-CALC-D01-B1', 50)
     }
   }
 
-  // 5. Fallback B: all answered — restart the bank BUT keep topicFilter
+  // 5. Fallback B: all answered — restart the bank, still respect topicFilter
   {
     let q = supabase
       .from('questions')
       .select('id, outcome_id, difficulty_band, content_json, correct_answer, explanation, step_by_step, nesa_outcome_code')
-    if (topicFilter) q = q.or(topicClause(topicFilter))
+    if (topicFilter) q = q.like('outcome_id', `${topicFilter}-%`)
     const { data: any_ } = await q.limit(20)
     if (any_ && any_.length > 0) {
       const row = any_[Math.floor(Math.random() * any_.length)]
