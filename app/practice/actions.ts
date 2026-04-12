@@ -196,21 +196,36 @@ export async function getNextQuestion(userId: string, topicFilter?: string): Pro
   const supabase = createSupabaseServerClient()
   const now      = new Date().toISOString()
 
-  // 1. Load mastery map — eligible entries (review due or untested)
-  let masteryQuery = supabase
-    .from('mastery_map')
-    .select('outcome_id, confidence_pct, difficulty_band, next_review_at')
-    .eq('user_id', userId)
-    .or(`next_review_at.is.null,next_review_at.lte.${now}`)
-    .order('confidence_pct', { ascending: true })
-    .limit(30)
+  // ── KEY: outcome_id is stored as "MA-TRIG-02-B3" (prefix + "-B" + band) ──────
+  // We use fetch-all + JS filtering (same reliable approach as exam) to avoid
+  // PostgREST LIKE quirks that can silently return empty sets.
 
-  // If a specific topic is requested, filter mastery map to that topic
+  // 1. Fetch question pool — if topicFilter set, fetch with coarse server filter
+  //    to limit payload, then refine in JS.
+  const SELECT = 'id, outcome_id, difficulty_band, content_json, correct_answer, explanation, step_by_step, nesa_outcome_code'
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let poolQuery: any = supabase.from('questions').select(SELECT).limit(500)
+  // Coarse server-side filter: this may or may not work depending on PostgREST,
+  // but if it fails silently we rely on JS filter below.
+  if (topicFilter) poolQuery = poolQuery.ilike('outcome_id', `${topicFilter}%`)
+
+  const { data: poolRaw } = await poolQuery
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let pool = (poolRaw ?? []) as any[]
+
+  // JS-level refinement: only keep questions actually matching the topic prefix
   if (topicFilter) {
-    masteryQuery = masteryQuery.like('outcome_id', `${topicFilter}%`)
+    const prefix = topicFilter  // e.g. "MA-TRIG-02"
+    pool = pool.filter(r => {
+      const oid: string = r.outcome_id ?? ''
+      // Match "MA-TRIG-02-B3" style: startsWith prefix then "-B"
+      return oid === prefix || oid.startsWith(`${prefix}-`)
+    })
   }
 
-  const { data: masteryRows } = await masteryQuery
+  // If no questions exist for this topic at all, return null (show "no questions" UI)
+  if (pool.length === 0) return null
 
   // 2. Get recently answered question IDs (for exclusion)
   const { data: answeredRows } = await supabase
@@ -219,94 +234,50 @@ export async function getNextQuestion(userId: string, topicFilter?: string): Pro
     .eq('user_id', userId)
     .not('question_id', 'is', null)
     .order('created_at', { ascending: false })
-    .limit(300)
+    .limit(500)
 
   const answeredSet = new Set(
-    (answeredRows ?? []).map(r => r.question_id as string).filter(Boolean)
+    (answeredRows ?? []).map((r: { question_id: string }) => r.question_id).filter(Boolean)
   )
-  const answeredIds = Array.from(answeredSet)
 
-  // ── KEY: questions table stores outcome_id as "MA-TRIG-02-B3" (prefix + band) ──
-  // Never use .eq('outcome_id', prefix) — use .eq('outcome_id', `${prefix}-B${band}`)
-  // or .like('outcome_id', `${prefix}-B%`) for any band on that topic.
-  // For topicFilter: .like('outcome_id', `${topicFilter}-%`) matches all bands.
+  // 3. Load mastery map for prioritisation
+  const { data: masteryRows } = await supabase
+    .from('mastery_map')
+    .select('outcome_id, confidence_pct')
+    .eq('user_id', userId)
+    .or(`next_review_at.is.null,next_review_at.lte.${now}`)
 
-  // 3. Try each mastery-priority entry
-  for (const entry of (masteryRows ?? [])) {
-    const prefix     = entry.outcome_id.replace(/-B(\d+)$/, '')
-    const bandMatch  = entry.outcome_id.match(/-B(\d+)$/)
-    const band       = bandMatch ? parseInt(bandMatch[1], 10) : (entry.difficulty_band ?? 3)
-    const confidence = entry.confidence_pct ?? 0
-
-    // 3a. Ideal: exact outcome_id as stored in questions table (e.g. "MA-TRIG-02-B3")
-    {
-      let q = supabase
-        .from('questions')
-        .select('id, outcome_id, difficulty_band, content_json, correct_answer, explanation, step_by_step, nesa_outcome_code')
-        .eq('outcome_id', `${prefix}-B${band}`)
-      if (answeredIds.length > 0) q = q.not('id', 'in', `(${answeredIds.join(',')})`)
-      const { data: candidates } = await q.limit(8)
-      if (candidates && candidates.length > 0) {
-        const row = candidates[Math.floor(Math.random() * candidates.length)]
-        return shapeQuestion(row, entry.outcome_id, confidence)
-      }
-    }
-
-    // 3b. Any band for the same topic prefix (e.g. "MA-TRIG-02-B%")
-    {
-      let q = supabase
-        .from('questions')
-        .select('id, outcome_id, difficulty_band, content_json, correct_answer, explanation, step_by_step, nesa_outcome_code')
-        .like('outcome_id', `${prefix}-B%`)
-      if (answeredIds.length > 0) q = q.not('id', 'in', `(${answeredIds.join(',')})`)
-      const { data: anyBand } = await q.limit(8)
-      if (anyBand && anyBand.length > 0) {
-        const row = anyBand[Math.floor(Math.random() * anyBand.length)]
-        return shapeQuestion(row, entry.outcome_id, confidence)
-      }
-    }
+  // Build a quick lookup: outcomeId → confidence
+  const masteryMap: Record<string, number> = {}
+  for (const row of (masteryRows ?? [])) {
+    masteryMap[row.outcome_id] = row.confidence_pct ?? 50
   }
 
-  // 4. Fallback A: any unanswered question for this topic (e.g. "MA-TRIG-02-%")
-  {
-    let q = supabase
-      .from('questions')
-      .select('id, outcome_id, difficulty_band, content_json, correct_answer, explanation, step_by_step, nesa_outcome_code')
-    if (topicFilter) q = q.like('outcome_id', `${topicFilter}-%`)
-    if (answeredIds.length > 0) q = q.not('id', 'in', `(${answeredIds.join(',')})`)
-    const { data: fallback } = await q.limit(20)
-    if (fallback && fallback.length > 0) {
-      const row = fallback[Math.floor(Math.random() * fallback.length)]
-      return shapeQuestion(row, row.outcome_id ?? topicFilter ?? 'MA-CALC-D01-B1', 50)
-    }
+  // 4. Score each question in the pool
+  //    Lower score = higher priority (we want lowest confidence, unanswered first)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function scoreQuestion(r: any): number {
+    const oid: string = r.outcome_id ?? ''
+    const answered   = answeredSet.has(r.id) ? 1000 : 0   // push answered to end
+    const confidence = masteryMap[oid] ?? 50               // 0–100, lower = higher priority
+    return answered + confidence
   }
 
-  // 5. Fallback B: all answered — restart the bank, still respect topicFilter
-  {
-    let q = supabase
-      .from('questions')
-      .select('id, outcome_id, difficulty_band, content_json, correct_answer, explanation, step_by_step, nesa_outcome_code')
-    if (topicFilter) q = q.like('outcome_id', `${topicFilter}-%`)
-    const { data: any_ } = await q.limit(20)
-    if (any_ && any_.length > 0) {
-      const row = any_[Math.floor(Math.random() * any_.length)]
-      return shapeQuestion(row, row.outcome_id ?? topicFilter ?? 'MA-CALC-D01', 50)
-    }
-  }
+  // Sort and pick best candidate, with a little randomness in the top-10
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sorted = pool.slice().sort((a: any, b: any) => scoreQuestion(a) - scoreQuestion(b))
 
-  // 6. Absolute last resort (no questions at all for topic): any question
-  {
-    const { data: last } = await supabase
-      .from('questions')
-      .select('id, outcome_id, difficulty_band, content_json, correct_answer, explanation, step_by_step, nesa_outcome_code')
-      .limit(20)
-    if (last && last.length > 0) {
-      const row = last[Math.floor(Math.random() * last.length)]
-      return shapeQuestion(row, row.outcome_id ?? 'MA-CALC-D01', 50)
-    }
-  }
+  // Prefer unanswered questions; take top-10 unanswered for randomness
+  const unanswered = sorted.filter((r: { id: string }) => !answeredSet.has(r.id))
+  const candidates = unanswered.length > 0
+    ? unanswered.slice(0, 10)     // pick from top-10 unanswered by confidence priority
+    : sorted.slice(0, 10)         // all answered — restart, pick from top-10
 
-  return null
+  const row = candidates[Math.floor(Math.random() * candidates.length)]
+  const oid: string = row.outcome_id ?? ''
+  const confidence = masteryMap[oid] ?? 50
+  // masteryOutcomeId is the full stored key (e.g. "MA-TRIG-02-B3") or construct it
+  return shapeQuestion(row, oid || `${topicFilter ?? 'MA-CALC-D01'}-B3`, confidence)
 }
 
 // ─── submitAnswer ───────────────────────────────────────────────────────────────

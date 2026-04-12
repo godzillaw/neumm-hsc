@@ -269,7 +269,8 @@ export default function PracticeSession({
     if (timerRef.current) clearInterval(timerRef.current)
     timerRef.current = setInterval(() => setElapsed(Math.floor((Date.now() - startMsRef.current) / 1000)), 1000)
     questionCount.current += 1
-  }, [userId])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, topicFilter])
 
   useEffect(() => { loadNext() }, [loadNext])
 
@@ -362,10 +363,31 @@ export default function PracticeSession({
     endSession()
     return (
       <div className="flex items-center justify-center min-h-screen px-6">
-        <div className="text-center animate-pop-in">
-          <div className="text-6xl mb-4">🎉</div>
-          <h2 className="text-xl font-black text-gray-900">You crushed it!</h2>
-          <p className="text-sm text-gray-500 mt-1">New questions coming soon. Check back tomorrow!</p>
+        <div className="text-center animate-pop-in max-w-sm">
+          {topicFilter ? (
+            <>
+              <div className="text-6xl mb-4">📚</div>
+              <h2 className="text-xl font-black" style={{ color: '#0F0F14' }}>Questions coming soon!</h2>
+              <p className="text-sm mt-2 leading-relaxed" style={{ color: '#666672' }}>
+                We&apos;re still generating questions for <strong style={{ color: '#FF6B35' }}>
+                  {topicFilter.replace(/-B\d+$/, '')}
+                </strong>. Check back soon or try another topic.
+              </p>
+              <button
+                onClick={() => window.history.back()}
+                className="mt-5 px-6 py-3 rounded-2xl text-sm font-black"
+                style={{ background: '#FFDA00', color: '#0F0F14' }}
+              >
+                ← Back to Progress
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="text-6xl mb-4">🎉</div>
+              <h2 className="text-xl font-black text-gray-900">You crushed it!</h2>
+              <p className="text-sm text-gray-500 mt-1">New questions coming soon. Check back tomorrow!</p>
+            </>
+          )}
         </div>
       </div>
     )
