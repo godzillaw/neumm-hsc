@@ -262,9 +262,27 @@ export default function PracticeSession({
     setChatMessages([])
     setShowChatPanel(false)
     setElapsed(0)
-    const q = await getNextQuestion(userId, topicFilter ?? undefined)
+
+    let q = await getNextQuestion(userId, topicFilter ?? undefined)
+
+    // No questions exist yet → call generation API, then retry once
+    if (!q && topicFilter) {
+      try {
+        const base = typeof window !== 'undefined' ? window.location.origin : ''
+        await fetch(`${base}/math-nsw/app/api/generate-questions`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ topic: topicFilter }),
+        })
+        // Retry after generation
+        q = await getNextQuestion(userId, topicFilter)
+      } catch (genErr) {
+        console.error('[PracticeSession] Generation failed:', genErr)
+      }
+    }
+
     setQuestion(q)
-    setPhase('ready')  // if q is null, the !question check below handles it
+    setPhase('ready')  // if q is null, the !question guard below handles it
     startMsRef.current = Date.now()
     if (timerRef.current) clearInterval(timerRef.current)
     timerRef.current = setInterval(() => setElapsed(Math.floor((Date.now() - startMsRef.current) / 1000)), 1000)
