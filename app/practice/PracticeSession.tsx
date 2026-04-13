@@ -265,19 +265,25 @@ export default function PracticeSession({
 
     let q = await getNextQuestion(userId, topicFilter ?? undefined)
 
-    // No questions exist yet → call generation API, then retry once
+    // No questions exist yet → call generation API, then retry
     if (!q && topicFilter) {
       try {
         const base = typeof window !== 'undefined' ? window.location.origin : ''
-        await fetch(`${base}/math-nsw/app/api/generate-questions`, {
+        const genRes = await fetch(`${base}/math-nsw/app/api/generate-questions`, {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
           body:    JSON.stringify({ topic: topicFilter }),
         })
-        // Retry after generation
-        q = await getNextQuestion(userId, topicFilter)
+        const genJson = await genRes.json().catch(() => ({})) as Record<string, unknown>
+        console.log('[PracticeSession] Generation response:', genRes.status, genJson)
+
+        if (genRes.ok || genJson.status === 'already_exists') {
+          // Small delay to let DB propagate, then retry
+          await new Promise(r => setTimeout(r, 500))
+          q = await getNextQuestion(userId, topicFilter)
+        }
       } catch (genErr) {
-        console.error('[PracticeSession] Generation failed:', genErr)
+        console.error('[PracticeSession] Generation call failed:', genErr)
       }
     }
 
