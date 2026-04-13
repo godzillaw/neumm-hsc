@@ -264,7 +264,7 @@ export default function PracticeSession({
     setElapsed(0)
     const q = await getNextQuestion(userId, topicFilter ?? undefined)
     setQuestion(q)
-    setPhase(q ? 'ready' : 'loading')
+    setPhase('ready')  // if q is null, the !question check below handles it
     startMsRef.current = Date.now()
     if (timerRef.current) clearInterval(timerRef.current)
     timerRef.current = setInterval(() => setElapsed(Math.floor((Date.now() - startMsRef.current) / 1000)), 1000)
@@ -348,12 +348,19 @@ export default function PracticeSession({
   if (phase === 'loading') {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-4 text-center px-6">
           <div className="w-12 h-12 rounded-2xl flex items-center justify-center animate-bounce-in"
-            style={{ background: 'linear-gradient(135deg,#7C3AED,#EC4899)' }}>
+            style={{ background: 'linear-gradient(135deg,#FFDA00,#FF6B35)' }}>
             <span className="text-2xl">⚡</span>
           </div>
-          <p className="text-sm font-semibold text-gray-400">Finding your next challenge…</p>
+          <p className="text-sm font-semibold" style={{ color: '#666672' }}>
+            {topicFilter ? 'Generating questions for this topic…' : 'Finding your next challenge…'}
+          </p>
+          {topicFilter && (
+            <p className="text-xs" style={{ color: '#9CA3AF' }}>
+              First time for this topic — this takes ~15 seconds
+            </p>
+          )}
         </div>
       </div>
     )
