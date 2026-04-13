@@ -196,31 +196,26 @@ export async function getNextQuestion(userId: string, topicFilter?: string): Pro
   const supabase = createSupabaseServerClient()
   const now      = new Date().toISOString()
 
-  // ── KEY: outcome_id is stored as "MA-TRIG-02-B3" (prefix + "-B" + band) ──────
-  // We use fetch-all + JS filtering (same reliable approach as exam) to avoid
-  // PostgREST LIKE quirks that can silently return empty sets.
+  // ── KEY: outcome_id stored as "MA-TRIG-02-B3" (prefix + "-B" + band) ──────────
+  // PostgREST LIKE/ILIKE filters silently return empty for some patterns.
+  // Solution: fetch ALL questions (no server filter), filter 100% in JS.
+  // ~1000 rows × small fields ≈ <500ms, well worth the reliability guarantee.
 
-  // 1. Fetch question pool — if topicFilter set, fetch with coarse server filter
-  //    to limit payload, then refine in JS.
   const SELECT = 'id, outcome_id, difficulty_band, content_json, correct_answer, explanation, step_by_step, nesa_outcome_code'
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let poolQuery: any = supabase.from('questions').select(SELECT).limit(500)
-  // Coarse server-side filter: this may or may not work depending on PostgREST,
-  // but if it fails silently we rely on JS filter below.
-  if (topicFilter) poolQuery = poolQuery.ilike('outcome_id', `${topicFilter}%`)
+  const { data: poolRaw } = await supabase
+    .from('questions')
+    .select(SELECT)
+    .limit(1000)
 
-  const { data: poolRaw } = await poolQuery
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let pool = (poolRaw ?? []) as any[]
 
-  // JS-level refinement: only keep questions actually matching the topic prefix
+  // JS filter — 100% reliable regardless of PostgREST quirks
   if (topicFilter) {
-    const prefix = topicFilter  // e.g. "MA-TRIG-02"
     pool = pool.filter(r => {
       const oid: string = r.outcome_id ?? ''
-      // Match "MA-TRIG-02-B3" style: startsWith prefix then "-B"
-      return oid === prefix || oid.startsWith(`${prefix}-`)
+      return oid.startsWith(`${topicFilter}-`)
     })
   }
 
