@@ -207,7 +207,7 @@ export async function getNextQuestion(userId: string, topicFilter?: string): Pro
   // outcome_id format in DB: "MA-TRIG-02-B3" (prefix + "-B" + band 1-6)
   // .like()/.ilike() silently return empty for many patterns in PostgREST.
   // .in() with exact values is 100% reliable regardless of row insertion order.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   let pool: any[]
 
   if (topicFilter) {
@@ -227,6 +227,7 @@ export async function getNextQuestion(userId: string, topicFilter?: string): Pro
       .limit(500)
     pool = (poolRaw ?? []) as any[]
   }
+  /* eslint-enable @typescript-eslint/no-explicit-any */
 
   // If no questions exist for this topic, return null.
   // The client (PracticeSession) detects this and calls /api/generate-questions
