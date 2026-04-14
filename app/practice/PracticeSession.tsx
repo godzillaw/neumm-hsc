@@ -643,7 +643,7 @@ export default function PracticeSession({
           <button onClick={() => setShowChatPanel(true)}
             className="hidden md:flex fixed bottom-6 right-6 z-40 items-center gap-2 px-4 py-3 rounded-2xl text-white text-sm font-black shadow-lg hover:scale-105 active:scale-95 transition-transform"
             style={{ background: 'linear-gradient(135deg,#7C3AED,#EC4899)' }}>
-            🤖 AI Tutor
+            🤖 Neumm Helper
             {chatMessages.length > 0 && (
               <span className="bg-white text-violet-700 rounded-full w-5 h-5 flex items-center justify-center text-xs font-black">
                 {chatMessages.length}
