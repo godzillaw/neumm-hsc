@@ -149,26 +149,35 @@ export async function startExam(
 
   // ── Fetch questions ────────────────────────────────────────────────────────
   // KEY: questions table stores outcome_id as "MA-STAT-01-B3" (prefix + "-B" + band).
-  // We fetch a large pool then filter in JS — avoids complex .or() PostgREST syntax
-  // issues that silently return empty results.
+  //
+  // IMPORTANT: .limit(1000) only returns the first 1000 rows (Calculus topics seeded
+  // first). Topics seeded later (Trig, Stats, Algebra, etc.) are beyond row 1000.
+  // Fix: use exact .in() matching with all band variants for the selected prefixes.
   type QRow = Record<string, unknown>
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const baseQuery: any = supabase
-    .from('questions')
-    .select('id, outcome_id, difficulty_band, content_json, correct_answer, explanation, nesa_outcome_code')
-    .limit(1000)
+  const SELECT_COLS = 'id, outcome_id, difficulty_band, content_json, correct_answer, explanation, nesa_outcome_code'
 
-  const { data: allRows, error: qErr } = await baseQuery
-  if (qErr) return { error: `Question fetch: ${qErr.message}` }
+  let pool: QRow[]
 
-  // Filter by topic prefixes in JS (prefixes is empty for full exam = all topics)
-  let pool = (allRows ?? []) as QRow[]
   if (prefixes.length > 0) {
-    pool = pool.filter(r => {
-      const oid = (r.outcome_id as string) ?? ''
-      return prefixes.some(p => oid === p || oid.startsWith(`${p}-`))
-    })
+    // Build exact outcome_id list: each prefix × bands 1–6
+    // e.g. ['MA-TRIG-01-B1','MA-TRIG-01-B2',...,'MA-TRIG-09-B6']
+    const outcomeIds = prefixes.flatMap(p => [1, 2, 3, 4, 5, 6].map(b => `${p}-B${b}`))
+    const { data, error: qErr } = await supabase
+      .from('questions')
+      .select(SELECT_COLS)
+      .in('outcome_id', outcomeIds)
+      .limit(2000)
+    if (qErr) return { error: `Question fetch: ${qErr.message}` }
+    pool = (data ?? []) as QRow[]
+  } else {
+    // Full exam — fetch everything (85 topics × 6 bands × 12 qs = 6120 rows)
+    const { data, error: qErr } = await supabase
+      .from('questions')
+      .select(SELECT_COLS)
+      .limit(7000)
+    if (qErr) return { error: `Question fetch: ${qErr.message}` }
+    pool = (data ?? []) as QRow[]
   }
 
   // Prefer bands 4–6; fall back to all bands if none exist
@@ -180,16 +189,19 @@ export async function startExam(
   }
 
   // Sample, shuffle, take N
-  const sampled   = shuffle(rawQ as Record<string, unknown>[]).slice(0, questionCount)
+  const sampled = shuffle(rawQ).slice(0, questionCount)
 
   const questions: ExamQuestion[] = sampled.map(row => {
-    const c = (row.content_json ?? {}) as Record<string, string>
+    const c      = (row.content_json ?? {}) as Record<string, string>
+    // outcome_id in DB is "MA-TRIG-02-B3" — strip band to get topic prefix
+    const fullId = row.outcome_id as string
+    const prefix = fullId.replace(/-B\d+$/, '')   // "MA-TRIG-02"
     return {
       id:                 row.id as string,
-      outcome_id:         row.outcome_id as string,
-      mastery_outcome_id: `${row.outcome_id}-B${row.difficulty_band}`,
+      outcome_id:         prefix,                  // topic prefix for display/grouping
+      mastery_outcome_id: fullId,                  // full key "MA-TRIG-02-B3" for mastery_map
       difficulty_band:    row.difficulty_band as number,
-      topic_name:         TOPIC_NAMES[row.outcome_id as string] ?? (row.outcome_id as string),
+      topic_name:         TOPIC_NAMES[prefix] ?? prefix,
       nesa_outcome_code:  (row.nesa_outcome_code as string) ?? '',
       content: {
         question_text: c.question_text ?? '',
@@ -241,10 +253,10 @@ export async function finalizeExam(
   }
 
   // ── Fetch practice mastery for comparison ──────────────────────────────────
-  // Build mastery_outcome_ids for lookup
+  // outcome_id in DB is already the full mastery key e.g. "MA-TRIG-02-B3"
   const masteryIds: string[] = []
   for (const q of (rawQ ?? [])) {
-    masteryIds.push(`${q.outcome_id}-B${q.difficulty_band}`)
+    masteryIds.push(q.outcome_id as string)
   }
   const { data: masteryRows } = await supabase
     .from('mastery_map')
@@ -272,12 +284,16 @@ export async function finalizeExam(
 
     if (isCorrect) totalCorrect++
 
+    // outcome_id in DB is "MA-TRIG-02-B3" — strip band to get topic prefix
+    const fullId  = q.outcome_id as string
+    const prefix  = fullId.replace(/-B\d+$/, '')   // "MA-TRIG-02"
+
     questionResults.push({
       id:                 q.id as string,
-      outcome_id:         q.outcome_id as string,
-      mastery_outcome_id: `${q.outcome_id}-B${q.difficulty_band}`,
+      outcome_id:         prefix,                  // topic prefix for grouping
+      mastery_outcome_id: fullId,                  // full key for mastery_map
       difficulty_band:    q.difficulty_band as number,
-      topic_name:         TOPIC_NAMES[q.outcome_id as string] ?? (q.outcome_id as string),
+      topic_name:         TOPIC_NAMES[prefix] ?? prefix,
       nesa_outcome_code:  (q.nesa_outcome_code as string) ?? '',
       content: {
         question_text: c.question_text ?? '',
