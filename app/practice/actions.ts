@@ -203,20 +203,29 @@ export async function getNextQuestion(userId: string, topicFilter?: string): Pro
 
   const SELECT = 'id, outcome_id, difficulty_band, content_json, correct_answer, explanation, step_by_step, nesa_outcome_code'
 
-  const { data: poolRaw } = await supabase
-    .from('questions')
-    .select(SELECT)
-    .limit(1000)
-
+  // ── Use exact .in() matching when a topic filter is given ──────────────────
+  // outcome_id format in DB: "MA-TRIG-02-B3" (prefix + "-B" + band 1-6)
+  // .like()/.ilike() silently return empty for many patterns in PostgREST.
+  // .in() with exact values is 100% reliable regardless of row insertion order.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let pool = (poolRaw ?? []) as any[]
+  let pool: any[]
 
-  // JS filter — 100% reliable regardless of PostgREST quirks
   if (topicFilter) {
-    pool = pool.filter(r => {
-      const oid: string = r.outcome_id ?? ''
-      return oid.startsWith(`${topicFilter}-`)
-    })
+    // Build the 6 exact outcome_id values for this topic
+    const outcomeIds = [1, 2, 3, 4, 5, 6].map(b => `${topicFilter}-B${b}`)
+    const { data: poolRaw } = await supabase
+      .from('questions')
+      .select(SELECT)
+      .in('outcome_id', outcomeIds)
+      .limit(200)
+    pool = (poolRaw ?? []) as any[]
+  } else {
+    // No filter — fetch a broad sample for adaptive practice
+    const { data: poolRaw } = await supabase
+      .from('questions')
+      .select(SELECT)
+      .limit(500)
+    pool = (poolRaw ?? []) as any[]
   }
 
   // If no questions exist for this topic, return null.
