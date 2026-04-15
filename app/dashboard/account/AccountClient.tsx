@@ -2,6 +2,7 @@
 
 import { useState }  from 'react'
 import { useRouter } from 'next/navigation'
+import Link          from 'next/link'
 import { signOut }   from '@/lib/auth'
 
 interface Props {
@@ -67,13 +68,13 @@ export default function AccountClient({ email, displayName, tier, trialEnd }: Pr
           )}
         </div>
         {tier !== 'pro' && (
-          <a
+          <Link
             href="/account/upgrade"
             className="inline-block w-full py-3 rounded-xl text-sm font-bold text-white text-center min-h-[44px]"
             style={{ backgroundColor: '#185FA5' }}
           >
             Upgrade plan →
-          </a>
+          </Link>
         )}
       </div>
 
