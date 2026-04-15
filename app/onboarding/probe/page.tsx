@@ -1,162 +1,268 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
-import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
-import NeummLogo from '@/components/NeummLogo'
+import { useRouter }                    from 'next/navigation'
+import NeummLogo                        from '@/components/NeummLogo'
+import { createSupabaseBrowserClient }  from '@/lib/supabase-browser'
 
-// ─── Types ─────────────────────────────────────────────────────────────────────
-interface Question {
-  id: string
-  outcome_id: string
-  nesa_outcome_code: string
-  difficulty_band: number
-  content_json: {
-    question_text: string
-    option_a: string
-    option_b: string
-    option_c: string
-    option_d: string
-  }
-  correct_answer: string
-  explanation: string
+// ─── Hardcoded 8-question placement probe ─────────────────────────────────────
+// Questions progress from Band 2 → Band 6 to infer course level.
+
+interface ProbeQuestion {
+  id:         string
+  outcomeId:  string
+  band:       number
+  text:       string
+  formula:    string | null
+  options:    [string, string, string, string]   // A, B, C, D
+  correct:    'a' | 'b' | 'c' | 'd'
 }
 
-interface ProbeAnswer {
-  question_id: string
-  outcome_id: string
-  difficulty_band: number
-  selected: string
-  correct: string
-  is_correct: boolean
-  time_ms: number
-}
-
-// 8 probe questions: two each at the key decision bands (3 and 5)
-const TARGET_BANDS = [1, 2, 3, 3, 4, 5, 5, 6]
+const PROBE_QUESTIONS: ProbeQuestion[] = [
+  {
+    id:        'probe-q1',
+    outcomeId: 'MA-ALG-01',
+    band:      2,
+    text:      'Solve for x:',
+    formula:   '2x + 5 = 13',
+    options:   ['x = 3', 'x = 4', 'x = 9', 'x = 6'],
+    correct:   'b',
+  },
+  {
+    id:        'probe-q2',
+    outcomeId: 'MA-FUNC-01',
+    band:      3,
+    text:      'If f(x) = x² − 2x + 1, what is f(3)?',
+    formula:   'f(x) = x² − 2x + 1',
+    options:   ['2', '4', '6', '8'],
+    correct:   'b',
+  },
+  {
+    id:        'probe-q3',
+    outcomeId: 'MA-TRIG-01',
+    band:      3,
+    text:      'Find the angle θ if sin θ = 0.5, where 0° ≤ θ ≤ 90°',
+    formula:   'sin θ = 0.5,  0° ≤ θ ≤ 90°',
+    options:   ['30°', '45°', '60°', '90°'],
+    correct:   'a',
+  },
+  {
+    id:        'probe-q4',
+    outcomeId: 'MA-COORD-01',
+    band:      3,
+    text:      'Find the gradient of the line passing through the two points below:',
+    formula:   '(1, 3)  and  (4, 9)',
+    options:   ['1', '2', '3', '4'],
+    correct:   'b',
+  },
+  {
+    id:        'probe-q5',
+    outcomeId: 'MA-CALC-D01',
+    band:      4,
+    text:      'Differentiate the following function:',
+    formula:   'f(x) = 3x⁴ − 2x + 5',
+    options:   ["f′(x) = 12x³ − 2x", "f′(x) = 12x³ − 2", "f′(x) = 3x³ − 2", "f′(x) = 4x³ − 2"],
+    correct:   'b',
+  },
+  {
+    id:        'probe-q6',
+    outcomeId: 'MA-CALC-I01',
+    band:      4,
+    text:      'Evaluate the following indefinite integral:',
+    formula:   '∫(2x + 3) dx',
+    options:   ['x² + 3x', 'x² + 3x + C', '2x² + 3x + C', 'x + 3 + C'],
+    correct:   'b',
+  },
+  {
+    id:        'probe-q7',
+    outcomeId: 'MA-EXT-04',
+    band:      5,
+    text:      'Solve for x in the domain 0 ≤ x ≤ 2π:',
+    formula:   '2sin²x − sin x − 1 = 0',
+    options:   [
+      'x = π/6, 5π/6',
+      'x = π/2, 7π/6, 11π/6',
+      'x = π/2, 7π/6',
+      'x = π/6, π/2',
+    ],
+    correct:   'b',
+  },
+  {
+    id:        'probe-q8',
+    outcomeId: 'MA-EXT-01',
+    band:      6,
+    text:      'Which of the following correctly proves by mathematical induction that 3ⁿ − 1 is divisible by 2 for all positive integers n?',
+    formula:   'Prove: 3ⁿ − 1 is divisible by 2 for all n ∈ ℤ⁺',
+    options:   [
+      'Base n=1: 3¹−1=2 ✓. Assume 3ᵏ−1 divisible by 2. Then 3^(k+1)−1 = 3·3ᵏ−1 = 3(3ᵏ−1)+2. Both terms divisible by 2. ✓',
+      'Base n=1: 3¹−1=2. Assume 3ᵏ divisible by 2. Then 3^(k+1)=3·3ᵏ also divisible by 2. ✓',
+      '3ⁿ is always odd, so 3ⁿ−1 is always even, therefore divisible by 2. ✓',
+      'For n=1: 2 is divisible by 2. For n=2: 8 is divisible by 2. Therefore true for all n. ✓',
+    ],
+    correct:   'a',
+  },
+]
 
 const OPTION_LABELS = ['A', 'B', 'C', 'D'] as const
-const OPTION_KEYS  = ['a', 'b', 'c', 'd'] as const
+const OPTION_KEYS   = ['a', 'b', 'c', 'd'] as const
 
-// ─── Course inference ──────────────────────────────────────────────────────────
+// ─── Course assignment ─────────────────────────────────────────────────────────
+// Uses the index-based "correct count" approach specified in the product brief.
+
+interface ProbeAnswer {
+  questionId: string
+  outcomeId:  string
+  band:       number
+  selected:   string
+  correct:    string
+  isCorrect:  boolean
+  timeMs:     number
+}
+
 function assignCourse(answers: ProbeAnswer[]): string {
-  const byBand: Record<number, boolean[]> = {}
-  for (const a of answers) {
-    if (!byBand[a.difficulty_band]) byBand[a.difficulty_band] = []
-    byBand[a.difficulty_band].push(a.is_correct)
-  }
-  const allOk  = (band: number) => (byBand[band] ?? [true]).every(Boolean)
-  const anyBad = (band: number) => (byBand[band] ?? []).some(c => !c)
+  const correctCount = answers.filter(a => a.isCorrect).length
 
-  // Priority order — most restrictive first
-  if (anyBad(1) || anyBad(2) || anyBad(3)) return 'Standard'
-  if ([1,2,3,4].every(allOk) && anyBad(5))  return 'Advanced'
-  if ([1,2,3,4,5].every(allOk) && anyBad(6)) return 'Extension 1'
-  if ([1,2,3,4,5,6].every(allOk))           return 'Extension 2'
+  // Check specific question correctness by index
+  const ok = (i: number) => answers[i]?.isCorrect ?? false
+
+  // All 8 correct → Extension 2
+  if (correctCount === 8) return 'Extension 2'
+
+  // Q1–Q7 correct, Q8 wrong → Extension 1
+  if ([0,1,2,3,4,5,6].every(i => ok(i)) && !ok(7)) return 'Extension 1'
+
+  // Q1–Q6 correct, Q7 wrong → Advanced (note ext1 readiness)
+  if ([0,1,2,3,4,5].every(i => ok(i)) && !ok(6)) return 'Advanced'
+
+  // Q1–Q5 correct, Q6 wrong → Advanced
+  if ([0,1,2,3,4].every(i => ok(i)) && !ok(5)) return 'Advanced'
+
+  // Q5 correct even if Q4 wrong → weight Q5 heavily → Advanced
+  if (ok(4) && correctCount >= 4) return 'Advanced'
+
+  // Q1–Q3 correct, Q4 wrong → Standard
+  if ([0,1,2].every(i => ok(i)) && !ok(3)) return 'Standard'
+
+  // Fewer than 3 correct → Standard
+  if (correctCount < 3) return 'Standard'
+
   return 'Standard'
 }
 
+// ─── Mastery seeding ───────────────────────────────────────────────────────────
+async function seedMastery(
+  userId:  string,
+  answers: ProbeAnswer[],
+  course:  string,
+) {
+  const supabase = createSupabaseBrowserClient()
+
+  // Map of tested outcome → result
+  const tested = new Map<string, boolean>()
+  for (const a of answers) tested.set(a.outcomeId, a.isCorrect)
+
+  // All outcomes that appear in the probe
+  const probeOutcomes = PROBE_QUESTIONS.map(q => q.outcomeId)
+
+  // Additional untested outcomes to seed for the assigned course
+  const courseOutcomes: Record<string, string[]> = {
+    'Standard':    ['MA-ALG-01','MA-ALG-02','MA-ALG-03','MA-ALG-04','MA-ALG-05','MA-ALG-06','MA-ALG-07','MA-ALG-08',
+                    'MA-FUNC-01','MA-FUNC-02','MA-FUNC-03','MA-FUNC-04','MA-FUNC-05',
+                    'MA-TRIG-01','MA-TRIG-02','MA-TRIG-03','MA-TRIG-07','MA-TRIG-09',
+                    'MA-COORD-01','MA-COORD-02','MA-STAT-01','MA-STAT-02','MA-STAT-03',
+                    'MA-FIN-01','MA-FIN-02','MA-FIN-03'],
+    'Advanced':    ['MA-ALG-01','MA-ALG-02','MA-ALG-03','MA-ALG-04','MA-ALG-05','MA-ALG-06','MA-ALG-07','MA-ALG-08',
+                    'MA-FUNC-01','MA-FUNC-02','MA-FUNC-03','MA-FUNC-04','MA-FUNC-05','MA-FUNC-06','MA-FUNC-07','MA-FUNC-08','MA-FUNC-09',
+                    'MA-TRIG-01','MA-TRIG-02','MA-TRIG-03','MA-TRIG-04','MA-TRIG-05','MA-TRIG-06','MA-TRIG-07','MA-TRIG-08','MA-TRIG-09',
+                    'MA-COORD-01','MA-COORD-02','MA-COORD-03','MA-COORD-04','MA-COORD-05',
+                    'MA-CALC-D01','MA-CALC-D02','MA-CALC-D03','MA-CALC-D04','MA-CALC-D05','MA-CALC-D06','MA-CALC-D07','MA-CALC-D08','MA-CALC-D09',
+                    'MA-CALC-I01','MA-CALC-I02','MA-CALC-I03','MA-CALC-I04','MA-CALC-I06','MA-CALC-I07',
+                    'MA-EXP-01','MA-EXP-02','MA-EXP-03','MA-EXP-04','MA-EXP-05','MA-EXP-06',
+                    'MA-STAT-01','MA-STAT-02','MA-STAT-03','MA-STAT-04','MA-STAT-05','MA-STAT-06',
+                    'MA-FIN-01','MA-FIN-02','MA-FIN-03','MA-FIN-04','MA-FIN-05'],
+    'Extension 1': ['MA-CALC-D01','MA-CALC-D02','MA-CALC-D03','MA-CALC-D04','MA-CALC-D05','MA-CALC-D06','MA-CALC-D07','MA-CALC-D08','MA-CALC-D09','MA-CALC-D10','MA-CALC-D11','MA-CALC-D12',
+                    'MA-CALC-I01','MA-CALC-I02','MA-CALC-I03','MA-CALC-I04','MA-CALC-I05','MA-CALC-I06','MA-CALC-I07','MA-CALC-I08',
+                    'MA-EXT-01','MA-EXT-02','MA-EXT-03','MA-EXT-04','MA-EXT-05','MA-EXT-06','MA-EXT-07','MA-EXT-08'],
+    'Extension 2': ['MA-CALC-D01','MA-CALC-D02','MA-CALC-D03','MA-CALC-D04','MA-CALC-D05','MA-CALC-D06','MA-CALC-D07','MA-CALC-D08','MA-CALC-D09','MA-CALC-D10','MA-CALC-D11','MA-CALC-D12',
+                    'MA-CALC-I01','MA-CALC-I02','MA-CALC-I03','MA-CALC-I04','MA-CALC-I05','MA-CALC-I06','MA-CALC-I07','MA-CALC-I08','MA-CALC-I09','MA-CALC-I10','MA-CALC-I11','MA-CALC-I12',
+                    'MA-EXT-01','MA-EXT-02','MA-EXT-03','MA-EXT-04','MA-EXT-05','MA-EXT-06','MA-EXT-07','MA-EXT-08'],
+  }
+
+  // All outcomes to seed = probe outcomes ∪ course outcomes
+  const allOutcomes = Array.from(new Set([
+    ...probeOutcomes,
+    ...(courseOutcomes[course] ?? courseOutcomes['Standard']),
+  ]))
+
+  const rows = allOutcomes.map(oid => {
+    const wasTested  = tested.has(oid)
+    const wasCorrect = tested.get(oid) ?? false
+    const now        = new Date().toISOString()
+    return {
+      user_id:        userId,
+      outcome_id:     oid,
+      confidence_pct: wasTested ? (wasCorrect ? 60 : 20) : 0,
+      status:         wasTested ? (wasCorrect ? 'learning' : 'needs_work') : 'untested',
+      last_tested_at: wasTested ? now : null,
+      next_review_at: wasTested ? new Date(Date.now() + (wasCorrect ? 3 : 1) * 86400000).toISOString() : null,
+    }
+  })
+
+  await supabase.from('mastery_map').upsert(rows, { onConflict: 'user_id,outcome_id' })
+}
+
 // ─── Phase type ────────────────────────────────────────────────────────────────
-type Phase = 'loading' | 'active' | 'feedback' | 'saving' | 'error'
+type Phase = 'active' | 'thinking' | 'saving' | 'done'
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 export default function ProbePage() {
   const router = useRouter()
-  const [phase, setPhase]         = useState<Phase>('loading')
-  const [questions, setQuestions] = useState<Question[]>([])
+
+  const [phase,      setPhase]      = useState<Phase>('active')
   const [currentIdx, setCurrentIdx] = useState(0)
-  const [answers, setAnswers]     = useState<ProbeAnswer[]>([])
-  const [selected, setSelected]   = useState<string | null>(null)
-  const [loadError, setLoadError] = useState<string | null>(null)
-  const startRef = useRef<number>(0)
+  const [answers,    setAnswers]    = useState<ProbeAnswer[]>([])
+  const startRef = useRef<number>(Date.now())
 
-  // ── Load questions ────────────────────────────────────────────────────────
-  useEffect(() => { loadProbeQuestions() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  // Reset timer when question changes
+  useEffect(() => { startRef.current = Date.now() }, [currentIdx])
 
-  async function loadProbeQuestions() {
-    try {
-      const supabase = createSupabaseBrowserClient()
-
-      // Fetch a pool per band so we can pick without repetition
-      const uniqueBands = [1, 2, 3, 4, 5, 6]
-      const pool: Record<number, Question[]> = {}
-
-      await Promise.all(uniqueBands.map(async (band) => {
-        const { data, error } = await supabase
-          .from('questions')
-          .select('id, outcome_id, nesa_outcome_code, difficulty_band, content_json, correct_answer, explanation')
-          .eq('difficulty_band', band)
-          .limit(10)
-
-        if (error) throw error
-        // Shuffle client-side
-        pool[band] = (data ?? []).sort(() => Math.random() - 0.5)
-      }))
-
-      // Build the 8-question probe without repeating question IDs
-      const probe: Question[] = []
-      const used = new Set<string>()
-      const cursor: Record<number, number> = {}
-
-      for (const band of TARGET_BANDS) {
-        const available = pool[band] ?? []
-        // advance cursor past already-used ids
-        if (!cursor[band]) cursor[band] = 0
-        while (cursor[band] < available.length && used.has(available[cursor[band]].id)) {
-          cursor[band]++
-        }
-        if (cursor[band] < available.length) {
-          const q = available[cursor[band]]
-          probe.push(q)
-          used.add(q.id)
-          cursor[band]++
-        }
-      }
-
-      if (probe.length === 0) {
-        setLoadError('No questions found. Please contact support.')
-        setPhase('error')
-        return
-      }
-
-      setQuestions(probe)
-      setPhase('active')
-      startRef.current = Date.now()
-    } catch (err) {
-      console.error(err)
-      setLoadError('Failed to load questions. Please refresh.')
-      setPhase('error')
-    }
-  }
-
-  // ── Handle answer selection ───────────────────────────────────────────────
+  // ── Handle answer selection ─────────────────────────────────────────────────
   function handleSelect(optionKey: string) {
-    if (phase !== 'active' || selected) return
+    if (phase !== 'active') return
 
-    const timeMs  = Date.now() - startRef.current
-    const q       = questions[currentIdx]
-    const correct = q.correct_answer.toLowerCase()
-    const isOk    = optionKey === correct
-
-    setSelected(optionKey)
-    setPhase('feedback')
+    const timeMs     = Date.now() - startRef.current
+    const q          = PROBE_QUESTIONS[currentIdx]
+    const isCorrect  = optionKey === q.correct
 
     const newAnswers: ProbeAnswer[] = [
       ...answers,
       {
-        question_id: q.id,
-        outcome_id:  q.outcome_id,
-        difficulty_band: q.difficulty_band,
-        selected: optionKey,
-        correct,
-        is_correct: isOk,
-        time_ms: timeMs,
+        questionId: q.id,
+        outcomeId:  q.outcomeId,
+        band:       q.band,
+        selected:   optionKey,
+        correct:    q.correct,
+        isCorrect,
+        timeMs,
       },
     ]
     setAnswers(newAnswers)
+
+    // No feedback — show brief "Thinking..." then advance
+    setPhase('thinking')
+    setTimeout(() => {
+      const next = currentIdx + 1
+      if (next < PROBE_QUESTIONS.length) {
+        setCurrentIdx(next)
+        setPhase('active')
+      } else {
+        // All questions answered — save results
+        void finishProbe(newAnswers)
+      }
+    }, 500)
   }
 
-  // ── Finish & save ─────────────────────────────────────────────────────────
+  // ── Finish & save ───────────────────────────────────────────────────────────
   async function finishProbe(finalAnswers: ProbeAnswer[]) {
     setPhase('saving')
     const supabase = createSupabaseBrowserClient()
@@ -165,315 +271,163 @@ export default function ProbePage() {
     if (!user) { router.replace('/auth/login'); return }
 
     const course = assignCourse(finalAnswers)
-    const now    = new Date().toISOString()
 
     // 1 — Update student_profiles
     await supabase.from('student_profiles').upsert(
       { user_id: user.id, course, placement_probe_completed: true },
-      { onConflict: 'user_id' }
+      { onConflict: 'user_id' },
     )
 
-    // 2 — Seed mastery_map (one row per probe question)
-    const masteryRows = finalAnswers.map((a) => {
-      const dayMs   = 24 * 60 * 60 * 1000
-      const reviewIn = a.is_correct ? 3 * dayMs : 1 * dayMs
-      return {
-        user_id:          user.id,
-        outcome_id:       a.outcome_id,
-        status:           a.is_correct ? 'learning' : 'needs_work',
-        confidence_pct:   a.is_correct ? 50 : 5,
-        last_tested_at:   now,
-        next_review_at:   new Date(Date.now() + reviewIn).toISOString(),
-        difficulty_band:  a.difficulty_band,
-        predicted_hsc_band: a.is_correct
-          ? parseFloat(a.difficulty_band.toFixed(1))
-          : Math.max(1, a.difficulty_band - 1) * 1.0,
-      }
-    })
+    // 2 — Seed mastery map
+    await seedMastery(user.id, finalAnswers, course)
 
-    await supabase.from('mastery_map').upsert(masteryRows, {
-      onConflict: 'user_id,outcome_id',
-    })
+    // 3 — Log all answers to error_log (records time + correctness)
+    const logRows = finalAnswers.map(a => ({
+      user_id:            user.id,
+      question_id:        a.questionId,
+      outcome_id:         a.outcomeId,
+      error_type:         a.isCorrect ? null : 'probe_incorrect',
+      hint_used:          false,
+      time_to_respond_ms: a.timeMs,
+    }))
+    await supabase.from('error_log').insert(logRows)
 
-    // 3 — Save probe attempts to error_log (wrong answers only)
-    const errorRows = finalAnswers
-      .filter(a => !a.is_correct)
-      .map(a => ({
-        user_id:           user.id,
-        question_id:       a.question_id,
-        outcome_id:        a.outcome_id,
-        error_type:        'probe_incorrect',
-        hint_used:         false,
-        time_to_respond_ms: a.time_ms,
-      }))
-
-    if (errorRows.length > 0) {
-      await supabase.from('error_log').insert(errorRows)
-    }
-
+    setPhase('done')
     router.push('/onboarding/map')
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
-  const progress = questions.length > 0
-    ? Math.round(((phase === 'saving' ? questions.length : currentIdx) / questions.length) * 100)
-    : 0
+  const q        = PROBE_QUESTIONS[currentIdx]
+  const progress = Math.round((currentIdx / PROBE_QUESTIONS.length) * 100)
 
-  // Loading
-  if (phase === 'loading') {
+  // ── Saving screen ────────────────────────────────────────────────────────────
+  if (phase === 'saving' || phase === 'done') {
     return (
       <Screen>
-        <div className="flex flex-col items-center gap-4">
-          <NeummLogo size={44} />
-          <div className="flex items-center gap-2 text-gray-500 text-sm">
-            <SpinnerIcon color="#FFDA00" />
-            Preparing your placement probe…
-          </div>
+        <div className="text-center">
+          <Spinner size={40} />
+          <p className="mt-4 text-sm font-semibold text-gray-600">Building your mastery map…</p>
         </div>
       </Screen>
     )
-  }
-
-  // Error
-  if (phase === 'error') {
-    return (
-      <Screen>
-        <div
-          className="bg-white rounded-2xl p-8 text-center max-w-sm w-full shadow-sm"
-          style={{ border: '1.5px solid #F0E980' }}
-        >
-          <div className="text-4xl mb-4">⚠️</div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">Something went wrong</h2>
-          <p className="text-sm text-gray-500 mb-6">{loadError}</p>
-          <button
-            onClick={() => { setPhase('loading'); loadProbeQuestions() }}
-            className="w-full py-3 rounded-xl font-semibold text-sm"
-            style={{ background: '#FFDA00', color: '#0F0F14' }}
-          >
-            Try again
-          </button>
-        </div>
-      </Screen>
-    )
-  }
-
-  // Saving
-  if (phase === 'saving') {
-    const course = assignCourse(answers)
-    const correct = answers.filter(a => a.is_correct).length
-    return (
-      <Screen>
-        <div
-          className="bg-white rounded-2xl p-8 text-center max-w-sm w-full shadow-sm"
-          style={{ border: '1.5px solid #F0E980' }}
-        >
-          <div className="text-5xl mb-4">🎉</div>
-          <h2 className="text-xl font-bold text-gray-900 mb-1">Probe complete!</h2>
-          <p className="text-sm text-gray-500 mb-6">
-            {correct} of {answers.length} correct
-          </p>
-          <div
-            className="rounded-xl px-6 py-4 mb-6"
-            style={{ backgroundColor: '#FFFBF0', border: '1.5px solid #F0E980' }}
-          >
-            <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#0F0F14' }}>
-              Recommended course
-            </p>
-            <p className="text-2xl font-bold" style={{ color: '#0F0F14' }}>{course}</p>
-            <p className="text-xs text-gray-500 mt-1">Mathematics</p>
-          </div>
-          <div className="flex items-center justify-center gap-2 text-gray-400 text-sm">
-            <SpinnerIcon color="#FFDA00" />
-            Building your mastery map…
-          </div>
-        </div>
-      </Screen>
-    )
-  }
-
-  // Active / feedback
-  const q        = questions[currentIdx]
-  const optionBg = (key: string) => {
-    if (!selected) return '#FFFFFF'
-    if (key === q.correct_answer.toLowerCase()) return '#D1FAE5' // green
-    if (key === selected && !q.correct_answer.toLowerCase().includes(key)) return '#FEE2E2' // red
-    return '#FFFFFF'
-  }
-  const optionBorder = (key: string) => {
-    if (!selected) return '#E5E7EB'
-    if (key === q.correct_answer.toLowerCase()) return '#10B981'
-    if (key === selected) return '#EF4444'
-    return '#E5E7EB'
   }
 
   return (
     <div
       className="min-h-screen flex flex-col"
-      style={{ backgroundColor: '#FFFBF0', fontFamily: "'Nunito', sans-serif" }}
+      style={{ backgroundColor: '#FFFFFF', fontFamily: "'Nunito', sans-serif" }}
     >
       {/* Header */}
-      <div className="px-6 pt-10 pb-0">
-        <div className="flex items-center justify-between mb-3">
-          <NeummLogo size={28} />
-          <span className="text-xs font-black" style={{ color: '#0F0F14' }}>
-            {currentIdx + 1} / {questions.length}
+      <div className="px-6 pt-10 pb-4">
+        <div className="flex items-center justify-between mb-4">
+          <NeummLogo size={32} />
+          <span className="text-xs font-bold text-gray-400">
+            {currentIdx + 1} / {PROBE_QUESTIONS.length}
           </span>
-          {/* Band pill */}
-          <span
-            className="text-xs font-black px-2.5 py-1 rounded-full"
-            style={{ backgroundColor: '#FFDA00', color: '#0F0F14' }}
-          >
-            Band {q.difficulty_band}
-          </span>
+          <div className="flex items-center gap-1.5">
+            {[1,2,3,4].map(n => (
+              <div key={n} className="h-1.5 rounded-full transition-all"
+                style={{ width: n <= 3 ? 24 : 8, backgroundColor: n <= 3 ? '#185FA5' : '#E5E7EB' }} />
+            ))}
+          </div>
         </div>
 
         {/* Progress bar */}
-        <div className="h-1.5 rounded-full bg-gray-200 overflow-hidden">
+        <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-500"
-            style={{ width: `${progress}%`, backgroundColor: '#FFDA00' }}
+            style={{ width: `${progress}%`, backgroundColor: '#185FA5' }}
           />
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 flex flex-col px-6 pt-6 pb-8 gap-6">
+      {/* Body */}
+      <div className="flex-1 flex flex-col px-6 pb-10 gap-5">
 
-        {/* Metadata chips */}
-        <div className="flex gap-2 flex-wrap">
-          {/* Outcome chip: dark bg so white text is readable */}
-          <span
-            className="text-xs font-semibold px-2.5 py-1 rounded-full text-white"
-            style={{ backgroundColor: '#0F0F14' }}
-          >
-            {q.nesa_outcome_code}
-          </span>
-          {/* Difficulty chip: yellow bg with dark text */}
-          <span
-            className="text-xs font-semibold px-2.5 py-1 rounded-full"
-            style={{ backgroundColor: '#F0E980', color: '#0F0F14' }}
-          >
-            Difficulty {q.difficulty_band}
-          </span>
-        </div>
-
-        {/* Question */}
-        <div
-          className="bg-white rounded-2xl shadow-sm px-5 py-5"
-          style={{ border: '1.5px solid #F0E980' }}
-        >
-          <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-2">Question</p>
-          <p className="text-gray-900 text-base leading-relaxed font-medium">
-            {q.content_json.question_text}
+        {/* Heading */}
+        <div>
+          <h1 className="text-lg font-bold text-gray-900">
+            {"Let's see where you are — 8 quick questions"}
+          </h1>
+          <p className="text-sm text-gray-400 mt-1">
+            There are no wrong answers here. Just do your best.
           </p>
         </div>
 
-        {/* Options */}
-        <div className="flex flex-col gap-3">
-          {OPTION_KEYS.map((key, i) => {
-            const text = q.content_json[`option_${key}` as keyof typeof q.content_json]
-            const isCorrectSelected = selected && key === q.correct_answer.toLowerCase()
-            const isWrongSelected   = selected === key && !isCorrectSelected
+        {/* Question card */}
+        <div className="rounded-2xl border border-gray-100 bg-gray-50 p-5 shadow-sm">
+          <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-2">
+            Question {currentIdx + 1}
+          </p>
+          <p className="text-base font-medium text-gray-900 leading-relaxed mb-3">
+            {q.text}
+          </p>
 
-            return (
+          {/* Formula block */}
+          {q.formula && (
+            <div
+              className="rounded-xl px-4 py-3"
+              style={{ backgroundColor: '#E6F1FB', borderLeft: '3px solid #185FA5' }}
+            >
+              <p
+                className="text-sm font-semibold leading-relaxed"
+                style={{ color: '#0C447C', fontFamily: "'Courier New', monospace" }}
+              >
+                {q.formula}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* "Thinking..." overlay — shown briefly after selection */}
+        {phase === 'thinking' ? (
+          <div className="flex flex-col gap-3">
+            {OPTION_KEYS.map((_, i) => (
+              <div
+                key={i}
+                className="rounded-2xl h-14 animate-pulse"
+                style={{ backgroundColor: '#F3F4F6' }}
+              />
+            ))}
+            <div className="flex items-center justify-center gap-2 text-gray-400 text-sm mt-2">
+              <Spinner size={16} />
+              Thinking…
+            </div>
+          </div>
+        ) : (
+          /* Answer options */
+          <div className="flex flex-col gap-3">
+            {OPTION_KEYS.map((key, i) => (
               <button
                 key={key}
                 onClick={() => handleSelect(key)}
-                disabled={!!selected}
-                className="w-full text-left rounded-2xl border-2 transition-all duration-200 active:scale-[0.98] disabled:cursor-default"
+                disabled={phase !== 'active'}
+                className="w-full text-left rounded-2xl border-2 transition-all duration-150 active:scale-[0.98] hover:border-blue-200"
                 style={{
-                  minHeight: 56,
-                  borderColor: optionBorder(key),
-                  backgroundColor: optionBg(key),
+                  minHeight:       56,
+                  borderColor:     '#E5E7EB',
+                  backgroundColor: '#FAFAFA',
                 }}
               >
-                <div className="flex items-center gap-4 px-5 py-4">
-                  {/* Label circle */}
+                <div className="flex items-center gap-4 px-5 py-3.5">
                   <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm font-bold transition-all"
-                    style={{
-                      backgroundColor: isCorrectSelected
-                        ? '#10B981'
-                        : isWrongSelected
-                        ? '#EF4444'
-                        : selected
-                        ? '#F3F4F6'
-                        : '#FFFBF0',
-                      color: isCorrectSelected || isWrongSelected ? '#FFFFFF' : '#0F0F14',
-                    }}
+                    className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm font-bold"
+                    style={{ backgroundColor: '#E6F1FB', color: '#185FA5' }}
                   >
                     {OPTION_LABELS[i]}
                   </div>
-
-                  <span
-                    className="text-sm font-medium leading-snug"
-                    style={{
-                      color: isCorrectSelected
-                        ? '#065F46'
-                        : isWrongSelected
-                        ? '#991B1B'
-                        : '#111827',
-                    }}
-                  >
-                    {text}
+                  <span className="text-sm font-medium text-gray-800 leading-snug">
+                    {q.options[i]}
                   </span>
-
-                  {/* Tick / cross */}
-                  {isCorrectSelected && (
-                    <svg className="ml-auto shrink-0 w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                  {isWrongSelected && (
-                    <svg className="ml-auto shrink-0 w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  )}
                 </div>
               </button>
-            )
-          })}
-        </div>
-
-        {/* Explanation (shown after answer) */}
-        {selected && (
-          <div
-            className="rounded-2xl px-5 py-4 border"
-            style={{
-              backgroundColor: '#F0FDF4',
-              borderColor: '#86EFAC',
-            }}
-          >
-            <p className="text-xs font-bold text-green-700 uppercase tracking-wide mb-1">Explanation</p>
-            <p className="text-sm text-green-900 leading-relaxed">{q.explanation}</p>
+            ))}
           </div>
         )}
 
-        {/* Next question button */}
-        {selected && (
-          <button
-            onClick={() => {
-              const next = currentIdx + 1
-              if (next < questions.length) {
-                setCurrentIdx(next)
-                setSelected(null)
-                setPhase('active')
-                startRef.current = Date.now()
-              } else {
-                finishProbe(answers)
-              }
-            }}
-            className="w-full py-3.5 rounded-2xl text-sm font-black transition-all active:scale-[0.98]"
-            style={{ background: '#FFDA00', color: '#0F0F14' }}
-          >
-            {currentIdx + 1 < questions.length ? 'Next question →' : 'See my results →'}
-          </button>
-        )}
-
-        {/* Tap prompt (no answer yet) */}
-        {!selected && (
+        {/* Tap prompt */}
+        {phase === 'active' && (
           <p className="text-center text-xs text-gray-400 mt-auto">
-            Tap an answer to continue
+            Tap an option to continue
           </p>
         )}
       </div>
@@ -481,23 +435,28 @@ export default function ProbePage() {
   )
 }
 
-// ─── Sub-components ────────────────────────────────────────────────────────────
+// ─── Sub-components ─────────────────────────────────────────────────────────────
 function Screen({ children }: { children: React.ReactNode }) {
   return (
     <div
       className="min-h-screen flex items-center justify-center px-6"
-      style={{ backgroundColor: '#FFFBF0', fontFamily: "'Nunito', sans-serif" }}
+      style={{ backgroundColor: '#FFFFFF', fontFamily: "'Nunito', sans-serif" }}
     >
       {children}
     </div>
   )
 }
 
-function SpinnerIcon({ color = 'currentColor', className = '' }: { color?: string; className?: string }) {
+function Spinner({ size = 20 }: { size?: number }) {
   return (
-    <svg className={`animate-spin h-4 w-4 ${className}`} fill="none" viewBox="0 0 24 24" style={{ color }}>
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+    <svg
+      className="animate-spin"
+      style={{ width: size, height: size }}
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="#185FA5" strokeWidth="4" />
+      <path className="opacity-75" fill="#185FA5" d="M4 12a8 8 0 018-8v8H4z" />
     </svg>
   )
 }
