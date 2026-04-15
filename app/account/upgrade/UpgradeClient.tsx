@@ -30,8 +30,9 @@ export default function UpgradeClient({ basicPriceId, proPriceId }: { basicPrice
   const router       = useRouter()
   const searchParams = useSearchParams()
   const reason       = searchParams.get('reason') ?? ''
-  const [loading, setLoading] = useState<string | null>(null)
-  const [error,   setError]   = useState<string | null>(null)
+  const [loading,     setLoading]     = useState<string | null>(null)
+  const [error,       setError]       = useState<string | null>(null)
+  const [selectedPlan, setSelectedPlan] = useState<string>('pro')   // tracks highlighted tile
 
   const priceIds: Record<string, string> = { basic: basicPriceId, pro: proPriceId }
 
@@ -43,7 +44,8 @@ export default function UpgradeClient({ basicPriceId, proPriceId }: { basicPrice
     }
     setLoading(planId); setError(null)
     try {
-      const res  = await fetch('/api/stripe/checkout', {
+      // Must include basePath prefix — native fetch() doesn't get it automatically
+      const res  = await fetch('/math-nsw/app/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ priceId }),
@@ -84,38 +86,48 @@ export default function UpgradeClient({ basicPriceId, proPriceId }: { basicPrice
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full max-w-2xl">
-        {PLANS.map(plan => (
-          <div key={plan.id}
-            className={`bg-white rounded-3xl p-6 flex flex-col shadow-sm ${plan.highlight ? 'ring-2 ring-violet-400' : 'border border-purple-50'}`}>
-            {plan.highlight && (
-              <span className="text-xs font-black text-white px-3 py-1 rounded-full self-start mb-3"
-                style={{ background: 'linear-gradient(135deg,#7C3AED,#EC4899)' }}>
-                ⭐ Most popular
-              </span>
-            )}
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-2xl">{plan.emoji}</span>
-              <h2 className="text-lg font-black text-gray-900">{plan.name}</h2>
+        {PLANS.map(plan => {
+          const isSelected = selectedPlan === plan.id
+          return (
+            <div key={plan.id}
+              onClick={() => setSelectedPlan(plan.id)}
+              className="bg-white rounded-3xl p-6 flex flex-col shadow-sm cursor-pointer transition-all"
+              style={isSelected
+                ? { outline: '2px solid #7C3AED', outlineOffset: '2px' }
+                : { border: '1px solid #F3E8FF' }
+              }>
+              {plan.id === 'pro' && (
+                <span className="text-xs font-black text-white px-3 py-1 rounded-full self-start mb-3"
+                  style={{ background: 'linear-gradient(135deg,#7C3AED,#EC4899)' }}>
+                  ⭐ Most popular
+                </span>
+              )}
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-2xl">{plan.emoji}</span>
+                <h2 className="text-lg font-black text-gray-900">{plan.name}</h2>
+              </div>
+              <div className="flex items-baseline gap-1 mb-4">
+                <span className="text-3xl font-black text-gray-900">{plan.price}</span>
+                <span className="text-sm text-gray-400">{plan.period}</span>
+              </div>
+              <ul className="space-y-2 mb-6 flex-1">
+                {plan.features.map(f => (
+                  <li key={f} className="flex items-center gap-2 text-sm text-gray-600">
+                    <span className="text-green-500 font-black">✓</span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={e => { e.stopPropagation(); handleUpgrade(plan.id) }}
+                disabled={loading !== null}
+                className="w-full py-3 rounded-2xl text-sm font-black text-white min-h-[48px] disabled:opacity-60 active:scale-[0.98] transition-all"
+                style={{ background: loading === plan.id ? '#9CA3AF' : plan.gradient }}>
+                {loading === plan.id ? 'Redirecting…' : plan.cta}
+              </button>
             </div>
-            <div className="flex items-baseline gap-1 mb-4">
-              <span className="text-3xl font-black text-gray-900">{plan.price}</span>
-              <span className="text-sm text-gray-400">{plan.period}</span>
-            </div>
-            <ul className="space-y-2 mb-6 flex-1">
-              {plan.features.map(f => (
-                <li key={f} className="flex items-center gap-2 text-sm text-gray-600">
-                  <span className="text-green-500 font-black">✓</span>
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <button onClick={() => handleUpgrade(plan.id)} disabled={loading !== null}
-              className="w-full py-3 rounded-2xl text-sm font-black text-white min-h-[48px] disabled:opacity-60 active:scale-[0.98] transition-all"
-              style={{ background: loading === plan.id ? '#9CA3AF' : plan.gradient }}>
-              {loading === plan.id ? 'Redirecting…' : plan.cta}
-            </button>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       <button onClick={() => router.back()}
