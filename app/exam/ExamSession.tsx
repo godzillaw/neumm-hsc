@@ -47,8 +47,8 @@ function TopicSelector({
 }) {
   return (
     <div
-      className="px-5 md:px-10 py-6 md:py-8 max-w-3xl mx-auto"
-      style={{ fontFamily: "'Nunito', sans-serif", background: '#FFFBF0', minHeight: '100vh' }}
+      className="px-5 md:px-8 py-6 md:py-8 max-w-3xl"
+      style={{ fontFamily: "'Nunito', sans-serif" }}
     >
       <h1 className="text-2xl font-black mb-1" style={{ color: '#0F0F14' }}>Exam Mode</h1>
       <p className="text-sm mb-7" style={{ color: '#666672' }}>
@@ -148,7 +148,7 @@ function ResultsScreen({
   return (
     <div
       className="px-5 md:px-10 py-8 max-w-3xl mx-auto pb-24"
-      style={{ fontFamily: "'Nunito', sans-serif", background: '#FFFBF0', minHeight: '100vh' }}
+      style={{ fontFamily: "'Nunito', sans-serif" }}
     >
 
       {/* Header */}
@@ -450,7 +450,7 @@ function ActiveExam({
   ]
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ fontFamily: "'Nunito', sans-serif", background: '#FFFBF0' }}>
+    <div className="flex flex-col" style={{ fontFamily: "'Nunito', sans-serif" }}>
 
       {/* ── Exam header bar ── */}
       <div
@@ -682,8 +682,8 @@ export default function ExamSession({
   if (phase === 'loading') {
     return (
       <div
-        className="flex items-center justify-center min-h-screen"
-        style={{ fontFamily: "'Nunito', sans-serif", background: '#FFFBF0' }}
+        className="flex items-center justify-center py-20"
+        style={{ fontFamily: "'Nunito', sans-serif" }}
       >
         <div className="flex flex-col items-center gap-3 text-center">
           <div

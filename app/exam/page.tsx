@@ -3,6 +3,8 @@ import { requireAuth }        from '@/lib/auth-server'
 import { checkTierAccess }    from '@/lib/tier'
 import ExamSession            from './ExamSession'
 import { getCategoryMastery } from './actions'
+import AppSidebar             from '@/components/AppSidebar'
+import MobileBottomNav        from '@/components/MobileBottomNav'
 
 export default async function ExamPage() {
   const user   = await requireAuth()
@@ -15,8 +17,12 @@ export default async function ExamPage() {
   const categoryMastery = await getCategoryMastery(user.id)
 
   return (
-    <div className="flex-1 min-w-0 pb-20 md:pb-0">
-      <ExamSession userId={user.id} categoryMastery={categoryMastery} />
+    <div className="flex min-h-screen" style={{ background: '#F4F6FA' }}>
+      <AppSidebar />
+      <div className="flex-1 min-w-0 pb-20 md:pb-0">
+        <ExamSession userId={user.id} categoryMastery={categoryMastery} />
+      </div>
+      <MobileBottomNav />
     </div>
   )
 }
