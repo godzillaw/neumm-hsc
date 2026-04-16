@@ -13,7 +13,7 @@ const FEATURES = [
     desc:  'A placement probe finds your exact gaps in 8 questions. No guessing what to study.',
   },
   {
-    emoji: '🤖',
+    emoji: '👩‍🏫',
     title: 'AI tutor in your corner',
     desc:  'Socratic hints, step-by-step solutions and exam simulation — available 24/7.',
   },

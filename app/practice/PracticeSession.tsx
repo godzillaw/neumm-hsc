@@ -75,7 +75,7 @@ function ChatWindow({
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 no-scrollbar">
         {messages.length === 0 && !loading && (
           <div className="flex flex-col items-center justify-center h-full text-center px-6 py-8">
-            <div className="text-4xl mb-3">🤖</div>
+            <div className="text-4xl mb-3">👩‍🏫</div>
             <p className="font-black text-gray-800 text-base">Neumm Helper</p>
             <p className="text-sm text-gray-400 mt-1 leading-relaxed">
               Ask me anything about this question,<br/>or hit <strong>💡 Hint</strong> for a nudge!
@@ -87,7 +87,7 @@ function ChatWindow({
             {m.role === 'assistant' && (
               <div className="w-7 h-7 rounded-full flex items-center justify-center text-sm mr-2 shrink-0 mt-0.5"
                 style={{ background: 'linear-gradient(135deg,#7C3AED,#EC4899)' }}>
-                🤖
+                👩‍🏫
               </div>
             )}
             <div className={`max-w-[82%] px-4 py-3 text-sm leading-relaxed ${m.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-ai'}`}>
@@ -114,7 +114,7 @@ function ChatWindow({
         {loading && (
           <div className="flex items-center gap-2 animate-fade-in-up">
             <div className="w-7 h-7 rounded-full flex items-center justify-center text-sm shrink-0"
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#EC4899)' }}>🤖</div>
+              style={{ background: 'linear-gradient(135deg,#7C3AED,#EC4899)' }}>👩‍🏫</div>
             <div className="chat-bubble-ai px-4 py-3 flex items-center gap-1">
               {[0,1,2].map(i => (
                 <div key={i} className="w-2 h-2 rounded-full animate-bounce"
@@ -467,7 +467,7 @@ export default function PracticeSession({
             <button onClick={() => setShowChatPanel(true)}
               className="md:hidden flex items-center gap-1 text-xs font-black px-3 py-1.5 rounded-full text-white min-h-[32px]"
               style={{ background: 'linear-gradient(135deg,#7C3AED,#EC4899)' }}>
-              🤖 Tutor
+              👩‍🏫 Tutor
               {chatMessages.length > 0 && (
                 <span className="bg-white text-violet-700 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-black">
                   {chatMessages.length}
@@ -623,7 +623,7 @@ export default function PracticeSession({
             <div className="flex items-center justify-between px-5 py-4 shrink-0"
               style={{ background: 'linear-gradient(135deg,#7C3AED,#EC4899)' }}>
               <div className="flex items-center gap-2">
-                <span className="text-xl">🤖</span>
+                <span className="text-xl">👩‍🏫</span>
                 <p className="text-sm font-black text-white">Neumm Helper</p>
               </div>
               <button onClick={() => setShowChatPanel(false)}
@@ -643,7 +643,7 @@ export default function PracticeSession({
           <button onClick={() => setShowChatPanel(true)}
             className="hidden md:flex fixed bottom-6 right-6 z-40 items-center gap-2 px-4 py-3 rounded-2xl text-white text-sm font-black shadow-lg hover:scale-105 active:scale-95 transition-transform"
             style={{ background: 'linear-gradient(135deg,#7C3AED,#EC4899)' }}>
-            🤖 Neumm Helper
+            👩‍🏫 Neumm Helper
             {chatMessages.length > 0 && (
               <span className="bg-white text-violet-700 rounded-full w-5 h-5 flex items-center justify-center text-xs font-black">
                 {chatMessages.length}
