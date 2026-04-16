@@ -1,23 +1,15 @@
-import { redirect }                   from 'next/navigation'
-import { requireAuth }                from '@/lib/auth-server'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
-import ExamSession                    from './ExamSession'
-import { getCategoryMastery }         from './actions'
-
-// Blocked tiers: expired trial or payment failed only
-const EXAM_BLOCKED_TIERS = new Set<string>(['basic_trial_expired', 'trial_expired', 'payment_failed'])
+import { redirect }           from 'next/navigation'
+import { requireAuth }        from '@/lib/auth-server'
+import { checkTierAccess }    from '@/lib/tier'
+import ExamSession            from './ExamSession'
+import { getCategoryMastery } from './actions'
 
 export default async function ExamPage() {
-  const user     = await requireAuth()
-  const supabase = createSupabaseServerClient()
+  const user   = await requireAuth()
+  const access = await checkTierAccess(user.id)
 
-  const { data: userRow } = await supabase
-    .from('users').select('tier').eq('id', user.id).single()
-
-  const tier: string = (userRow as { tier?: string } | null)?.tier ?? 'basic_trial'
-
-  if (EXAM_BLOCKED_TIERS.has(tier)) {
-    redirect('/account/upgrade?reason=exam')
+  if (access.isBlocked) {
+    redirect('/account/upgrade?reason=expired')
   }
 
   const categoryMastery = await getCategoryMastery(user.id)

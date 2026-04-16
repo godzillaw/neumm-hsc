@@ -25,8 +25,8 @@ export default function DailyLimitBanner({
       : `${questionsRemaining} question${questionsRemaining === 1 ? '' : 's'} remaining today`
 
   const sub = isTrial
-    ? 'Trial accounts are limited to 10 questions per day.'
-    : 'Basic accounts are limited to 25 questions per day.'
+    ? 'Upgrade to keep practising — your 7-day trial is almost up.'
+    : 'Basic plan allows 50 questions per day. Resets at midnight UTC.'
 
   return (
     <div

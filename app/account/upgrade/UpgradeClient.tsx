@@ -6,14 +6,14 @@ import { useRouter, useSearchParams }    from 'next/navigation'
 const PLANS = [
   {
     id: 'basic', name: 'Basic', price: '$29.99', period: '/mo', emoji: '⚡',
-    features: ['Unlimited questions', 'AI Socratic tutor', 'Progress tracking', 'Mastery map', 'Exam mode'],
+    features: ['50 questions per day', 'AI Socratic tutor', 'Progress tracking', 'Mastery map', 'Exam mode'],
     cta: 'Start Basic',
     gradient: 'linear-gradient(135deg,#6366F1,#8B5CF6)',
     highlight: false,
   },
   {
     id: 'pro', name: 'Pro', price: '$49.99', period: '/mo', emoji: '🚀',
-    features: ['Everything in Basic', 'Exam mode', 'Full analytics', 'Leaderboard', 'Priority support'],
+    features: ['Unlimited questions', 'Everything in Basic', 'Full analytics', 'Leaderboard', 'Priority support'],
     cta: 'Go Pro 🔥',
     gradient: 'linear-gradient(135deg,#7C3AED,#EC4899)',
     highlight: true,
