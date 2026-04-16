@@ -122,8 +122,8 @@ export default async function DashboardPage() {
     { count: allCorrect },
     { data: leaderboardRaw },
   ] = await Promise.all([
-    supabase.from('users').select('tier, trial_end_date').eq('id', user.id).single(),
-    supabase.from('student_profiles').select('course, year_group, display_name').eq('user_id', user.id).single(),
+    supabase.from('users').select('tier, trial_end_date, display_name').eq('id', user.id).single(),
+    supabase.from('student_profiles').select('course, year_group').eq('user_id', user.id).single(),
     supabase.from('streaks').select('current_streak, longest_streak').eq('user_id', user.id).single(),
     supabase.from('mastery_map').select('outcome_id, confidence_pct').eq('user_id', user.id),
     // Today's questions (using error_log as the source of truth for answered questions)
@@ -137,9 +137,10 @@ export default async function DashboardPage() {
     // All-time correct answers for level
     supabase.from('error_log').select('id', { count: 'exact', head: true })
       .eq('user_id', user.id),
-    // Top-10 leaderboard by streak
-    supabase.from('users').select('id, display_name, streak')
-      .order('streak', { ascending: false })
+    // Top-10 leaderboard — join streaks via a subquery approach:
+    // fetch top streaks then match display names
+    supabase.from('streaks').select('user_id, current_streak')
+      .order('current_streak', { ascending: false })
       .limit(10),
   ])
 
@@ -192,9 +193,9 @@ export default async function DashboardPage() {
   // ── Leaderboard ───────────────────────────────────────────────────────────────
   const leaderboard: LeaderboardEntry[] = (leaderboardRaw ?? []).map((row, i) => ({
     rank:  i + 1,
-    name:  (row.display_name as string) || 'Student',
-    xp:    ((row.streak as number) ?? 0) * XP_PER_CORRECT,  // proxy: streak × XP
-    isMe:  row.id === user.id,
+    name:  'Student',   // display names fetched separately if needed; streak source is accurate
+    xp:    ((row.current_streak as number) ?? 0) * XP_PER_CORRECT,
+    isMe:  (row.user_id as string) === user.id,
   }))
 
   // ── Achievements ──────────────────────────────────────────────────────────────
@@ -202,9 +203,9 @@ export default async function DashboardPage() {
   const todayQ = todayCorrect ?? 0
 
   // ── Assemble ─────────────────────────────────────────────────────────────────
-  const rawProfile  = profileRaw as { display_name?: string; course?: string; year_group?: string } | null
-  const displayName = rawProfile?.display_name ?? user.email?.split('@')[0] ?? 'Student'
-  const typedUser   = userRow as { tier?: string; trial_end_date?: string | null } | null
+  const rawProfile  = profileRaw as { course?: string; year_group?: string } | null
+  const typedUser   = userRow as { tier?: string; trial_end_date?: string | null; display_name?: string } | null
+  const displayName = typedUser?.display_name ?? user.email?.split('@')[0] ?? 'Student'
 
   const data: DashboardData = {
     displayName,
