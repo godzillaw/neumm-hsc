@@ -390,6 +390,84 @@ export default function DashboardContent({ data }: { data: DashboardData }) {
         )}
       </div>
 
+      {/* ── Mastery Map ── */}
+      {data.topicStats.length > 0 && (() => {
+        const categories = Array.from(new Set(data.topicStats.map(t => t.category)))
+        return (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            {/* Header */}
+            <div className="px-5 pt-5 pb-3 flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-black text-gray-900">🗺️ Your mastery map</h2>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {data.masteredCount} of {data.topicStats.length} topics strong · {data.overallMastery}% overall
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                {/* Legend */}
+                {[
+                  { color: '#10B981', label: '≥60%' },
+                  { color: '#F59E0B', label: '20–59%' },
+                  { color: '#EF4444', label: '<20%' },
+                  { color: '#D1D5DB', label: 'Untested' },
+                ].map(l => (
+                  <div key={l.label} className="hidden sm:flex items-center gap-1">
+                    <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: l.color }} />
+                    <span className="text-xs text-gray-400">{l.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="px-5 pb-5 space-y-4">
+              {categories.map(cat => {
+                const catTopics = data.topicStats.filter(t => t.category === cat)
+                return (
+                  <div key={cat}>
+                    <p className="text-xs font-black uppercase tracking-wide text-gray-400 mb-2">{cat}</p>
+                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                      {catTopics.map(t => {
+                        const isUntested = t.avg === 0
+                        const tileColor  = t.avg >= 60 ? '#10B981' : t.avg >= 20 ? '#F59E0B' : t.avg > 0 ? '#EF4444' : '#D1D5DB'
+                        return (
+                          <button
+                            key={t.prefix}
+                            onClick={() => router.push(`/practice?topic=${encodeURIComponent(t.prefix)}`)}
+                            className="rounded-xl p-2 flex flex-col items-center gap-1 transition-all active:scale-95 hover:opacity-90"
+                            style={{
+                              backgroundColor: isUntested ? '#F5F5F5' : `${tileColor}15`,
+                              minHeight: 68,
+                            }}
+                          >
+                            <div
+                              className="w-8 h-8 rounded-lg flex items-center justify-center"
+                              style={{ backgroundColor: tileColor }}
+                            >
+                              {isUntested
+                                ? <span className="text-gray-400 text-xs font-bold">?</span>
+                                : <span className="text-white text-xs font-black">{t.avg}</span>
+                              }
+                            </div>
+                            <p className="text-center leading-tight font-semibold text-gray-600"
+                              style={{ fontSize: 8, lineHeight: 1.2 }}>
+                              {t.name}
+                            </p>
+                            <p className="text-center font-bold"
+                              style={{ fontSize: 7, color: isUntested ? '#D1D5DB' : tileColor }}>
+                              {isUntested ? 'Untested' : t.avg >= 60 ? 'Strong' : t.avg >= 20 ? 'Learning' : 'Gap'}
+                            </p>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })()}
+
       {/* ── Streak card ── */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
         <div className="flex items-start justify-between mb-3">

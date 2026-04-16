@@ -293,7 +293,7 @@ export default function ProbePage() {
     await supabase.from('error_log').insert(logRows)
 
     setPhase('done')
-    router.push('/onboarding/map')
+    router.push('/dashboard')
   }
 
   const q        = PROBE_QUESTIONS[currentIdx]
@@ -305,7 +305,7 @@ export default function ProbePage() {
       <Screen>
         <div className="text-center">
           <Spinner size={40} />
-          <p className="mt-4 text-sm font-semibold text-gray-600">Building your mastery map…</p>
+          <p className="mt-4 text-sm font-semibold text-gray-600">Building your mastery map — taking you to your dashboard…</p>
         </div>
       </Screen>
     )
