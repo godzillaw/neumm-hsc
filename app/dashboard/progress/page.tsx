@@ -207,8 +207,8 @@ export default async function ProgressPage() {
     const prefix = row.outcome_id.replace(/-B\d+$/, '')
     if (!prefixConfMap[prefix]) prefixConfMap[prefix] = []
     prefixConfMap[prefix].push(row.confidence_pct)
-    // Mark overdue if any band for this topic has a past review date
-    if (row.next_review_at && row.next_review_at <= nowStr) {
+    // Mark overdue only for topics genuinely tested (confidence > 0)
+    if (row.next_review_at && row.next_review_at <= nowStr && row.confidence_pct > 0) {
       prefixOverdueMap[prefix] = true
     }
   }
@@ -229,7 +229,10 @@ export default async function ProgressPage() {
   })
 
   // ── Summary counts ──────────────────────────────────────────────────────────────
-  const tested   = topicStats.filter(t => t.avg !== null)
+  // "tested" = student has genuinely engaged with this topic (confidence > 0).
+  // confidence_pct = 0 means a row was seeded as untested (old behaviour) — treat
+  // those the same as null so band predictions stay honest.
+  const tested   = topicStats.filter(t => t.avg !== null && t.avg > 0)
   const mastered = tested.filter(t => (t.avg ?? 0) >= 80).length
   const shaky    = tested.filter(t => (t.avg ?? 0) >= 50 && (t.avg ?? 0) < 80).length
   const gap      = tested.filter(t => (t.avg ?? 0) < 50).length

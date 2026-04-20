@@ -159,63 +159,23 @@ function assignCourse(answers: ProbeAnswer[]): string {
 }
 
 // ─── Mastery seeding ───────────────────────────────────────────────────────────
-async function seedMastery(
-  userId:  string,
-  answers: ProbeAnswer[],
-  course:  string,
-) {
+// Only seeds the 8 topics the student actually answered.
+// Untested topics have NO mastery_map row → avg = null in the progress page.
+// This keeps "topics tested" honest: 8 probe answers = 8 tested topics.
+async function seedMastery(userId: string, answers: ProbeAnswer[]) {
   const supabase = createSupabaseBrowserClient()
+  const now      = new Date().toISOString()
 
-  // Map of tested outcome → result
-  const tested = new Map<string, boolean>()
-  for (const a of answers) tested.set(a.outcomeId, a.isCorrect)
-
-  // All outcomes that appear in the probe
-  const probeOutcomes = PROBE_QUESTIONS.map(q => q.outcomeId)
-
-  // Additional untested outcomes to seed for the assigned course
-  const courseOutcomes: Record<string, string[]> = {
-    'Standard':    ['MA-ALG-01','MA-ALG-02','MA-ALG-03','MA-ALG-04','MA-ALG-05','MA-ALG-06','MA-ALG-07','MA-ALG-08',
-                    'MA-FUNC-01','MA-FUNC-02','MA-FUNC-03','MA-FUNC-04','MA-FUNC-05',
-                    'MA-TRIG-01','MA-TRIG-02','MA-TRIG-03','MA-TRIG-07','MA-TRIG-09',
-                    'MA-COORD-01','MA-COORD-02','MA-STAT-01','MA-STAT-02','MA-STAT-03',
-                    'MA-FIN-01','MA-FIN-02','MA-FIN-03'],
-    'Advanced':    ['MA-ALG-01','MA-ALG-02','MA-ALG-03','MA-ALG-04','MA-ALG-05','MA-ALG-06','MA-ALG-07','MA-ALG-08',
-                    'MA-FUNC-01','MA-FUNC-02','MA-FUNC-03','MA-FUNC-04','MA-FUNC-05','MA-FUNC-06','MA-FUNC-07','MA-FUNC-08','MA-FUNC-09',
-                    'MA-TRIG-01','MA-TRIG-02','MA-TRIG-03','MA-TRIG-04','MA-TRIG-05','MA-TRIG-06','MA-TRIG-07','MA-TRIG-08','MA-TRIG-09',
-                    'MA-COORD-01','MA-COORD-02','MA-COORD-03','MA-COORD-04','MA-COORD-05',
-                    'MA-CALC-D01','MA-CALC-D02','MA-CALC-D03','MA-CALC-D04','MA-CALC-D05','MA-CALC-D06','MA-CALC-D07','MA-CALC-D08','MA-CALC-D09',
-                    'MA-CALC-I01','MA-CALC-I02','MA-CALC-I03','MA-CALC-I04','MA-CALC-I06','MA-CALC-I07',
-                    'MA-EXP-01','MA-EXP-02','MA-EXP-03','MA-EXP-04','MA-EXP-05','MA-EXP-06',
-                    'MA-STAT-01','MA-STAT-02','MA-STAT-03','MA-STAT-04','MA-STAT-05','MA-STAT-06',
-                    'MA-FIN-01','MA-FIN-02','MA-FIN-03','MA-FIN-04','MA-FIN-05'],
-    'Extension 1': ['MA-CALC-D01','MA-CALC-D02','MA-CALC-D03','MA-CALC-D04','MA-CALC-D05','MA-CALC-D06','MA-CALC-D07','MA-CALC-D08','MA-CALC-D09','MA-CALC-D10','MA-CALC-D11','MA-CALC-D12',
-                    'MA-CALC-I01','MA-CALC-I02','MA-CALC-I03','MA-CALC-I04','MA-CALC-I05','MA-CALC-I06','MA-CALC-I07','MA-CALC-I08',
-                    'MA-EXT-01','MA-EXT-02','MA-EXT-03','MA-EXT-04','MA-EXT-05','MA-EXT-06','MA-EXT-07','MA-EXT-08'],
-    'Extension 2': ['MA-CALC-D01','MA-CALC-D02','MA-CALC-D03','MA-CALC-D04','MA-CALC-D05','MA-CALC-D06','MA-CALC-D07','MA-CALC-D08','MA-CALC-D09','MA-CALC-D10','MA-CALC-D11','MA-CALC-D12',
-                    'MA-CALC-I01','MA-CALC-I02','MA-CALC-I03','MA-CALC-I04','MA-CALC-I05','MA-CALC-I06','MA-CALC-I07','MA-CALC-I08','MA-CALC-I09','MA-CALC-I10','MA-CALC-I11','MA-CALC-I12',
-                    'MA-EXT-01','MA-EXT-02','MA-EXT-03','MA-EXT-04','MA-EXT-05','MA-EXT-06','MA-EXT-07','MA-EXT-08'],
-  }
-
-  // All outcomes to seed = probe outcomes ∪ course outcomes
-  const allOutcomes = Array.from(new Set([
-    ...probeOutcomes,
-    ...(courseOutcomes[course] ?? courseOutcomes['Standard']),
-  ]))
-
-  const rows = allOutcomes.map(oid => {
-    const wasTested  = tested.has(oid)
-    const wasCorrect = tested.get(oid) ?? false
-    const now        = new Date().toISOString()
-    return {
-      user_id:        userId,
-      outcome_id:     oid,
-      confidence_pct: wasTested ? (wasCorrect ? 60 : 20) : 0,
-      status:         wasTested ? (wasCorrect ? 'learning' : 'needs_work') : 'untested',
-      last_tested_at: wasTested ? now : null,
-      next_review_at: wasTested ? new Date(Date.now() + (wasCorrect ? 3 : 1) * 86400000).toISOString() : null,
-    }
-  })
+  const rows = answers.map(a => ({
+    user_id:        userId,
+    outcome_id:     a.outcomeId,
+    confidence_pct: a.isCorrect ? 60 : 20,
+    status:         a.isCorrect ? 'shaky' : 'gap',
+    last_tested_at: now,
+    next_review_at: new Date(
+      Date.now() + (a.isCorrect ? 3 : 1) * 86_400_000,
+    ).toISOString(),
+  }))
 
   await supabase.from('mastery_map').upsert(rows, { onConflict: 'user_id,outcome_id' })
 }
@@ -281,7 +241,7 @@ export default function ProbePage() {
       { user_id: user.id, course, placement_probe_completed: true },
       { onConflict: 'user_id' },
     )
-    await seedMastery(user.id, finalAnswers, course)
+    await seedMastery(user.id, finalAnswers)
 
     const logRows = finalAnswers.map(a => ({
       user_id:            user.id,
