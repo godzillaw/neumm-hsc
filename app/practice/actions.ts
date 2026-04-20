@@ -196,6 +196,14 @@ export async function getNextQuestion(userId: string, topicFilter?: string): Pro
   const supabase = createSupabaseServerClient()
   const now      = new Date().toISOString()
 
+  // ── Fetch student intent (drives scoring + pool filtering) ────────────────────
+  const { data: profileRow } = await supabase
+    .from('student_profiles')
+    .select('intent')
+    .eq('user_id', userId)
+    .single()
+  const intent: string = profileRow?.intent ?? 'not_sure'
+
   // ── KEY: outcome_id stored as "MA-TRIG-02-B3" (prefix + "-B" + band) ──────────
   // PostgREST LIKE/ILIKE filters silently return empty for some patterns.
   // Solution: fetch ALL questions (no server filter), filter 100% in JS.
@@ -226,6 +234,16 @@ export async function getNextQuestion(userId: string, topicFilter?: string): Pro
       .select(SELECT)
       .limit(500)
     pool = (poolRaw ?? []) as any[]
+  }
+  /* eslint-enable @typescript-eslint/no-explicit-any */
+
+  // ── Intent-based pool filter (difficulty_band) ───────────────────────────────
+  // exam_prep + getting_ahead: only serve hard questions (band ≥ 4)
+  // finding_gaps + not_sure: no difficulty filter
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  if (intent === 'exam_prep' || intent === 'getting_ahead') {
+    const hardPool = pool.filter((r: any) => (r.difficulty_band ?? 0) >= 4)
+    if (hardPool.length > 0) pool = hardPool   // keep fallback if pool would be empty
   }
   /* eslint-enable @typescript-eslint/no-explicit-any */
 
@@ -261,12 +279,29 @@ export async function getNextQuestion(userId: string, topicFilter?: string): Pro
   }
 
   // 4. Score each question in the pool
-  //    Lower score = higher priority (we want lowest confidence, unanswered first)
+  //    Lower score = higher priority.
+  //    Intent controls how confidence is weighted:
+  //      not_sure / exam_prep  → lowest confidence first (weakest topics first)
+  //      finding_gaps          → no confidence bias; random among unanswered
+  //      getting_ahead         → highest confidence first (build on strengths)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function scoreQuestion(r: any): number {
     const oid: string = r.outcome_id ?? ''
     const answered   = answeredSet.has(r.id) ? 1000 : 0   // push answered to end
-    const confidence = masteryMap[oid] ?? 50               // 0–100, lower = higher priority
+    const confidence = masteryMap[oid] ?? 50               // 0–100
+
+    if (intent === 'finding_gaps') {
+      // Equal weighting — all unanswered questions have same base score
+      // so the top-10 random pick gives broad topic coverage
+      return answered
+    }
+
+    if (intent === 'getting_ahead') {
+      // Favour topics the student is already confident in (high confidence = low score)
+      return answered + (100 - confidence)
+    }
+
+    // 'not_sure' (default) + 'exam_prep': lowest confidence first
     return answered + confidence
   }
 
