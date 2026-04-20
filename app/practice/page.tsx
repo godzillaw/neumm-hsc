@@ -1,11 +1,12 @@
-import Link                      from 'next/link'
-import { requireAuth }           from '@/lib/auth-server'
-import { checkTierAccess }       from '@/lib/tier'
-import { createPracticeSession } from './actions'
-import PracticeSession           from './PracticeSession'
-import AppSidebar                from '@/components/AppSidebar'
-import TrialExpiredModal         from '@/components/TrialExpiredModal'
-import MobileBottomNav           from '@/components/MobileBottomNav'
+import Link                            from 'next/link'
+import { requireAuth }                 from '@/lib/auth-server'
+import { checkTierAccess }             from '@/lib/tier'
+import { createPracticeSession }       from './actions'
+import { createSupabaseServerClient }  from '@/lib/supabase-server'
+import PracticeSession                 from './PracticeSession'
+import AppSidebar                      from '@/components/AppSidebar'
+import TrialExpiredModal               from '@/components/TrialExpiredModal'
+import MobileBottomNav                 from '@/components/MobileBottomNav'
 
 function DailyLimitCard() {
   return (
@@ -70,6 +71,15 @@ export default async function PracticePage({
     )
   }
 
+  // Fetch year_group so PracticeSession can pass it to generate-questions
+  const supabase = createSupabaseServerClient()
+  const { data: profile } = await supabase
+    .from('student_profiles')
+    .select('year_group')
+    .eq('user_id', user.id)
+    .single()
+  const yearGroup = (profile as { year_group?: string } | null)?.year_group ?? 'year_12'
+
   const sessionId = await createPracticeSession(user.id)
 
   if (!sessionId) {
@@ -88,7 +98,7 @@ export default async function PracticePage({
     <div className="flex min-h-screen" style={{ background: 'linear-gradient(135deg,#F7F3FF,#FDF2F8,#F0FDF4)' }}>
       <AppSidebar />
       <div className="flex-1 min-w-0 flex flex-col pb-20 md:pb-0">
-        <PracticeSession userId={user.id} sessionId={sessionId} topicFilter={topic} />
+        <PracticeSession userId={user.id} sessionId={sessionId} topicFilter={topic} yearGroup={yearGroup} />
       </div>
       <MobileBottomNav />
     </div>

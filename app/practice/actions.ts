@@ -196,13 +196,60 @@ export async function getNextQuestion(userId: string, topicFilter?: string): Pro
   const supabase = createSupabaseServerClient()
   const now      = new Date().toISOString()
 
-  // ── Fetch student intent (drives scoring + pool filtering) ────────────────────
+  // ── Fetch student profile (intent + year_group) ───────────────────────────────
   const { data: profileRow } = await supabase
     .from('student_profiles')
-    .select('intent')
+    .select('intent, year_group')
     .eq('user_id', userId)
     .single()
-  const intent: string = profileRow?.intent ?? 'not_sure'
+  const intent:    string = profileRow?.intent     ?? 'not_sure'
+  const yearGroup: string = profileRow?.year_group ?? 'year_12'
+
+  // ── NSW curriculum: topics allowed per year group ─────────────────────────────
+  // outcome_id format: "MA-CALC-D01-B3" → topic prefix "MA-CALC-D01"
+  const YEAR_TOPICS: Record<string, string[]> = {
+    year_9: [
+      'MA-COORD-01', 'MA-COORD-02',
+      'MA-ALG-01', 'MA-ALG-03', 'MA-ALG-05', 'MA-ALG-08',
+      'MA-TRIG-07', 'MA-TRIG-08',
+      'MA-STAT-01', 'MA-STAT-02', 'MA-STAT-03',
+      'MA-PROB-01',
+      'MA-FIN-01',
+    ],
+    year_10: [
+      'MA-COORD-01', 'MA-COORD-02', 'MA-COORD-03',
+      'MA-ALG-01', 'MA-ALG-02', 'MA-ALG-03', 'MA-ALG-04',
+      'MA-ALG-05', 'MA-ALG-06', 'MA-ALG-07', 'MA-ALG-08',
+      'MA-FUNC-01', 'MA-FUNC-02', 'MA-FUNC-05', 'MA-FUNC-06',
+      'MA-TRIG-01', 'MA-TRIG-07', 'MA-TRIG-08', 'MA-TRIG-09',
+      'MA-STAT-01', 'MA-STAT-02', 'MA-STAT-03', 'MA-STAT-04',
+      'MA-PROB-01', 'MA-PROB-02',
+      'MA-FIN-01', 'MA-FIN-02',
+    ],
+    year_11: [
+      'MA-COORD-01', 'MA-COORD-02', 'MA-COORD-03', 'MA-COORD-04', 'MA-COORD-05',
+      'MA-ALG-01', 'MA-ALG-02', 'MA-ALG-03', 'MA-ALG-04',
+      'MA-ALG-05', 'MA-ALG-06', 'MA-ALG-07', 'MA-ALG-08',
+      'MA-FUNC-01', 'MA-FUNC-02', 'MA-FUNC-03', 'MA-FUNC-04',
+      'MA-FUNC-05', 'MA-FUNC-06', 'MA-FUNC-07', 'MA-FUNC-08', 'MA-FUNC-09',
+      'MA-TRIG-01', 'MA-TRIG-02', 'MA-TRIG-03', 'MA-TRIG-04',
+      'MA-TRIG-05', 'MA-TRIG-06', 'MA-TRIG-07', 'MA-TRIG-08', 'MA-TRIG-09',
+      'MA-EXP-01', 'MA-EXP-02', 'MA-EXP-03', 'MA-EXP-04', 'MA-EXP-05', 'MA-EXP-06',
+      'MA-CALC-D01', 'MA-CALC-D02', 'MA-CALC-D03', 'MA-CALC-D07', 'MA-CALC-D08',
+      'MA-STAT-01', 'MA-STAT-02', 'MA-STAT-03', 'MA-STAT-04',
+      'MA-PROB-01', 'MA-PROB-02', 'MA-PROB-03',
+      'MA-FIN-01', 'MA-FIN-02', 'MA-FIN-03', 'MA-FIN-04', 'MA-FIN-05',
+    ],
+    // year_12: all topics — no restriction
+  }
+
+  // Max difficulty band per year (caps question complexity)
+  const YEAR_MAX_BAND: Record<string, number> = {
+    year_9:  2,
+    year_10: 3,
+    year_11: 5,
+    year_12: 6,
+  }
 
   // ── KEY: outcome_id stored as "MA-TRIG-02-B3" (prefix + "-B" + band) ──────────
   // PostgREST LIKE/ILIKE filters silently return empty for some patterns.
@@ -237,13 +284,34 @@ export async function getNextQuestion(userId: string, topicFilter?: string): Pro
   }
   /* eslint-enable @typescript-eslint/no-explicit-any */
 
+  // ── Year-group pool filter ────────────────────────────────────────────────────
+  // When no topicFilter: restrict to NSW curriculum topics for the student's year.
+  // Always: cap difficulty band so questions match year-appropriate complexity.
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  const allowedTopics = YEAR_TOPICS[yearGroup]   // undefined = Year 12 (all topics)
+  if (!topicFilter && allowedTopics) {
+    const topicSet = new Set(allowedTopics)
+    // outcome_id "MA-ALG-01-B2" → prefix "MA-ALG-01"
+    const byTopic = pool.filter((r: any) =>
+      topicSet.has((r.outcome_id ?? '').replace(/-B\d+$/, ''))
+    )
+    if (byTopic.length > 0) pool = byTopic
+  }
+
+  const maxBand = YEAR_MAX_BAND[yearGroup] ?? 6
+  if (maxBand < 6) {
+    const byBand = pool.filter((r: any) => (r.difficulty_band ?? 1) <= maxBand)
+    if (byBand.length > 0) pool = byBand
+  }
+  /* eslint-enable @typescript-eslint/no-explicit-any */
+
   // ── Intent-based pool filter (difficulty_band) ───────────────────────────────
-  // exam_prep + getting_ahead: only serve hard questions (band ≥ 4)
-  // finding_gaps + not_sure: no difficulty filter
+  // exam_prep + getting_ahead: only serve hard questions (band ≥ 4, but still
+  // within the year-group cap applied above)
   /* eslint-disable @typescript-eslint/no-explicit-any */
   if (intent === 'exam_prep' || intent === 'getting_ahead') {
     const hardPool = pool.filter((r: any) => (r.difficulty_band ?? 0) >= 4)
-    if (hardPool.length > 0) pool = hardPool   // keep fallback if pool would be empty
+    if (hardPool.length > 0) pool = hardPool
   }
   /* eslint-enable @typescript-eslint/no-explicit-any */
 

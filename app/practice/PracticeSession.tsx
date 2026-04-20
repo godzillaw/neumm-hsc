@@ -207,10 +207,12 @@ export default function PracticeSession({
   userId,
   sessionId: initialSessionId,
   topicFilter,
+  yearGroup,
 }: {
   userId:       string
   sessionId:    string
   topicFilter?: string | null
+  yearGroup?:   string | null
   questionsRemaining?: number
   dailyLimit?:         number
 }) {
@@ -272,7 +274,7 @@ export default function PracticeSession({
         const genRes = await fetch(`${base}/math-nsw/app/api/generate-questions`, {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({ topic: topicFilter }),
+          body:    JSON.stringify({ topic: topicFilter, yearGroup: yearGroup ?? 'year_12' }),
         })
         const genJson = await genRes.json().catch(() => ({})) as Record<string, unknown>
         console.log('[PracticeSession] Generation response:', genRes.status, genJson)

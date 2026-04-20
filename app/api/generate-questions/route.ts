@@ -106,11 +106,21 @@ const TOPICS: Record<string, { name: string; nesa: string }> = {
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
 
+// Maps year_group DB value to a human-readable label for the prompt
+const YEAR_LABEL: Record<string, string> = {
+  year_9:  'Year 9',
+  year_10: 'Year 10',
+  year_11: 'Year 11 (HSC Preliminary)',
+  year_12: 'Year 12 (HSC)',
+}
+
 export async function POST(req: NextRequest) {
-  let topic = ''
+  let topic     = ''
+  let yearGroup = 'year_12'
   try {
-    const body = await req.json() as { topic?: string }
-    topic = body.topic ?? ''
+    const body = await req.json() as { topic?: string; yearGroup?: string }
+    topic     = body.topic     ?? ''
+    yearGroup = body.yearGroup ?? 'year_12'
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
@@ -152,7 +162,24 @@ export async function POST(req: NextRequest) {
   // ── Generate via Claude Haiku ─────────────────────────────────────────────
   const client = new Anthropic({ apiKey })
 
-  const prompt = `Generate exactly 8 HSC Advanced Mathematics multiple choice questions on: "${meta.name}" (NESA code ${meta.nesa}).
+  const yearLabel = YEAR_LABEL[yearGroup] ?? 'Year 12 (HSC)'
+
+  // Max band for this year group — caps what we ask Claude to generate
+  const MAX_BAND: Record<string, number> = {
+    year_9: 2, year_10: 3, year_11: 5, year_12: 6,
+  }
+  const maxBand = MAX_BAND[yearGroup] ?? 6
+
+  // Spread difficulty_band evenly across 1..maxBand (8 questions)
+  const bands: number[] = Array.from({ length: 8 }, (_, i) =>
+    Math.min(Math.round(1 + (i / 7) * (maxBand - 1)), maxBand)
+  )
+
+  const prompt = `Generate exactly 8 NSW Mathematics multiple choice questions on: "${meta.name}" (NESA code ${meta.nesa}).
+
+These questions are for a ${yearLabel} student. Use age-appropriate language, real-world contexts relevant to that year level, and ensure difficulty suits that stage of learning.
+
+Difficulty bands range from 1 (easiest) to ${maxBand} (hardest for this year). Assign the 8 questions these bands in order: ${bands.join(', ')}.
 
 Return ONLY a valid JSON array, no markdown, no other text. Start with [ immediately.
 Each element must have exactly these fields:
@@ -166,7 +193,7 @@ Each element must have exactly these fields:
   "option_c": "...",
   "option_d": "...",
   "correct_option": "a",
-  "explanation": "2-3 sentences",
+  "explanation": "2-3 sentences explaining the answer at a ${yearLabel} level",
   "step_by_step": ["Step 1: ...", "Step 2: ...", "Step 3: ..."]
 }`
 
