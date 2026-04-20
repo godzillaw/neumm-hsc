@@ -1,10 +1,7 @@
-import { Suspense }              from 'react'
-import { requireAuth }          from '@/lib/auth-server'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
-import { getRecommendation }    from '@/lib/actions/recommendation'
-import ProgressView             from './ProgressView'
-import type { TopicStat }       from './ProgressView'
-import type { WeakTopic }       from '@/lib/actions/recommendation'
+import { requireAuth }                 from '@/lib/auth-server'
+import { createSupabaseServerClient }  from '@/lib/supabase-server'
+import ProgressView                    from './ProgressView'
+import type { TopicStat, NextMove }    from './ProgressView'
 
 // ─── Topic catalogue ────────────────────────────────────────────────────────────
 
@@ -96,57 +93,15 @@ const TOPIC_META: Record<string, { name: string; category: string }> = {
   'MA-EXT-08':   { name: 'Further trigonometry',        category: 'Extension Topics' },
 }
 
-// ─── Recommendation card (async server component, streamed via Suspense) ────────
+// ─── Band computation ────────────────────────────────────────────────────────────
 
-async function RecommendationCard({ weakTopics }: { weakTopics: WeakTopic[] }) {
-  const text = await getRecommendation(weakTopics)
-  return (
-    <div
-      className="rounded-2xl p-5 border mt-2"
-      style={{ backgroundColor: '#FFFBF0', borderColor: '#F0E980', fontFamily: "'Nunito', sans-serif" }}
-    >
-      <div className="flex items-start gap-3">
-        <div
-          className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-lg"
-          style={{ backgroundColor: '#FFDA00' }}
-        >
-          🎯
-        </div>
-        <div>
-          <p
-            className="text-xs font-bold uppercase tracking-wide mb-1"
-            style={{ color: '#0F0F14' }}
-          >
-            AI Recommendation
-          </p>
-          <p className="text-sm font-semibold leading-relaxed" style={{ color: '#0F0F14' }}>{text}</p>
-          {weakTopics.length > 1 && (
-            <p className="text-xs mt-2" style={{ color: '#666672' }}>
-              Also consider: {weakTopics.slice(1).map(t => t.name).join(', ')}
-            </p>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function RecommendationSkeleton() {
-  return (
-    <div
-      className="rounded-2xl p-5 border mt-2 animate-pulse"
-      style={{ backgroundColor: '#FFFBF0', borderColor: '#F0E980' }}
-    >
-      <div className="flex items-start gap-3">
-        <div className="w-9 h-9 rounded-xl shrink-0" style={{ backgroundColor: '#F0E980' }} />
-        <div className="flex-1">
-          <div className="h-3 rounded w-28 mb-2" style={{ backgroundColor: '#F0E980' }} />
-          <div className="h-4 rounded w-full mb-1.5" style={{ backgroundColor: '#F0E980' }} />
-          <div className="h-4 rounded w-3/4" style={{ backgroundColor: '#F0E980' }} />
-        </div>
-      </div>
-    </div>
-  )
+function computeBand(mastery: number): number {
+  if (mastery >= 85) return 6
+  if (mastery >= 70) return 5
+  if (mastery >= 55) return 4
+  if (mastery >= 40) return 3
+  if (mastery >= 25) return 2
+  return 1
 }
 
 // ─── Page ───────────────────────────────────────────────────────────────────────
@@ -155,22 +110,44 @@ export default async function ProgressPage() {
   const user     = await requireAuth()
   const supabase = createSupabaseServerClient()
 
-  // Fetch the full mastery_map
-  const { data: masteryRows } = await supabase
-    .from('mastery_map')
-    .select('outcome_id, confidence_pct, status')
-    .eq('user_id', user.id)
+  // Parallel fetch: mastery map + student profile + display name
+  const [masteryRes, profileRes, userRes] = await Promise.all([
+    supabase
+      .from('mastery_map')
+      .select('outcome_id, confidence_pct, next_review_at')
+      .eq('user_id', user.id),
+    supabase
+      .from('student_profiles')
+      .select('year_group')
+      .eq('user_id', user.id)
+      .single(),
+    supabase
+      .from('users')
+      .select('display_name')
+      .eq('id', user.id)
+      .single(),
+  ])
+
+  const masteryRows = masteryRes.data ?? []
+  const yearGroup   = (profileRes.data as { year_group?: string } | null)?.year_group ?? 'year_12'
+  const displayName = (userRes.data as { display_name?: string } | null)?.display_name
+    ?? user.email?.split('@')[0]
+    ?? 'Student'
+
+  const YEAR_LABEL: Record<string, string> = {
+    year_9: 'Year 9', year_10: 'Year 10',
+    year_11: 'Year 11', year_12: 'Year 12',
+  }
 
   // ── Aggregate: group mastery_map rows by topic prefix ──
   const prefixMap: Record<string, number[]> = {}
-  for (const row of (masteryRows ?? [])) {
+  for (const row of masteryRows) {
     const prefix = row.outcome_id.replace(/-B\d+$/, '')
     if (!prefixMap[prefix]) prefixMap[prefix] = []
     prefixMap[prefix].push(row.confidence_pct)
   }
 
-  // ── Build full topic list (all known + tested) ──
-  // Start with all TOPIC_META keys so untested topics appear as grey
+  // ── Build full topic list ──
   const topicStats: TopicStat[] = Object.keys(TOPIC_META).map(prefix => {
     const vals = prefixMap[prefix]
     const avg  = vals && vals.length > 0
@@ -191,38 +168,41 @@ export default async function ProgressPage() {
   const gap      = tested.filter(t => (t.avg ?? 0) < 50).length
   const untested = topicStats.length - tested.length
 
-  // ── Overall mastery % (only over tested topics) ──
+  // ── Overall mastery ──
   const overallMastery = tested.length > 0
     ? Math.round(tested.reduce((s, t) => s + (t.avg ?? 0), 0) / tested.length)
     : 0
 
-  // ── Three weakest tested topics (for AI recommendation) ──
-  const weakTopics: WeakTopic[] = tested
-    .slice()
-    .sort((a, b) => (a.avg ?? 0) - (b.avg ?? 0))
-    .slice(0, 3)
-    .map(t => ({ prefix: t.prefix, name: t.name, avg: t.avg ?? 0 }))
+  // ── Band prediction ──
+  const predictedBand = computeBand(overallMastery)
+  const targetBand    = predictedBand >= 5 ? 6 : predictedBand + 2
+
+  // ── Smart "Next 3 Moves" ──────────────────────────────────────────────────────
+  // Move 1 — Quick Win: highest confidence in 60–79% (one session to Mastered)
+  const quickWin = tested
+    .filter(t => (t.avg ?? 0) >= 60 && (t.avg ?? 0) < 80)
+    .sort((a, b) => (b.avg ?? 0) - (a.avg ?? 0))[0]
+    ?? tested.filter(t => (t.avg ?? 0) >= 50 && (t.avg ?? 0) < 80)
+       .sort((a, b) => (b.avg ?? 0) - (a.avg ?? 0))[0]
+
+  // Move 2 — Urgent Gap: lowest tested confidence > 0 (started but struggling)
+  const urgentGap = tested
+    .filter(t => (t.avg ?? 0) > 0 && (t.avg ?? 0) < 50)
+    .sort((a, b) => (a.avg ?? 0) - (b.avg ?? 0))[0]
+
+  // Move 3 — Fresh Start: first untested topic
+  const freshStart = topicStats.find(t => t.avg === null)
+
+  const nextMoves: NextMove[] = []
+  if (quickWin)   nextMoves.push({ type: 'quickWin',   prefix: quickWin.prefix,   name: quickWin.name,   avg: quickWin.avg   })
+  if (urgentGap)  nextMoves.push({ type: 'urgentGap',  prefix: urgentGap.prefix,  name: urgentGap.name,  avg: urgentGap.avg  })
+  if (freshStart) nextMoves.push({ type: 'freshStart', prefix: freshStart.prefix, name: freshStart.name, avg: null            })
 
   return (
     <div
       className="px-5 md:px-8 py-8 max-w-5xl"
       style={{ fontFamily: "'Nunito', sans-serif" }}
     >
-
-      {/* ── Page header ── */}
-      <div className="mb-6">
-        <h1
-          className="text-2xl font-bold"
-          style={{ color: '#0F0F14', fontFamily: "'Nunito', sans-serif" }}
-        >
-          Progress
-        </h1>
-        <p className="text-sm mt-0.5" style={{ color: '#666672' }}>
-          Your HSC Mathematics mastery at a glance
-        </p>
-      </div>
-
-      {/* ── Main mastery view (circular indicator + tiles) ── */}
       <ProgressView
         topics={topicStats}
         overallMastery={overallMastery}
@@ -230,31 +210,12 @@ export default async function ProgressPage() {
         shaky={shaky}
         gap={gap}
         untested={untested}
+        displayName={displayName}
+        yearLabel={YEAR_LABEL[yearGroup] ?? 'HSC'}
+        predictedBand={predictedBand}
+        targetBand={targetBand}
+        nextMoves={nextMoves}
       />
-
-      {/* ── AI Recommendation (streamed via Suspense) ── */}
-      <div className="mt-4 mb-8">
-        <h2
-          className="text-sm font-bold mb-2"
-          style={{ color: '#0F0F14', fontFamily: "'Nunito', sans-serif" }}
-        >
-          Next focus area
-        </h2>
-        <Suspense fallback={<RecommendationSkeleton />}>
-          {weakTopics.length > 0 ? (
-            <RecommendationCard weakTopics={weakTopics} />
-          ) : (
-            <div
-              className="rounded-2xl p-5 border"
-              style={{ backgroundColor: '#FFFBF0', borderColor: '#F0E980' }}
-            >
-              <p className="text-sm" style={{ color: '#666672' }}>
-                Complete the placement probe to unlock personalised recommendations.
-              </p>
-            </div>
-          )}
-        </Suspense>
-      </div>
     </div>
   )
 }
