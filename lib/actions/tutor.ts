@@ -5,6 +5,38 @@ import { createSupabaseServerClient } from '@/lib/supabase-server'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
+// ─── Tier guard ────────────────────────────────────────────────────────────────
+//
+// Returns true when the current user has access to Pro-level AI features.
+// basic_trial / pro_trial (active) and pro → true.  basic (paid) → false.
+
+const TRIAL_TIERS = new Set(['basic_trial', 'pro_trial'])
+
+async function hasProAIAccess(): Promise<boolean> {
+  try {
+    const supabase = createSupabaseServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return false
+
+    const { data } = await supabase
+      .from('users')
+      .select('tier, trial_end_date')
+      .eq('id', user.id)
+      .single()
+
+    const raw           = data as { tier?: string; trial_end_date?: string | null } | null
+    const rawTier       = raw?.tier           ?? 'basic_trial'
+    const trialEndDate  = raw?.trial_end_date ?? null
+    const trialExpired  = trialEndDate ? new Date(trialEndDate) < new Date() : false
+    const effectiveTier = TRIAL_TIERS.has(rawTier) && trialExpired ? 'basic_trial_expired' : rawTier
+
+    // basic (paid plan) is the only active tier WITHOUT Pro AI features
+    return effectiveTier !== 'basic'
+  } catch {
+    return true   // fail-open so a DB hiccup doesn't break the app
+  }
+}
+
 const SYSTEM_PROMPT = `You are an expert NSW HSC Mathematics tutor operating in Socratic mode.
 You help students studying for the Higher School Certificate (HSC) in Australia.
 Your teaching philosophy: never give away the answer directly — guide students to discover it themselves.
@@ -25,7 +57,7 @@ For EXPLANATIONS (post-submission):
 - Keep each step to 1-2 sentences
 - Include relevant formulas inline, e.g. "Using the chain rule: d/dx[f(g(x))] = f'(g(x)) · g'(x)"
 
-Always be warm, encouraging, and precise. Use plain text math notation (e.g. x^2, sqrt(x), dy/dx) — no LaTeX.`
+Always be warm, encouraging, and precise. Use proper Unicode math symbols — no LaTeX. Examples: x² not x^2, √x not sqrt(x), × not *, ÷ not /, π not pi, θ not theta, ° for degrees, ≠ not !=, ≤ ≥ not <= >=, ± √ ∫ Σ → ∞.`
 
 // ─── getHint ───────────────────────────────────────────────────────────────────
 //
@@ -158,6 +190,143 @@ Respond with the explanation only — no preamble.`.trim()
   }
 }
 
+// ─── getConceptVideo ──────────────────────────────────────────────────────────
+//
+// Searches YouTube (prioritising Eddie Woo) for a video that explains the
+// concept being tested.  Falls back gracefully when no API key is configured.
+
+export interface ConceptVideo {
+  videoId:      string
+  title:        string
+  channelTitle: string
+  thumbnailUrl: string
+}
+
+// Warm-instance cache — survives repeated requests within the same Lambda
+const _videoCache = new Map<string, ConceptVideo | null>()
+
+interface YTItem {
+  id:      { videoId: string }
+  snippet: {
+    title:        string
+    channelTitle: string
+    thumbnails:   { medium?: { url: string }; default?: { url: string } }
+  }
+}
+
+export async function getConceptVideo(
+  topicName: string,
+): Promise<{ video: ConceptVideo | null; searchQuery: string }> {
+  // Pro-only feature
+  const isPro = await hasProAIAccess()
+  if (!isPro) return { video: null, searchQuery: '' }
+
+  const apiKey      = process.env.YOUTUBE_API_KEY
+  const searchQuery = `eddie woo ${topicName} HSC maths`
+  const cacheKey    = topicName.toLowerCase().replace(/\W+/g, '_')
+
+  if (_videoCache.has(cacheKey)) {
+    return { video: _videoCache.get(cacheKey) ?? null, searchQuery }
+  }
+
+  if (!apiKey) return { video: null, searchQuery }
+
+  try {
+    const params = new URLSearchParams({
+      part:              'snippet',
+      q:                 searchQuery,
+      type:              'video',
+      maxResults:        '3',
+      relevanceLanguage: 'en',
+      key:               apiKey,
+    })
+    const res  = await fetch(`https://www.googleapis.com/youtube/v3/search?${params}`)
+    if (!res.ok) throw new Error(`YouTube API returned ${res.status}`)
+    const data = (await res.json()) as { items?: YTItem[] }
+    const item = data.items?.[0]
+    const video: ConceptVideo | null = item
+      ? {
+          videoId:      item.id.videoId,
+          title:        item.snippet.title,
+          channelTitle: item.snippet.channelTitle,
+          thumbnailUrl: item.snippet.thumbnails.medium?.url
+                        ?? item.snippet.thumbnails.default?.url
+                        ?? '',
+        }
+      : null
+    _videoCache.set(cacheKey, video)
+    return { video, searchQuery }
+  } catch (err) {
+    console.error('[getConceptVideo] error:', err)
+    _videoCache.set(cacheKey, null)
+    return { video: null, searchQuery }
+  }
+}
+
+// ─── getConceptExplanation ────────────────────────────────────────────────────
+//
+// Returns a clear, example-rich explanation of the concept being tested.
+// Shown BEFORE answering — teaches the concept without revealing the answer.
+
+export async function getConceptExplanation(
+  questionId: string,
+): Promise<{ concept: string }> {
+  // Pro-only feature
+  const isPro = await hasProAIAccess()
+  if (!isPro) {
+    return { concept: '__UPGRADE_REQUIRED__' }
+  }
+
+  const supabase = createSupabaseServerClient()
+
+  const { data: q } = await supabase
+    .from('questions')
+    .select('content_json, nesa_outcome_code, outcome_id, difficulty_band')
+    .eq('id', questionId)
+    .single()
+
+  if (!q) return { concept: 'Unable to load concept explanation. Please try again.' }
+
+  const content      = (q.content_json ?? {}) as Record<string, string>
+  const questionText = content.question_text ?? ''
+  const nesaCode     = q.nesa_outcome_code ?? q.outcome_id ?? ''
+
+  const userMessage = `
+A student is about to answer this HSC Mathematics question (NESA: ${nesaCode}, Band ${q.difficulty_band}):
+
+"${questionText}"
+
+Before they answer, explain the underlying mathematical CONCEPT being tested. Do NOT reveal or hint at the correct answer option.
+
+Structure your response exactly like this:
+
+📖 Concept: [Name the specific mathematical concept in 1 line]
+
+🔑 Key Idea: [Explain the concept clearly in 2–3 sentences. Include the key formula, rule, or definition.]
+
+✏️ Worked Example:
+[Write a short, self-contained worked example of this concept — use DIFFERENT numbers/values from the question above. Show each step clearly.]
+
+💡 Remember: [One sentence tip students often forget about this concept.]
+
+Use proper Unicode math symbols (e.g. x², √3/2, sin(θ), π, °, ≠, ≤, ≥, ×, ±, ∫). Be clear, concise, and friendly.`.trim()
+
+  try {
+    const response = await anthropic.messages.create({
+      model:      'claude-haiku-4-5',
+      max_tokens: 500,
+      system:     'You are an expert NSW HSC Mathematics teacher. Your job is to explain mathematical concepts clearly and concisely to Year 11–12 students. You teach directly and confidently, using worked examples. You never use LaTeX. Always use proper Unicode math symbols: ² ³ ⁴ ⁿ for powers, √ for roots, × for multiply, ÷ for divide, π θ α β for Greek letters, ° for degrees, ≠ ≤ ≥ ± ∫ Σ → ∞ as needed.',
+      messages:   [{ role: 'user', content: userMessage }],
+    })
+
+    const text = response.content[0].type === 'text' ? response.content[0].text : ''
+    return { concept: text.trim() }
+  } catch (err) {
+    console.error('[getConceptExplanation] Anthropic error:', err)
+    return { concept: 'Unable to load concept explanation right now. Try the Hint button for a nudge!' }
+  }
+}
+
 // ─── chatWithTutor ─────────────────────────────────────────────────────────────
 //
 // Free-form chat: student can ask follow-up questions about the current problem.
@@ -171,6 +340,12 @@ export async function chatWithTutor(
   questionId: string,
   messages:   ChatMessage[],
 ): Promise<{ reply: string }> {
+  // Pro-only feature
+  const isPro = await hasProAIAccess()
+  if (!isPro) {
+    return { reply: '__UPGRADE_REQUIRED__' }
+  }
+
   const supabase = createSupabaseServerClient()
 
   const { data: q } = await supabase
@@ -203,5 +378,115 @@ The student is asking follow-up questions. Continue in Socratic mode — guide t
   } catch (err) {
     console.error('[chatWithTutor] error:', err)
     return { reply: "I'm having trouble connecting right now. Try rephrasing your question!" }
+  }
+}
+
+// ─── assessOpenAnswer ──────────────────────────────────────────────────────────
+//
+// Uses Claude vision to assess a student's handwritten working image against
+// the model answer and marking criteria. Returns a structured assessment.
+
+export interface AssessOpenAnswerResult {
+  score:           number     // marks awarded
+  totalMarks:      number     // total possible marks
+  isCorrect:       boolean    // true if score >= 50% of totalMarks
+  feedback:        string     // 1-2 sentence overall assessment
+  whatWasRight:    string[]   // up to 3 correct aspects
+  whatWasMissing:  string[]   // up to 3 missing/incorrect aspects
+  tip:             string     // one specific improvement tip
+}
+
+export async function assessOpenAnswer(params: {
+  questionText:    string
+  modelAnswer:     string
+  solutionSteps:   string[]
+  marks:           number
+  markingCriteria: string[]
+  workingImageBase64: string  // raw base64, no "data:" prefix
+}): Promise<AssessOpenAnswerResult> {
+  const {
+    questionText, modelAnswer, solutionSteps, marks,
+    markingCriteria, workingImageBase64,
+  } = params
+
+  const criteriaText = markingCriteria.length > 0
+    ? markingCriteria.join('\n')
+    : `${marks} marks for a complete correct solution with all working shown.`
+
+  // Concise prompt — fewer input tokens = faster response
+  const prompt = `NSW HSC Mathematics marker. Mark the student's handwritten working in the image.
+
+Q: ${questionText}
+Marks: ${marks}
+Criteria: ${criteriaText}
+Model answer: ${modelAnswer || solutionSteps.slice(0, 4).join(' | ')}
+
+Return ONLY valid JSON (no markdown, nothing else):
+{"score":<int 0-${marks}>,"feedback":"<2 encouraging sentences about their attempt>","whatWasRight":["<up to 3 items>"],"whatWasMissing":["<up to 3 items>"],"tip":"<1 actionable sentence>"}
+
+If image is blank/unreadable set score to 0. Use Unicode math symbols, not LaTeX.`
+
+  // Detect image format from base64 magic bytes:
+  //   PNG  → starts with "iVBOR"  (\x89PNG)
+  //   JPEG → starts with "/9j/"   (\xFF\xD8\xFF)
+  //   default to jpeg (we always compress to JPEG client-side before sending)
+  const mediaType: 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif' =
+    workingImageBase64.startsWith('iVBOR') ? 'image/png' : 'image/jpeg'
+
+  try {
+    const response = await anthropic.messages.create({
+      // Haiku is 3-5× faster than Sonnet and fully capable of reading handwritten maths
+      model:      'claude-haiku-4-5',
+      max_tokens: 350,
+      messages: [{
+        role: 'user',
+        content: [
+          {
+            type: 'image',
+            source: {
+              type:       'base64',
+              media_type: mediaType,
+              data:       workingImageBase64,
+            },
+          },
+          { type: 'text', text: prompt },
+        ],
+      }],
+    })
+
+    const raw = response.content
+      .filter((b): b is Anthropic.TextBlock => b.type === 'text')
+      .map(b => b.text)
+      .join('')
+
+    // Parse JSON from response
+    const jsonStart = raw.indexOf('{')
+    const jsonEnd   = raw.lastIndexOf('}')
+    if (jsonStart === -1 || jsonEnd <= jsonStart) throw new Error('No JSON in response')
+
+    const parsed = JSON.parse(raw.slice(jsonStart, jsonEnd + 1)) as Record<string, unknown>
+    const score  = Math.max(0, Math.min(marks, Number(parsed.score ?? 0)))
+
+    return {
+      score,
+      totalMarks:     marks,
+      isCorrect:      score >= Math.ceil(marks * 0.5),
+      feedback:       String(parsed.feedback      ?? 'Assessment complete.'),
+      whatWasRight:   Array.isArray(parsed.whatWasRight)   ? (parsed.whatWasRight   as string[]) : [],
+      whatWasMissing: Array.isArray(parsed.whatWasMissing) ? (parsed.whatWasMissing as string[]) : [],
+      tip:            String(parsed.tip ?? 'Keep practising — you are improving!'),
+    }
+  } catch (err) {
+    console.error('[assessOpenAnswer] error:', err)
+    // Graceful fallback — partial credit, encourage retry
+    return {
+      score:          0,
+      totalMarks:     marks,
+      isCorrect:      false,
+      feedback:       "I couldn't fully read your working. Try resubmitting with clearer writing or better lighting.",
+      whatWasRight:   [],
+      whatWasMissing: ['Could not assess — please resubmit'],
+      tip:            'Write larger and ensure the photo is well-lit.',
+    }
   }
 }

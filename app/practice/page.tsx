@@ -8,29 +8,44 @@ import AppSidebar                      from '@/components/AppSidebar'
 import TrialExpiredModal               from '@/components/TrialExpiredModal'
 import MobileBottomNav                 from '@/components/MobileBottomNav'
 
-function DailyLimitCard() {
+function DailyLimitCard({ tier, dailyLimit }: { tier: string; dailyLimit: number }) {
+  const isFree = tier === 'free' || tier === 'basic_trial_expired' || tier === 'trial_expired'
   return (
-    <div className="bg-white rounded-3xl shadow-sm border border-orange-100 p-8 text-center max-w-sm w-full">
+    <div className="bg-white rounded-3xl shadow-sm border border-orange-100 p-8 text-center max-w-sm w-full"
+      style={{ fontFamily: "'Nunito', sans-serif" }}>
       <div className="text-5xl mb-4">⚡</div>
       <h2 className="text-lg font-black text-gray-900 mb-2">
         You&apos;ve hit today&apos;s limit
       </h2>
-      <p className="text-sm text-gray-500 mb-1">
-        Basic plan allows <strong>50 questions per day</strong>.
-      </p>
-      <p className="text-sm text-gray-400 mb-6">
-        Your limit resets at midnight UTC. Upgrade to Pro for unlimited access.
-      </p>
+      {isFree ? (
+        <>
+          <p className="text-sm text-gray-500 mb-1">
+            Free plan allows <strong>{dailyLimit} questions per day</strong>.
+          </p>
+          <p className="text-sm text-gray-400 mb-6">
+            Resets at midnight UTC. Upgrade to Basic (25/day) or Pro (unlimited).
+          </p>
+        </>
+      ) : (
+        <>
+          <p className="text-sm text-gray-500 mb-1">
+            Basic plan allows <strong>{dailyLimit} questions per day</strong>.
+          </p>
+          <p className="text-sm text-gray-400 mb-6">
+            Your limit resets at midnight UTC. Upgrade to Pro for unlimited access.
+          </p>
+        </>
+      )}
       <Link
         href="/account/upgrade"
-        className="inline-block w-full py-3 rounded-2xl text-sm font-black text-white"
+        className="inline-block w-full py-3 rounded-2xl text-sm font-black text-white mb-2"
         style={{ background: 'linear-gradient(135deg,#185FA5,#1E7BC4)' }}
       >
-        Upgrade to Pro →
+        {isFree ? 'Upgrade for more →' : 'Upgrade to Pro →'}
       </Link>
-      <Link href="/dashboard"
-        className="block mt-3 text-xs font-semibold text-gray-400 hover:text-gray-600">
-        ← Back to dashboard
+      <Link href="/dashboard/mission"
+        className="block mt-1 text-xs font-semibold text-gray-400 hover:text-gray-600">
+        ← Back to mission
       </Link>
     </div>
   )
@@ -39,11 +54,12 @@ function DailyLimitCard() {
 export default async function PracticePage({
   searchParams,
 }: {
-  searchParams: { topic?: string }
+  searchParams: { topic?: string; stage?: string }
 }) {
-  const user   = await requireAuth()
-  const access = await checkTierAccess(user.id)
-  const topic  = searchParams.topic ?? null
+  const user    = await requireAuth()
+  const access  = await checkTierAccess(user.id)
+  const topic   = searchParams.topic ?? null
+  const stageId = searchParams.stage ?? null
 
   // Trial expired / payment failed — hard block
   if (access.isBlocked) {
@@ -58,13 +74,13 @@ export default async function PracticePage({
     )
   }
 
-  // Basic daily limit reached — soft block with upgrade prompt
+  // Daily limit reached — soft block with upgrade prompt
   if (access.dailyLimitReached) {
     return (
       <div className="flex min-h-screen" style={{ background: 'linear-gradient(135deg,#F7F3FF,#FDF2F8,#F0FDF4)' }}>
         <AppSidebar />
         <div className="flex-1 min-w-0 flex items-center justify-center px-6">
-          <DailyLimitCard />
+          <DailyLimitCard tier={access.tier} dailyLimit={access.dailyLimit} />
         </div>
         <MobileBottomNav />
       </div>
@@ -98,7 +114,14 @@ export default async function PracticePage({
     <div className="flex min-h-screen" style={{ background: 'linear-gradient(135deg,#F7F3FF,#FDF2F8,#F0FDF4)' }}>
       <AppSidebar />
       <div className="flex-1 min-w-0 flex flex-col pb-20 md:pb-0">
-        <PracticeSession userId={user.id} sessionId={sessionId} topicFilter={topic} yearGroup={yearGroup} />
+        <PracticeSession
+          userId={user.id}
+          sessionId={sessionId}
+          topicFilter={topic}
+          yearGroup={yearGroup}
+          tier={access.tier}
+          stageId={stageId}
+        />
       </div>
       <MobileBottomNav />
     </div>

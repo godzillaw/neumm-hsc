@@ -12,14 +12,22 @@ export interface PracticeQuestion {
   outcome_id:         string   // topic prefix   e.g. "MA-CALC-D01"
   mastery_outcome_id: string   // full map key   e.g. "MA-CALC-D01-B3"
   difficulty_band:    number
+  question_type:      'multiple_choice' | 'open'   // 'multiple_choice' for all legacy questions
   content: {
-    question_text: string
-    option_a: string
-    option_b: string
-    option_c: string
-    option_d: string
+    question_text:    string
+    // Multiple choice fields
+    option_a:         string
+    option_b:         string
+    option_c:         string
+    option_d:         string
+    // Open response fields
+    model_answer:     string
+    marks:            number
+    marking_criteria: string[]
+    diagram:          string | null   // text description shown above question, or null
+    diagram_spec:     Record<string, unknown> | null  // structured spec for DiagramRenderer
   }
-  correct_answer:     string   // 'a'|'b'|'c'|'d'
+  correct_answer:     string   // 'a'|'b'|'c'|'d' for MC; 'open' for open response
   explanation:        string
   step_by_step:       string[]
   nesa_outcome_code:  string
@@ -137,19 +145,28 @@ const TOPIC_NAMES: Record<string, string> = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function shapeQuestion(row: any, masteryOutcomeId: string, confidence: number): PracticeQuestion {
-  const c = (row.content_json ?? {}) as Record<string, string>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const c = (row.content_json ?? {}) as Record<string, any>
   const prefix = row.outcome_id ?? masteryOutcomeId.replace(/-B\d+$/, '')
+  const questionType: 'multiple_choice' | 'open' =
+    (c.question_type === 'open' || row.format === 'open') ? 'open' : 'multiple_choice'
   return {
     id:                 row.id,
     outcome_id:         prefix,
     mastery_outcome_id: masteryOutcomeId,
     difficulty_band:    row.difficulty_band ?? 3,
+    question_type:      questionType,
     content: {
-      question_text: c.question_text ?? '',
-      option_a:      c.option_a      ?? '',
-      option_b:      c.option_b      ?? '',
-      option_c:      c.option_c      ?? '',
-      option_d:      c.option_d      ?? '',
+      question_text:    String(c.question_text ?? ''),
+      option_a:         String(c.option_a      ?? ''),
+      option_b:         String(c.option_b      ?? ''),
+      option_c:         String(c.option_c      ?? ''),
+      option_d:         String(c.option_d      ?? ''),
+      model_answer:     String(c.model_answer  ?? ''),
+      marks:            Number(c.marks         ?? 3),
+      marking_criteria: Array.isArray(c.marking_criteria) ? (c.marking_criteria as string[]) : [],
+      diagram:          c.diagram ? String(c.diagram) : null,
+      diagram_spec:     (c.diagram_spec && typeof c.diagram_spec === 'object') ? c.diagram_spec as Record<string, unknown> : null,
     },
     correct_answer:    (row.correct_answer ?? 'a').toLowerCase(),
     explanation:       row.explanation ?? '',

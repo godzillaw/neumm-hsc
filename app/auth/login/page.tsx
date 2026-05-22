@@ -5,10 +5,31 @@ import Link                                from 'next/link'
 import { useRouter }                       from 'next/navigation'
 import { signInWithEmail, signInWithGoogle } from '@/lib/auth'
 
+// ─── Left-panel highlights ─────────────────────────────────────────────────────
+const HIGHLIGHTS = [
+  {
+    emoji: '📊',
+    title: 'Your progress is waiting',
+    desc:  'Mastery map, band prediction and streaks all pick up exactly where you left off.',
+  },
+  {
+    emoji: '👩‍🏫',
+    title: 'AI tutor — always on',
+    desc:  'Socratic hints, worked solutions and concept explanations available 24/7.',
+  },
+  {
+    emoji: '✏️',
+    title: 'Show your working',
+    desc:  'Draw on your iPad or upload a photo — AI marks every step, not just the answer.',
+  },
+]
+
+// ─── Component ─────────────────────────────────────────────────────────────────
 export default function LoginPage() {
   const router = useRouter()
   const [email,         setEmail]         = useState('')
   const [password,      setPassword]      = useState('')
+  const [showPassword,  setShowPassword]  = useState(false)
   const [loading,       setLoading]       = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error,         setError]         = useState<string | null>(null)
@@ -16,109 +37,196 @@ export default function LoginPage() {
   async function handleEmailLogin(e: React.FormEvent) {
     e.preventDefault()
     setError(null); setLoading(true)
-    const { error } = await signInWithEmail(email, password)
-    if (error) { setError(error.message); setLoading(false) }
+    const { error: err } = await signInWithEmail(email, password)
+    if (err) { setError(err.message); setLoading(false) }
     else { router.push('/dashboard'); router.refresh() }
   }
 
   async function handleGoogleLogin() {
     setError(null); setGoogleLoading(true)
-    const { error } = await signInWithGoogle()
-    if (error) { setError(error.message); setGoogleLoading(false) }
+    const { error: err } = await signInWithGoogle()
+    if (err) { setError(err.message); setGoogleLoading(false) }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-10"
-      style={{ background: '#FFFBF0', fontFamily: "'Nunito', sans-serif" }}>
+    <div className="min-h-screen flex" style={{ fontFamily: "'Nunito', sans-serif" }}>
 
-      {/* Decorative blobs */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full opacity-30"
-          style={{ background: '#FFDA00', filter: 'blur(60px)' }} />
-        <div className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full opacity-20"
-          style={{ background: '#FF6B35', filter: 'blur(60px)' }} />
-      </div>
+      {/* ── LEFT PANEL ── */}
+      <div
+        className="hidden md:flex flex-col justify-between w-1/2 p-10 relative overflow-hidden"
+        style={{ background: 'linear-gradient(160deg, #0C2D5A 0%, #185FA5 60%, #1E7BC4 100%)' }}
+      >
+        {/* Decorative rings */}
+        <div className="absolute top-[-80px] right-[-80px] w-72 h-72 rounded-full opacity-10"
+          style={{ border: '2px solid white' }} />
+        <div className="absolute top-[-40px] right-[-40px] w-48 h-48 rounded-full opacity-10"
+          style={{ border: '2px solid white' }} />
+        <div className="absolute bottom-[-60px] left-[-60px] w-64 h-64 rounded-full opacity-10"
+          style={{ border: '2px solid white' }} />
+        <div className="absolute bottom-[80px] right-[-100px] w-80 h-80 rounded-full opacity-10"
+          style={{ border: '2px solid white' }} />
 
-      <div className="w-full max-w-[400px] relative z-10">
-
-        {/* Logo mark */}
-        <div className="text-center mb-9">
-          <div className="relative inline-flex items-center justify-center mb-5">
-            <div className="w-20 h-20 rounded-[2rem] flex items-center justify-center text-4xl font-black shadow-xl"
-              style={{ background: '#FFDA00', color: '#0F0F14', boxShadow: '0 8px 32px rgba(255,218,0,0.5)' }}>
-              N
-            </div>
-            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-4 border-[#FFFBF0]"
-              style={{ background: '#27D975' }} />
+        {/* Logo */}
+        <div className="flex items-center gap-3 relative z-10">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg"
+            style={{ backgroundColor: 'rgba(255,255,255,0.15)', color: 'white' }}>
+            N
           </div>
-          <h1 className="text-3xl font-black tracking-tight" style={{ color: '#0F0F14' }}>
-            Welcome back 👋
-          </h1>
-          <p className="text-sm mt-1 font-semibold" style={{ color: '#666672' }}>
-            Ready to crush some HSC prep?
-          </p>
+          <div>
+            <p className="font-black text-white text-lg leading-none">Neumm</p>
+            <p className="text-xs font-bold tracking-widest uppercase"
+              style={{ color: 'rgba(255,255,255,0.55)' }}>
+              HSC Mathematics
+            </p>
+          </div>
         </div>
 
-        {/* Card */}
-        <div className="rounded-3xl p-7 shadow-xl"
-          style={{ background: '#FFFFFF', border: '1.5px solid #F0E980' }}>
+        {/* Hero copy */}
+        <div className="relative z-10 flex-1 flex flex-col justify-center py-12">
+          <p className="text-xs font-black uppercase tracking-widest mb-4"
+            style={{ color: 'rgba(255,255,255,0.5)' }}>
+            ● Adaptive learning platform
+          </p>
+          <h1 className="text-4xl font-black text-white leading-tight mb-4">
+            Welcome back.<br />
+            <span style={{ color: '#7EC8F4' }}>Keep climbing.</span>
+          </h1>
+          <p className="text-base font-medium mb-10"
+            style={{ color: 'rgba(255,255,255,0.7)', maxWidth: 380 }}>
+            Your mastery map, streak and band prediction are all here — ready for your next session.
+          </p>
+
+          <div className="space-y-5">
+            {HIGHLIGHTS.map((h, i) => (
+              <div key={i} className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-xl"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}>
+                  {h.emoji}
+                </div>
+                <div>
+                  <p className="font-black text-white text-sm">{h.title}</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.6)' }}>{h.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <p className="text-xs relative z-10" style={{ color: 'rgba(255,255,255,0.35)' }}>
+          © 2025 Neumm. Built for Australian HSC students.
+        </p>
+      </div>
+
+      {/* ── RIGHT PANEL ── */}
+      <div className="flex-1 flex items-center justify-center px-6 py-12 bg-white overflow-y-auto">
+        <div className="w-full max-w-md">
+
+          {/* Mobile logo (hidden on desktop where left panel shows) */}
+          <div className="md:hidden flex items-center gap-2 mb-8">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-base text-white"
+              style={{ backgroundColor: '#185FA5' }}>
+              N
+            </div>
+            <span className="font-black text-gray-900 text-lg">Neumm</span>
+          </div>
+
+          {/* Heading */}
+          <div className="mb-7">
+            <h2 className="text-2xl font-black text-gray-900">Sign in to your account</h2>
+            <p className="text-sm text-gray-500 mt-1">
+              No account yet?{' '}
+              <Link href="/auth/signup" className="font-bold" style={{ color: '#185FA5' }}>
+                Start your free trial →
+              </Link>
+            </p>
+          </div>
 
           {/* Google */}
-          <button onClick={handleGoogleLogin} disabled={googleLoading || loading}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all disabled:opacity-50 min-h-[50px]"
-            style={{ background: '#0F0F14', color: '#FFFFFF', border: 'none' }}>
-            {googleLoading ? <Spinner light /> : <GoogleIcon />}
+          <button
+            onClick={handleGoogleLogin}
+            disabled={googleLoading || loading}
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl text-sm font-bold border transition-all disabled:opacity-50 mb-5 min-h-[48px] hover:bg-gray-50"
+            style={{ borderColor: '#E5E7EB', backgroundColor: '#FAFAFA', color: '#374151' }}
+          >
+            {googleLoading ? <Spinner /> : <GoogleIcon />}
             Continue with Google
           </button>
 
-          <div className="flex items-center gap-3 my-5">
-            <div className="flex-1 h-px" style={{ background: '#F0E980' }} />
-            <span className="text-xs font-bold" style={{ color: '#999' }}>or</span>
-            <div className="flex-1 h-px" style={{ background: '#F0E980' }} />
+          {/* Divider */}
+          <div className="flex items-center gap-3 mb-5">
+            <div className="flex-1 h-px bg-gray-200" />
+            <span className="text-xs font-semibold text-gray-400">or sign in with email</span>
+            <div className="flex-1 h-px bg-gray-200" />
           </div>
 
+          {/* Form */}
           <form onSubmit={handleEmailLogin} className="space-y-4">
             <div>
-              <label className="block text-sm font-extrabold mb-1.5" style={{ color: '#0F0F14' }}>Email</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
-                placeholder="you@example.com"
-                className="w-full px-4 py-3 text-sm rounded-2xl outline-none transition-all placeholder:text-gray-300"
-                style={{ background: '#FFFBF0', border: '1.5px solid #F0E980', color: '#0F0F14', fontFamily: 'inherit' }}
-                onFocus={e => (e.target.style.borderColor = '#FFDA00')}
-                onBlur={e => (e.target.style.borderColor = '#F0E980')} />
+              <label className="block text-xs font-bold text-gray-700 mb-1.5">Email address</label>
+              <input
+                type="email" value={email} onChange={e => setEmail(e.target.value)}
+                required placeholder="you@example.com" autoComplete="email"
+                className="w-full px-3.5 py-3 text-sm rounded-xl border outline-none transition-all"
+                style={{ borderColor: '#E5E7EB', fontFamily: 'inherit' }}
+                onFocus={e => (e.target.style.borderColor = '#185FA5')}
+                onBlur={e => (e.target.style.borderColor = '#E5E7EB')}
+              />
             </div>
+
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-sm font-extrabold" style={{ color: '#0F0F14' }}>Password</label>
-                <Link href="/auth/reset-password" className="text-xs font-bold" style={{ color: '#FF6B35' }}>
-                  Forgot?
+                <label className="text-xs font-bold text-gray-700">Password</label>
+                <Link href="/auth/reset-password"
+                  className="text-xs font-bold transition-colors hover:opacity-80"
+                  style={{ color: '#185FA5' }}>
+                  Forgot password?
                 </Link>
               </div>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} required
-                placeholder="••••••••"
-                className="w-full px-4 py-3 text-sm rounded-2xl outline-none transition-all placeholder:text-gray-300"
-                style={{ background: '#FFFBF0', border: '1.5px solid #F0E980', color: '#0F0F14', fontFamily: 'inherit' }}
-                onFocus={e => (e.target.style.borderColor = '#FFDA00')}
-                onBlur={e => (e.target.style.borderColor = '#F0E980')} />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password} onChange={e => setPassword(e.target.value)}
+                  required placeholder="••••••••" autoComplete="current-password"
+                  className="w-full px-3.5 py-3 pr-11 text-sm rounded-xl border outline-none transition-all"
+                  style={{ borderColor: '#E5E7EB', fontFamily: 'inherit' }}
+                  onFocus={e => (e.target.style.borderColor = '#185FA5')}
+                  onBlur={e => (e.target.style.borderColor = '#E5E7EB')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  tabIndex={-1}>
+                  {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                </button>
+              </div>
             </div>
 
             {error && (
-              <div className="text-sm rounded-2xl px-4 py-3 font-semibold"
-                style={{ color: '#CC2200', background: '#FFF0EE', border: '1px solid #FFCDC8' }}>{error}</div>
+              <div className="text-sm rounded-xl px-4 py-3 font-semibold text-red-700 bg-red-50 border border-red-200">
+                {error}
+              </div>
             )}
 
-            <button type="submit" disabled={loading || googleLoading}
-              className="btn-gradient w-full py-3.5 rounded-2xl text-sm min-h-[50px] font-black">
+            <button
+              type="submit"
+              disabled={loading || googleLoading}
+              className="w-full py-3.5 rounded-xl text-sm font-black text-white transition-all active:scale-[0.98] disabled:opacity-50 min-h-[50px]"
+              style={{ backgroundColor: '#185FA5' }}
+            >
               {loading
-                ? <span className="flex items-center justify-center gap-2"><Spinner />Signing in…</span>
-                : 'Sign in ✨'}
+                ? <span className="flex items-center justify-center gap-2"><Spinner light />Signing in…</span>
+                : 'Sign in →'}
             </button>
           </form>
 
-          <p className="mt-5 text-center text-sm font-bold" style={{ color: '#666672' }}>
-            No account?{' '}
-            <Link href="/auth/signup" className="font-black" style={{ color: '#0F0F14', textDecoration: 'underline', textDecorationColor: '#FFDA00', textUnderlineOffset: '3px' }}>
-              Start free trial 🚀
+          {/* Signup link — repeated at bottom for mobile where left panel is hidden */}
+          <p className="mt-6 text-center text-sm text-gray-400">
+            New here?{' '}
+            <Link href="/auth/signup"
+              className="font-black transition-colors hover:opacity-80"
+              style={{ color: '#185FA5' }}>
+              Create a free account 🚀
             </Link>
           </p>
         </div>
@@ -126,6 +234,8 @@ export default function LoginPage() {
     </div>
   )
 }
+
+// ─── Icons ─────────────────────────────────────────────────────────────────────
 
 function GoogleIcon() {
   return (
@@ -137,11 +247,29 @@ function GoogleIcon() {
     </svg>
   )
 }
+
+function EyeIcon() {
+  return (
+    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+    </svg>
+  )
+}
+
+function EyeOffIcon() {
+  return (
+    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+    </svg>
+  )
+}
+
 function Spinner({ light = false }: { light?: boolean }) {
   return (
     <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke={light ? 'white' : '#0F0F14'} strokeWidth="4"/>
-      <path className="opacity-75" fill={light ? 'white' : '#0F0F14'} d="M4 12a8 8 0 018-8v8H4z"/>
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke={light ? 'white' : '#185FA5'} strokeWidth="4" />
+      <path className="opacity-75" fill={light ? 'white' : '#185FA5'} d="M4 12a8 8 0 018-8v8H4z" />
     </svg>
   )
 }

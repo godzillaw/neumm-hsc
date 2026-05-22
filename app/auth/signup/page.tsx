@@ -48,12 +48,12 @@ export default function SignupPage() {
     const { data, error: err } = await signUp(email, password, displayName)
     if (err) { setError(err.message); setLoading(false); return }
     if (data.user && !data.session) { setSuccess(true); setLoading(false) }
-    else { router.push('/onboarding/intent'); router.refresh() }
+    else { router.push('/onboarding/year'); router.refresh() }
   }
 
   async function handleGoogle() {
     setError(null); setGoogleLoading(true)
-    const { error: err } = await signInWithGoogle()
+    const { error: err } = await signInWithGoogle('/onboarding/year')
     if (err) { setError(err.message); setGoogleLoading(false) }
   }
 
@@ -289,6 +289,16 @@ export default function SignupPage() {
               Your data is stored securely in Australia and never sold to third parties.
             </p>
           </form>
+
+          {/* Login link — visible at bottom on mobile where left panel is hidden */}
+          <p className="mt-6 text-center text-sm text-gray-400">
+            Already have an account?{' '}
+            <Link href="/auth/login"
+              className="font-black transition-colors hover:opacity-80"
+              style={{ color: '#185FA5' }}>
+              Sign in →
+            </Link>
+          </p>
         </div>
       </div>
     </div>

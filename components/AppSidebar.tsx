@@ -28,10 +28,9 @@ function SidebarStreak() {
 }
 
 const NAV_ITEMS = [
-  { href: '/dashboard',            label: 'Home',        emoji: '🏠' },
+  { href: '/dashboard/progress',   label: 'Progress',    emoji: '📊' },
   { href: '/practice',             label: 'Topic Mastery', emoji: '⚡' },
   { href: '/exam',                 label: 'Exam',        emoji: '📝' },
-  { href: '/dashboard/progress',   label: 'Progress',    emoji: '📈' },
   { href: '/dashboard/leaderboard',label: 'Leaderboard', emoji: '🏆' },
   { href: '/dashboard/account',    label: 'Account',     emoji: '👤' },
 ]
@@ -60,8 +59,7 @@ export default function AppSidebar() {
       {/* Nav */}
       <nav className="flex-1 px-3 space-y-1">
         {NAV_ITEMS.map(item => {
-          const isActive = pathname === item.href ||
-            (item.href !== '/dashboard' && pathname.startsWith(item.href))
+          const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
           return (
             <Link key={item.href} href={item.href}
               className="flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-bold transition-all"

@@ -18,6 +18,44 @@ const nextConfig = {
   basePath: '/math-nsw/app',
 
   /**
+   * Redirect bare domain root → /math-nsw (the marketing landing page).
+   * Runs before filesystem and rewrite checks.
+   */
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/math-nsw',
+        permanent: true,
+      },
+    ]
+  },
+
+  /**
+   * Reverse-proxy /math-nsw and /math-nsw/* to the marketing site hosted on
+   * hsc-math-marketing.vercel.app. Because we use afterFiles, Next.js checks
+   * its own filesystem (basePath /math-nsw/app) first — so /math-nsw/app/**
+   * routes are always served by this app and never proxied.
+   *
+   * The marketing site has basePath '/math-nsw', so its _next assets are at
+   * /math-nsw/_next/... which also get transparently proxied here.
+   */
+  async rewrites() {
+    return {
+      afterFiles: [
+        {
+          source: '/math-nsw',
+          destination: 'https://hsc-math-marketing.vercel.app/math-nsw',
+        },
+        {
+          source: '/math-nsw/:path*',
+          destination: 'https://hsc-math-marketing.vercel.app/math-nsw/:path*',
+        },
+      ],
+    }
+  },
+
+  /**
    * Recommended: prevents the app from being embedded as an iframe on other domains.
    */
   async headers() {

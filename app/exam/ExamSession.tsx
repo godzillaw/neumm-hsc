@@ -8,6 +8,7 @@ import {
   type ExamResult, type TopicResult,
 } from './actions'
 import { EXAM_CATEGORIES } from './categories'
+import MathText           from '@/components/MathText'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -263,7 +264,7 @@ function ResultsScreen({
                     <p className="text-xs font-semibold mb-1" style={{ color: '#666672' }}>
                       Q{i + 1} · {qr.topic_name} · Band {qr.difficulty_band}
                     </p>
-                    <p className="text-sm" style={{ color: '#0F0F14' }}>{qr.content.question_text}</p>
+                    <MathText text={qr.content.question_text} as="p" className="text-sm" style={{ color: '#0F0F14' }} />
                   </div>
                 </div>
                 {/* Options */}
@@ -287,7 +288,7 @@ function ResultsScreen({
                         }}
                       >
                         <span className="uppercase font-bold">{opt}.</span>
-                        <span>{text}</span>
+                        <MathText text={text ?? ''} />
                         {isCorrect  && <span className="ml-auto">✓ correct</span>}
                         {isSelected && !isCorrect && <span className="ml-auto">✗ your answer</span>}
                       </div>
@@ -300,7 +301,7 @@ function ResultsScreen({
                     className="ml-7 rounded-lg p-2.5 text-xs"
                     style={{ backgroundColor: '#FFFBF0', borderLeft: '3px solid #FFDA00', color: '#0F0F14' }}
                   >
-                    {qr.explanation}
+                    <MathText text={qr.explanation} />
                   </div>
                 )}
               </div>
@@ -515,9 +516,12 @@ function ActiveExam({
           className="bg-white rounded-2xl p-5 mb-5 shadow-sm"
           style={{ border: '1.5px solid #F0E980' }}
         >
-          <p className="text-base font-medium leading-relaxed" style={{ color: '#0F0F14' }}>
-            {question.content.question_text}
-          </p>
+          <MathText
+            text={question.content.question_text}
+            as="p"
+            className="text-base font-medium leading-relaxed"
+            style={{ color: '#0F0F14' }}
+          />
         </div>
 
         {/* Options */}
@@ -546,7 +550,7 @@ function ActiveExam({
                 >
                   {opt.label}
                 </span>
-                <span className="text-sm font-medium flex-1">{optText}</span>
+                <MathText text={String(optText ?? '')} className="text-sm font-medium flex-1" />
               </button>
             )
           })}

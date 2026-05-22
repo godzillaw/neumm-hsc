@@ -2,10 +2,18 @@ import { NextResponse }               from 'next/server'
 import Stripe                         from 'stripe'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-12-18.acacia' as Stripe.LatestApiVersion })
-
 export async function POST(request: Request) {
+  // Guard: Stripe key must be present
+  const secretKey = process.env.STRIPE_SECRET_KEY
+  if (!secretKey) {
+    console.error('[stripe/checkout] STRIPE_SECRET_KEY is not set')
+    return NextResponse.json({ error: 'Payment system is not configured. Please contact support.' }, { status: 503 })
+  }
+
   try {
+    // Initialise Stripe inside the handler so a bad key doesn't crash module load
+    const stripe = new Stripe(secretKey, { apiVersion: '2024-12-18.acacia' as Stripe.LatestApiVersion })
+
     const supabase = createSupabaseServerClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -13,7 +21,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
     }
 
-    const { priceId: rawId } = await request.json()
+    const body = await request.json().catch(() => ({})) as Record<string, unknown>
+    const rawId = body.priceId as string | undefined
     if (!rawId) {
       return NextResponse.json({ error: 'Missing priceId' }, { status: 400 })
     }

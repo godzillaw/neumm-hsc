@@ -13,7 +13,7 @@ import { createSupabaseServerClient }  from '@/lib/supabase-server'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code  = searchParams.get('code')
-  const next  = searchParams.get('next') ?? '/onboarding/intent'
+  const next  = searchParams.get('next') ?? '/dashboard'
   const error = searchParams.get('error')
   const errorDescription = searchParams.get('error_description')
 
@@ -28,13 +28,26 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = createSupabaseServerClient()
-    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+    const { data: { user }, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
 
-    if (!exchangeError) {
-      return NextResponse.redirect(`${appBase}${next}`)
+    if (!exchangeError && user) {
+      // If the user already completed onboarding (has a year_group), skip onboarding
+      // even when next=/onboarding/year — send them straight to the dashboard.
+      let destination = next
+      if (next === '/onboarding/year') {
+        const { data: profile } = await supabase
+          .from('student_profiles')
+          .select('year_group')
+          .eq('user_id', user.id)
+          .maybeSingle()
+        if (profile?.year_group) {
+          destination = '/dashboard'
+        }
+      }
+      return NextResponse.redirect(`${appBase}${destination}`)
     }
 
-    const msg = encodeURIComponent(exchangeError.message)
+    const msg = encodeURIComponent(exchangeError?.message ?? 'Authentication failed')
     return NextResponse.redirect(`${appBase}/auth/login?error=${msg}`)
   }
 

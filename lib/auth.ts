@@ -32,12 +32,12 @@ export async function getCurrentUser() {
 
 // ─── Google OAuth ─────────────────────────────────────────────────────────────
 
-export async function signInWithGoogle() {
+export async function signInWithGoogle(next = '/dashboard') {
   const supabase = createSupabaseBrowserClient()
   return supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${appBaseUrl()}/auth/callback?next=/onboarding/intent`,
+      redirectTo: `${appBaseUrl()}/auth/callback?next=${encodeURIComponent(next)}`,
       queryParams: { access_type: 'offline', prompt: 'consent' },
     },
   })
@@ -61,7 +61,7 @@ export async function signUp(
     password,
     options: {
       data: { display_name: displayName, full_name: displayName },
-      emailRedirectTo: `${appBaseUrl()}/auth/callback?next=/onboarding/intent`,
+      emailRedirectTo: `${appBaseUrl()}/auth/callback?next=/onboarding/year`,
     },
   })
   // DB trigger (002_auth_trigger.sql) auto-creates users + streaks rows

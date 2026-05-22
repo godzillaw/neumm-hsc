@@ -30,7 +30,7 @@ export default function YearPage() {
     const { error: dbErr } = await supabase
       .from('student_profiles')
       .upsert(
-        { user_id: user.id, year_group: selected, placement_probe_completed: false },
+        { user_id: user.id, year_group: selected, placement_probe_completed: true },
         { onConflict: 'user_id' },
       )
 
@@ -40,7 +40,17 @@ export default function YearPage() {
       return
     }
 
-    router.push('/onboarding/probe')
+    // Year 9 and 10 have no course selection — go straight to dashboard
+    if (selected === 'year_9' || selected === 'year_10') {
+      // Save 'all' as the course for Year 9/10
+      await supabase
+        .from('student_profiles')
+        .upsert({ user_id: user.id, course: 'all' }, { onConflict: 'user_id' })
+      router.push('/dashboard')
+    } else {
+      // Year 11/12 need to select their course (Std/Adv/Ext1/Ext2)
+      router.push('/onboarding/course?year=' + selected)
+    }
   }
 
   return (
@@ -149,7 +159,7 @@ export default function YearPage() {
           </button>
 
           <button
-            onClick={() => router.push('/onboarding/probe')}
+            onClick={() => router.push('/dashboard')}
             className="w-full py-3 text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors"
           >
             Skip for now

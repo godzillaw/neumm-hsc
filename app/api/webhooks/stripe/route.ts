@@ -45,8 +45,11 @@ const supabase = createClient(
 
 type Tier = 'basic_trial' | 'basic' | 'pro' | 'basic_trial_expired' | 'payment_failed'
 
-function tierFromPriceId(priceId: string | null | undefined): 'basic' | 'pro' {
-  if (priceId && priceId === process.env.STRIPE_PRO_PRICE_ID) return 'pro'
+// NOTE: STRIPE_BASIC_PRICE_ID / STRIPE_PRO_PRICE_ID contain *product* IDs (prod_xxx).
+// The subscription item gives us price.product (also a prod_xxx string when not expanded).
+// We compare product IDs — never price IDs — so the env var naming is kept as-is.
+function tierFromProductId(productId: string | null | undefined): 'basic' | 'pro' {
+  if (productId && productId === process.env.STRIPE_PRO_PRICE_ID) return 'pro'
   return 'basic'
 }
 
@@ -160,8 +163,12 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     expand: ['items.data.price'],
   })
 
-  const priceId  = subscription.items.data[0]?.price?.id ?? null
-  const tier     = tierFromPriceId(priceId)
+  const priceItem  = subscription.items.data[0]?.price
+  // price.product is a string (product ID) when not further expanded
+  const productId  = priceItem
+    ? (typeof priceItem.product === 'string' ? priceItem.product : (priceItem.product as { id: string })?.id ?? null)
+    : null
+  const tier       = tierFromProductId(productId)
   const trialEnd = subscription.trial_end
     ? new Date(subscription.trial_end * 1000).toISOString()
     : null

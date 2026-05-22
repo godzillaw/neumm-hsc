@@ -5,7 +5,7 @@ const PUBLIC_PATHS          = ['/auth/login', '/auth/signup', '/auth/callback', 
 const PROTECTED_AUTH_PATHS  = ['/onboarding', '/dashboard', '/practice', '/exam']
 
 // Expired-trial / payment-failed users may ONLY access these paths
-const EXPIRED_ALLOWED = ['/dashboard', '/account/upgrade', '/auth']
+const EXPIRED_ALLOWED = ['/dashboard', '/account/upgrade', '/auth', '/api']
 
 const TRIAL_TIERS   = new Set(['basic_trial', 'pro_trial'])
 const BLOCKED_TIERS = new Set(['basic_trial_expired', 'trial_expired', 'payment_failed'])

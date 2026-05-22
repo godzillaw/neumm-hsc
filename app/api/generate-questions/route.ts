@@ -41,11 +41,11 @@ const TOPICS: Record<string, { name: string; nesa: string }> = {
   'MA-CALC-I10': { name: 'Integration applications — kinematics',                               nesa: 'MA-C4' },
   'MA-CALC-I11': { name: 'Trapezoidal rule and numerical integration',                          nesa: 'MA-C4' },
   'MA-CALC-I12': { name: 'Exponential growth and decay',                                        nesa: 'MA-C4' },
-  'MA-TRIG-01':  { name: 'Trigonometric ratios — exact values 30, 45, 60 degrees',              nesa: 'MA-T1' },
+  'MA-TRIG-01':  { name: 'Trigonometric ratios — exact values 30°, 45°, 60°',                   nesa: 'MA-T1' },
   'MA-TRIG-02':  { name: 'Trigonometric graphs — sine cosine tangent and transformations',      nesa: 'MA-T1' },
   'MA-TRIG-03':  { name: 'Trigonometric identities — Pythagorean and reciprocal',               nesa: 'MA-T2' },
   'MA-TRIG-04':  { name: 'Trigonometric equations — solving in given domains',                  nesa: 'MA-T2' },
-  'MA-TRIG-05':  { name: 'Inverse trigonometric functions arcsin arccos arctan',                nesa: 'MA-T2' },
+  'MA-TRIG-05':  { name: 'Inverse trigonometric functions sin⁻¹, cos⁻¹, tan⁻¹',               nesa: 'MA-T2' },
   'MA-TRIG-06':  { name: 'Compound angle and double angle formulas',                            nesa: 'MA-T3' },
   'MA-TRIG-07':  { name: 'Sine rule cosine rule and area formula',                              nesa: 'MA-T1' },
   'MA-TRIG-08':  { name: 'Bearings and 3D trigonometry problems',                              nesa: 'MA-T1' },
@@ -102,6 +102,50 @@ const TOPICS: Record<string, { name: string; nesa: string }> = {
   'MA-EXT-06':   { name: 'Vectors — operations dot product projections',                       nesa: 'MA-V1' },
   'MA-EXT-07':   { name: 'Complex numbers — operations modulus argument polar form',            nesa: 'MA-N1' },
   'MA-EXT-08':   { name: 'Further trigonometry — t-formula and auxiliary angle method',        nesa: 'MA-T4' },
+  // ── First principles (Year 11 MA-C1) ─────────────────────────────────────
+  'MA-CALC-D00': { name: 'First principles — limit definition of the derivative',              nesa: 'MA-C1' },
+  // ── Year 9 — NSW Stage 5 ─────────────────────────────────────────────────
+  'NSW9-IDX-01':   { name: 'Index laws — multiplying and dividing with indices',               nesa: 'MA5-4NA' },
+  'NSW9-IDX-02':   { name: 'Negative and zero indices',                                        nesa: 'MA5-4NA' },
+  'NSW9-SUR-01':   { name: 'Surds and irrational numbers — simplifying and operations',       nesa: 'MA5-6NA' },
+  'NSW9-CON-01':   { name: 'Consumer arithmetic — percentages, rates, ratios and GST',        nesa: 'MA5-2NA' },
+  'NSW9-FIN-01':   { name: 'Financial mathematics — simple interest, earning and spending',   nesa: 'MA5-2NA' },
+  'NSW9-ALG-01':   { name: 'Algebraic techniques — expanding brackets and factorising',       nesa: 'MA5-5NA' },
+  'NSW9-ALG-02':   { name: 'Algebraic fractions — simplifying, adding and multiplying',       nesa: 'MA5-5NA' },
+  'NSW9-LIN-01':   { name: 'Linear equations — solving one and two step equations',           nesa: 'MA5-7NA' },
+  'NSW9-LIN-02':   { name: 'Linear graphs — gradient, intercepts and direct proportion',      nesa: 'MA5-7NA' },
+  'NSW9-SIM-01':   { name: 'Simultaneous equations — graphical and algebraic methods',        nesa: 'MA5-8NA' },
+  'NSW9-INEQ-01':  { name: 'Linear inequalities — solving and graphing on a number line',     nesa: 'MA5-8NA' },
+  'NSW9-GEOM-01':  { name: 'Properties of geometrical figures — angles, parallel lines, polygons', nesa: 'MA5-11MG' },
+  'NSW9-GEOM-02':  { name: "Pythagoras' theorem — finding sides and applications",            nesa: 'MA5-11MG' },
+  'NSW9-GEOM-03':  { name: 'Similarity and congruence — scale factors and similar triangles', nesa: 'MA5-12MG' },
+  'NSW9-TRIG-01':  { name: 'Trigonometric ratios — sin, cos and tan in right triangles',      nesa: 'MA5-13MG' },
+  'NSW9-TRIG-02':  { name: 'Angles of elevation and depression',                              nesa: 'MA5-13MG' },
+  'NSW9-MEAS-01':  { name: 'Area and volume — composite shapes and 3D objects',               nesa: 'MA5-14MG' },
+  'NSW9-GRAPH-01': { name: 'Non-linear graphs — parabolas, hyperbolas and exponentials',     nesa: 'MA5-9NA' },
+  'NSW9-STAT-01':  { name: 'Single variable data analysis — mean, median, mode and range',   nesa: 'MA5-15SP' },
+  'NSW9-STAT-02':  { name: 'Bivariate data — scatter plots and lines of best fit',           nesa: 'MA5-16SP' },
+  'NSW9-PROB-01':  { name: 'Probability — single and multi-step chance experiments',         nesa: 'MA5-17SP' },
+  // ── Year 10 — NSW Stage 5 ────────────────────────────────────────────────
+  'NSW10-ALG-01':   { name: 'Factorisation — common factors, difference of squares, trinomials', nesa: 'MA5-6NA' },
+  'NSW10-ALG-02':   { name: 'Quadratic equations — factorising, completing the square, formula',  nesa: 'MA5-8NA' },
+  'NSW10-ALG-03':   { name: 'Polynomial expressions — operations and factor theorem',             nesa: 'MA5-6NA' },
+  'NSW10-ALG-04':   { name: 'Further algebraic techniques — complex fractions and identities',    nesa: 'MA5-6NA' },
+  'NSW10-SIM-01':   { name: 'Simultaneous equations — linear and non-linear systems',             nesa: 'MA5-8NA' },
+  'NSW10-PROOF-01': { name: 'Algebraic and geometric proof — formal reasoning and deduction',     nesa: 'MA5-3WM' },
+  'NSW10-FUNC-01':  { name: 'Quadratic functions — graphs, vertex, axis of symmetry',            nesa: 'MA5-9NA' },
+  'NSW10-FUNC-02':  { name: 'Non-linear functions — circles, exponentials and their graphs',     nesa: 'MA5-9NA' },
+  'NSW10-EXP-01':   { name: 'Exponential functions — graphs, equations and growth or decay',     nesa: 'MA5-9NA' },
+  'NSW10-GRAPH-01': { name: 'Hyperbola and inverse proportion — graphs and equations',           nesa: 'MA5-9NA' },
+  'NSW10-LOG-01':   { name: 'Introduction to logarithms — definition and basic log laws',        nesa: 'MA5-9NA' },
+  'NSW10-COORD-01': { name: 'Coordinate geometry — distance, midpoint, gradient and line equations', nesa: 'MA5-10NA' },
+  'NSW10-TRIG-01':  { name: 'Sine rule and cosine rule — finding sides and angles',              nesa: 'MA5-13MG' },
+  'NSW10-TRIG-02':  { name: 'Bearings and 3D trigonometry problems',                             nesa: 'MA5-13MG' },
+  'NSW10-MEAS-01':  { name: 'Surface area and volume — prisms, cylinders, cones, spheres',      nesa: 'MA5-14MG' },
+  'NSW10-GEOM-01':  { name: 'Circle geometry theorems — chords, tangents and angle properties', nesa: 'MA5-12MG' },
+  'NSW10-STAT-01':  { name: 'Data analysis and regression — correlation and line of best fit',   nesa: 'MA5-16SP' },
+  'NSW10-PROB-01':  { name: 'Conditional probability — tree diagrams and Venn diagrams',         nesa: 'MA5-17SP' },
+  'NSW10-PROB-02':  { name: 'Two-way tables and Venn diagrams — set notation and probability',   nesa: 'MA5-17SP' },
 }
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
@@ -175,27 +219,104 @@ export async function POST(req: NextRequest) {
     Math.min(Math.round(1 + (i / 7) * (maxBand - 1)), maxBand)
   )
 
-  const prompt = `Generate exactly 8 NSW Mathematics multiple choice questions on: "${meta.name}" (NESA code ${meta.nesa}).
+  // Questions 0-1 are MC, questions 2-7 are open response
+  const prompt = `Generate exactly 8 NSW Mathematics questions on: "${meta.name}" (NESA code ${meta.nesa}).
 
-These questions are for a ${yearLabel} student. Use age-appropriate language, real-world contexts relevant to that year level, and ensure difficulty suits that stage of learning.
+These questions are for a ${yearLabel} student. Use age-appropriate language, real-world contexts, and ensure difficulty suits that stage.
 
-Difficulty bands range from 1 (easiest) to ${maxBand} (hardest for this year). Assign the 8 questions these bands in order: ${bands.join(', ')}.
+Difficulty bands range from 1 (easiest) to ${maxBand} (hardest). The 8 questions must be assigned these bands in order: ${bands.join(', ')}.
 
-Return ONLY a valid JSON array, no markdown, no other text. Start with [ immediately.
-Each element must have exactly these fields:
+QUESTION MIX (must follow exactly):
+- Questions 1-2 (bands ${bands[0]}, ${bands[1]}): MULTIPLE CHOICE — 4 options (A-D), one correct answer
+- Questions 3-8 (bands ${bands[2]}–${bands[7]}): OPEN RESPONSE — student must show full written working; no options
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DIAGRAM SPECS — READ CAREFULLY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Where a visual aids understanding, include a machine-renderable "diagram_spec" object. Use these formats:
+
+CARTESIAN (function graphs, parabolas, trig curves, exponential, area under curve):
+{"type":"cartesian","title":"y = x² - 4","xRange":[-3,3],"yRange":[-5,6],"xLabel":"x","yLabel":"y",
+ "curves":[{"points":[[-3,5],[-2,0],[-1,-3],[0,-4],[1,-3],[2,0],[3,5]],"color":"#7C3AED","label":"y = x² - 4"}],
+ "points":[{"x":-2,"y":0,"label":"(-2,0)","filled":true},{"x":2,"y":0,"label":"(2,0)","filled":true},{"x":0,"y":-4,"label":"vertex (0,-4)","filled":true}]}
+
+TRIANGLE (geometry, trig, Pythagoras):
+{"type":"triangle","title":"Right Triangle","vertices":[{"x":0,"y":0,"label":"A"},{"x":4,"y":0,"label":"B"},{"x":0,"y":3,"label":"C"}],
+ "sides":[{"from":0,"to":1,"label":"a = 4"},{"from":0,"to":2,"label":"b = 3"},{"from":1,"to":2,"label":"c = 5"}],
+ "angles":[{"vertex":0,"label":"90°","rightAngle":true},{"vertex":1,"label":"θ"}]}
+
+NUMBERLINE (inequalities, sequences, number sets):
+{"type":"numberline","min":-3,"max":5,"points":[{"x":-1,"label":"-1","filled":true},{"x":3,"label":"3","filled":false}],
+ "intervals":[{"from":-1,"to":3,"color":"#7C3AED","label":"-1 < x ≤ 3"}]}
+
+CIRCLE (coordinate geometry, circle theorems):
+{"type":"circle","title":"Circle: (x-3)²+(y-4)²=25","center":{"x":3,"y":4,"label":"(3,4)"},"radius":5,
+ "xRange":[-3,9],"yRange":[-2,10],"points":[{"x":0,"y":0,"label":"O origin"}]}
+
+For curves, supply 11-15 pre-computed (x,y) points spanning the domain.
+For areas under a curve, add "regions":[{"points":[...boundary...],"color":"#7C3AED","opacity":0.18}].
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP VISUAL FORMAT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+In every "📊 Visual:" step, ALWAYS embed the diagram spec using [SPEC]...[/SPEC] markers, followed by a brief text description. Example:
+"📊 Visual: [SPEC]{"type":"cartesian","title":"y = x² - 4","xRange":[-3,3],"yRange":[-5,6],"curves":[{"points":[[-3,5],[-2,0],[0,-4],[2,0],[3,5]],"color":"#7C3AED","label":"y = x² - 4"}],"points":[{"x":-2,"y":0,"label":"(-2,0)","filled":true},{"x":2,"y":0,"label":"(2,0)","filled":true},{"x":0,"y":-4,"label":"vertex","filled":true}]}[/SPEC] The parabola opens upward with vertex (0,−4) and x-intercepts at x = ±2."
+
+Include a 📊 Visual step for EVERY question involving: graphs, triangles, circles, inequalities, areas, trig ratios, exponential growth, or geometric figures. Only skip for purely algebraic/arithmetic questions.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RETURN ONLY a valid JSON array. Start with [ immediately. No markdown, no commentary outside the JSON.
+
+For MULTIPLE CHOICE questions:
 {
+  "question_type": "multiple_choice",
+  "outcome_id": "${topic}-B1",
+  "nesa_outcome_code": "${meta.nesa}",
+  "difficulty_band": 1,
+  "question_text": "self-contained question (include graph description in text if question refers to a graph)",
+  "option_a": "...", "option_b": "...", "option_c": "...", "option_d": "...",
+  "correct_option": "a",
+  "diagram_spec": {"type":"cartesian",...} or null,
+  "explanation": "2-3 sentences explaining WHY the correct answer is right and why each distractor is wrong",
+  "step_by_step": [
+    "Step 1 [concept/rule]: Formula or rule used and why.",
+    "Step 2 [substitute]: Show exact substitution with numbers.",
+    "Step 3 [calculate]: Each arithmetic step clearly.",
+    "📊 Visual: [SPEC]{...spec json...}[/SPEC] Description of graph/diagram.",
+    "⚠️ Common mistake: Most frequent error students make."
+  ]
+}
+
+For OPEN RESPONSE questions:
+{
+  "question_type": "open",
   "outcome_id": "${topic}-B3",
   "nesa_outcome_code": "${meta.nesa}",
   "difficulty_band": 3,
-  "question_text": "self-contained question text",
-  "option_a": "...",
-  "option_b": "...",
-  "option_c": "...",
-  "option_d": "...",
-  "correct_option": "a",
-  "explanation": "2-3 sentences explaining the answer at a ${yearLabel} level",
-  "step_by_step": ["Step 1: ...", "Step 2: ...", "Step 3: ..."]
-}`
+  "question_text": "Full question requiring written working. Include 'Show all working.' or 'Find ... giving reasons.'",
+  "marks": 3,
+  "model_answer": "Complete correct worked solution showing every algebraic/numerical step",
+  "marking_criteria": ["1 mark: correct setup/substitution", "1 mark: correct working", "1 mark: correct final answer with units"],
+  "diagram": "Text description of the diagram/sketch context for the student (e.g. 'A parabola y = x² − 4 is shown. Mark the vertex and x-intercepts.'). Set null if no diagram.",
+  "diagram_spec": {"type":"cartesian",...} or null,
+  "step_by_step": [
+    "Step 1 [identify given/find]: Known values and unknown.",
+    "Step 2 [method/formula]: Rule with formula. Why it applies.",
+    "Step 3 [substitute]: Substitution with actual numbers.",
+    "Step 4 [solve]: Each algebraic manipulation — do not skip.",
+    "Step 5 [final answer + units]: Answer rounded, with units.",
+    "📊 Visual: [SPEC]{...spec json...}[/SPEC] Description of graph/diagram.",
+    "⚠️ Common mistake: Most frequent error."
+  ]
+}
+
+RULES for step_by_step:
+- Each step names the concept in [square brackets]
+- Show actual numbers — never write "substitute the values"
+- Every question with a graph/geometry/trig MUST have a 📊 Visual step with [SPEC]...[/SPEC]
+- ⚠️ Common mistake at the end
+
+Use proper Unicode math symbols — no LaTeX. Examples: x² not x^2, √x not sqrt(x), × not *, π not pi, θ not theta, ° for degrees, ≠ ≤ ≥ ± ∫ → as needed.`
 
   let rawText = ''
   try {
@@ -252,24 +373,40 @@ Each element must have exactly these fields:
   }
 
   // ── Insert into Supabase ──────────────────────────────────────────────────
-  const rows = parsed.map(q => ({
-    outcome_id:        String(q.outcome_id        ?? `${topic}-B3`),
-    course:            'Advanced Mathematics',
-    difficulty_band:   Number(q.difficulty_band   ?? 3),
-    format:            'multiple_choice',
-    content_json: {
-      question_text: String(q.question_text ?? ''),
-      option_a:      String(q.option_a      ?? ''),
-      option_b:      String(q.option_b      ?? ''),
-      option_c:      String(q.option_c      ?? ''),
-      option_d:      String(q.option_d      ?? ''),
-    },
-    correct_answer:    String(q.correct_option ?? 'a').toLowerCase().charAt(0),
-    explanation:       String(q.explanation    ?? ''),
-    step_by_step:      Array.isArray(q.step_by_step) ? q.step_by_step as string[] : [],
-    nesa_outcome_code: String(q.nesa_outcome_code ?? meta.nesa),
-    served_to:         [],
-  }))
+  const rows = parsed.map(q => {
+    const isOpen = String(q.question_type ?? 'multiple_choice') === 'open'
+    return {
+      outcome_id:      String(q.outcome_id      ?? `${topic}-B3`),
+      course:          'Advanced Mathematics',
+      difficulty_band: Number(q.difficulty_band ?? 3),
+      format:          isOpen ? 'open' : 'multiple_choice',
+      content_json:    isOpen
+        ? {
+            question_type:    'open',
+            question_text:    String(q.question_text ?? ''),
+            model_answer:     String(q.model_answer  ?? ''),
+            marks:            Number(q.marks         ?? 3),
+            marking_criteria: Array.isArray(q.marking_criteria) ? q.marking_criteria as string[] : [],
+            diagram:          q.diagram ? String(q.diagram) : null,
+            diagram_spec:     (q.diagram_spec && typeof q.diagram_spec === 'object') ? q.diagram_spec : null,
+          }
+        : {
+            question_text: String(q.question_text ?? ''),
+            option_a:      String(q.option_a      ?? ''),
+            option_b:      String(q.option_b      ?? ''),
+            option_c:      String(q.option_c      ?? ''),
+            option_d:      String(q.option_d      ?? ''),
+            diagram_spec:  (q.diagram_spec && typeof q.diagram_spec === 'object') ? q.diagram_spec : null,
+          },
+      correct_answer:    isOpen
+        ? 'open'
+        : String(q.correct_option ?? 'a').toLowerCase().charAt(0),
+      explanation:       String(q.explanation    ?? ''),
+      step_by_step:      Array.isArray(q.step_by_step) ? q.step_by_step as string[] : [],
+      nesa_outcome_code: String(q.nesa_outcome_code ?? meta.nesa),
+      served_to:         [],
+    }
+  })
 
   const { error: insertErr, data: inserted } = await supabase
     .from('questions')

@@ -4,10 +4,9 @@ import Link          from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const NAV_ITEMS = [
-  { href: '/dashboard',          label: 'Home',     icon: '🏠' },
+  { href: '/dashboard/progress', label: 'Progress',  icon: '📊' },
   { href: '/practice',           label: 'Mastery',  icon: '⚡' },
   { href: '/exam',               label: 'Exam',     icon: '📝' },
-  { href: '/dashboard/progress', label: 'Progress', icon: '📈' },
   { href: '/dashboard/account',  label: 'Me',       icon: '👤' },
 ]
 
@@ -24,8 +23,7 @@ export default function MobileBottomNav() {
       }}>
       <div className="flex items-center justify-around px-1 pt-1 pb-1">
         {NAV_ITEMS.map(item => {
-          const isActive = pathname === item.href ||
-            (item.href !== '/dashboard' && pathname.startsWith(item.href))
+          const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
           return (
             <Link key={item.href} href={item.href}
               className="flex flex-col items-center justify-center gap-0.5 flex-1 py-2 min-h-[52px] relative">
