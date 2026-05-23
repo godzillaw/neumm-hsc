@@ -43,18 +43,16 @@ export default function SignupPage() {
     const displayName = `${firstName} ${lastName}`.trim()
     const BASE = '/math-nsw/app'  // must match next.config basePath
 
-    // ── Step 1: create user + get session tokens from the Route Handler ───────
+    // ── Step 1: create the user account via Route Handler (Admin API) ─────────
+    // The Route Handler uses the Supabase Admin API to create the account with
+    // email_confirm: true so no verification email is sent.
     const res = await fetch(`${BASE}/api/auth/signup`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ email, password, displayName }),
     })
 
-    const data = await res.json() as {
-      error?:         string
-      access_token?:  string
-      refresh_token?: string
-    }
+    const data = await res.json() as { error?: string; success?: boolean }
 
     if (!res.ok || data.error) {
       setError(data.error ?? 'Signup failed. Please try again.')
@@ -62,19 +60,20 @@ export default function SignupPage() {
       return
     }
 
-    // ── Step 2: store the session in browser cookies via setSession() ─────────
-    // The browser Supabase client writes directly to document.cookie — this is
-    // guaranteed to be present on the very next HTTP request, unlike server-side
-    // Set-Cookie headers which can be silently dropped or delayed.
+    // ── Step 2: sign in using the browser client ──────────────────────────────
+    // createBrowserClient (used inside createSupabaseBrowserClient) writes the
+    // session directly to document.cookie — the SAME code path as the login
+    // page which is known to work.  This is more reliable than any server-side
+    // Set-Cookie approach because document.cookie is guaranteed to be present
+    // on the very next HTTP request.
     const supabase = createSupabaseBrowserClient()
-    const { error: sessionErr } = await supabase.auth.setSession({
-      access_token:  data.access_token!,
-      refresh_token: data.refresh_token!,
-    })
+    const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password })
 
-    if (sessionErr) {
-      setError('Account created, but could not sign you in. Please log in manually.')
+    if (signInErr) {
+      // Account was created — tell the user to log in manually.
+      setError('Account created! Please sign in below.')
       setLoading(false)
+      window.location.href = `${BASE}/auth/login`
       return
     }
 
