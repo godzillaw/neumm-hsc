@@ -1,8 +1,8 @@
 'use client'
 
-import { useState }                        from 'react'
+import { useState, useEffect, Suspense }   from 'react'
 import Link                                from 'next/link'
-import { useRouter }                       from 'next/navigation'
+import { useRouter, useSearchParams }      from 'next/navigation'
 import { signInWithEmail, signInWithGoogle } from '@/lib/auth'
 
 // ─── Left-panel highlights ─────────────────────────────────────────────────────
@@ -25,14 +25,35 @@ const HIGHLIGHTS = [
 ]
 
 // ─── Component ─────────────────────────────────────────────────────────────────
-export default function LoginPage() {
-  const router = useRouter()
+function LoginPageInner() {
+  const router       = useRouter()
+  const searchParams = useSearchParams()
   const [email,         setEmail]         = useState('')
   const [password,      setPassword]      = useState('')
   const [showPassword,  setShowPassword]  = useState(false)
   const [loading,       setLoading]       = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error,         setError]         = useState<string | null>(null)
+  const [info,          setInfo]          = useState<string | null>(null)
+
+  // Handle error/info messages from URL params (e.g. OAuth callback errors)
+  useEffect(() => {
+    const urlError = searchParams.get('error') ?? ''
+    if (!urlError) return
+
+    // PKCE errors happen when a stale confirmation email is clicked.
+    // The user's account is already active — just ask them to log in normally.
+    if (urlError.toLowerCase().includes('pkce') || urlError.toLowerCase().includes('verifier')) {
+      setInfo('Your account is confirmed! Please log in below.')
+    } else if (urlError.toLowerCase().includes('access_denied')) {
+      // User cancelled Google OAuth
+      setInfo(null)
+    } else {
+      setError(decodeURIComponent(urlError))
+    }
+    // Remove the error param from the URL bar so it doesn't confuse users
+    window.history.replaceState({}, '', window.location.pathname)
+  }, [searchParams])
 
   async function handleEmailLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -202,6 +223,12 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {info && (
+              <div className="text-sm rounded-xl px-4 py-3 font-semibold text-green-700 bg-green-50 border border-green-200">
+                ✅ {info}
+              </div>
+            )}
+
             {error && (
               <div className="text-sm rounded-xl px-4 py-3 font-semibold text-red-700 bg-red-50 border border-red-200">
                 {error}
@@ -232,6 +259,14 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-white" />}>
+      <LoginPageInner />
+    </Suspense>
   )
 }
 

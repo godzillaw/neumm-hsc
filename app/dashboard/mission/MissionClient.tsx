@@ -33,45 +33,63 @@ function PointsBanner({ totalPoints, displayName, streak, missionTitle }: {
 }) {
   return (
     <div
-      className="rounded-3xl overflow-hidden mb-6 shadow-lg"
-      style={{ background: 'linear-gradient(135deg,#0C2D5A 0%,#185FA5 55%,#1D4ED8 100%)' }}
+      className="w-full mb-6 rounded-2xl overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, #0D1B2E 0%, #112240 60%, #0D1B2E 100%)',
+        border: '1px solid rgba(255,255,255,0.08)',
+      }}
     >
+      {/* Hero row */}
       <div className="px-5 pt-5 pb-4">
-        {/* Mission label */}
-        <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
-          🎯 {displayName}&apos;s Mission
+        <p className="text-[10px] font-black uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
+          {displayName}&apos;s Mission
         </p>
-        <h2 className="text-lg font-black text-white leading-tight mb-1">{missionTitle}</h2>
+        <h2 className="text-xl font-black text-white leading-tight mb-4">{missionTitle}</h2>
 
         {/* Stats row */}
-        <div className="flex items-center gap-3 mt-3">
-          {/* Points */}
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {/* XP */}
           <div
-            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl flex-1"
-            style={{ background: 'rgba(255,255,255,0.1)' }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl"
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}
           >
-            <span className="text-xl">⚡</span>
+            <span className="text-lg">⚡</span>
             <div>
-              <p className="text-2xl font-black text-white leading-none">{formatPoints(totalPoints)}</p>
-              <p className="text-[10px] font-semibold" style={{ color: 'rgba(255,255,255,0.5)' }}>Total XP</p>
+              <p className="text-xl font-black text-white leading-none">{formatPoints(totalPoints)}</p>
+              <p className="text-[10px] font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>XP</p>
             </div>
           </div>
 
           {/* Streak */}
           <div
-            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl"
-            style={{ background: streak > 0 ? 'rgba(255,107,53,0.7)' : 'rgba(255,255,255,0.08)' }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl"
+            style={{
+              background: streak > 0 ? 'rgba(255,107,53,0.25)' : 'rgba(255,255,255,0.06)',
+              border: `1px solid ${streak > 0 ? 'rgba(255,107,53,0.4)' : 'rgba(255,255,255,0.08)'}`,
+            }}
           >
-            <span className="text-xl">🔥</span>
+            <span className="text-lg">🔥</span>
             <div>
-              <p className="text-2xl font-black text-white leading-none">{streak}</p>
-              <p className="text-[10px] font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>day streak</p>
+              <p className="text-xl font-black text-white leading-none">{streak}</p>
+              <p className="text-[10px] font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>Streak</p>
+            </div>
+          </div>
+
+          {/* Rank soon */}
+          <div
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+          >
+            <span className="text-lg">📊</span>
+            <div>
+              <p className="text-xl font-black leading-none" style={{ color: 'rgba(255,255,255,0.3)' }}>—</p>
+              <p className="text-[10px] font-semibold" style={{ color: 'rgba(255,255,255,0.25)' }}>Rank soon</p>
             </div>
           </div>
         </div>
 
         {/* XP guide */}
-        <div className="flex items-center gap-4 mt-3">
+        <div className="flex items-center gap-4 mt-3 flex-wrap">
           {[
             { label: `+${POINTS.CORRECT} per question`, color: '#4ADE80' },
             { label: `+${POINTS.STAGE_COMPLETE} per stage`, color: '#60A5FA' },
@@ -79,7 +97,7 @@ function PointsBanner({ totalPoints, displayName, streak, missionTitle }: {
           ].map(item => (
             <div key={item.label} className="flex items-center gap-1">
               <div className="w-1.5 h-1.5 rounded-full" style={{ background: item.color }} />
-              <span className="text-[10px] font-bold" style={{ color: 'rgba(255,255,255,0.5)' }}>{item.label}</span>
+              <span className="text-[10px] font-bold" style={{ color: 'rgba(255,255,255,0.4)' }}>{item.label}</span>
             </div>
           ))}
         </div>
@@ -88,70 +106,64 @@ function PointsBanner({ totalPoints, displayName, streak, missionTitle }: {
   )
 }
 
-// ── Stage Node ─────────────────────────────────────────────────────────────────
+// ── Stage Row (inside level card) ─────────────────────────────────────────────
 
-function StageNode({
-  stage, isCompleted, isLocked, levelColor, onClick,
+function StageRow({
+  stage, isCompleted, levelColor, onClick,
 }: {
   stage:       Stage
   isCompleted: boolean
-  isLocked:    boolean
   levelColor:  string
   onClick:     () => void
 }) {
   const [hovered, setHovered] = useState(false)
 
-  const state = isCompleted ? 'done' : isLocked ? 'locked' : 'available'
-
-  const cfg = {
-    done:      { bg: '#DCFCE7', border: '#4ADE80', icon: '✓', iconColor: '#16A34A', textColor: '#065F46' },
-    available: { bg: `${levelColor}12`, border: levelColor, icon: stage.code, iconColor: levelColor, textColor: '#111827' },
-    locked:    { bg: '#F9FAFB', border: '#E5E7EB', icon: '🔒', iconColor: '#9CA3AF', textColor: '#9CA3AF' },
-  }[state]
-
   return (
     <button
-      onClick={isLocked ? undefined : onClick}
-      onMouseEnter={() => !isLocked && setHovered(true)}
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      disabled={isLocked}
-      className="w-full text-left rounded-2xl border-2 transition-all duration-150 disabled:cursor-not-allowed"
+      className="w-full text-left transition-all duration-150"
       style={{
-        background:   cfg.bg,
-        borderColor:  hovered ? levelColor : cfg.border,
-        transform:    hovered && !isLocked ? 'translateX(4px)' : 'none',
-        boxShadow:    hovered && !isLocked ? `4px 4px 16px ${levelColor}22` : 'none',
-        opacity:      isLocked ? 0.5 : 1,
+        background:  hovered ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)',
+        borderRadius: 12,
+        border: '1px solid rgba(255,255,255,0.07)',
+        transform: hovered ? 'translateX(3px)' : 'none',
       }}
     >
       <div className="flex items-center gap-3 px-4 py-3">
         {/* Stage code badge */}
         <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black shrink-0"
-          style={{ background: state === 'done' ? '#4ADE80' : levelColor, color: 'white' }}
+          className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black shrink-0"
+          style={{
+            background: isCompleted ? '#22C55E' : levelColor,
+            color: 'white',
+          }}
         >
           {isCompleted ? '✓' : stage.code}
         </div>
 
         {/* Title */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-black leading-tight truncate" style={{ color: cfg.textColor }}>
+          <p className="text-sm font-black leading-tight truncate" style={{ color: isCompleted ? 'rgba(255,255,255,0.5)' : 'white' }}>
             {stage.title}
           </p>
-          <p className="text-[11px] font-semibold mt-0.5" style={{ color: '#9CA3AF' }}>
-            {isCompleted ? '✨ Stage complete' : isLocked ? 'Complete previous stages first' : `+${POINTS.CORRECT} XP per question`}
+          <p className="text-[11px] font-semibold mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
+            {isCompleted ? '✨ Stage complete' : `+${POINTS.CORRECT} XP per question`}
           </p>
         </div>
 
-        {/* Arrow / Done */}
-        {!isLocked && (
-          <div className="shrink-0">
-            {isCompleted
-              ? <span className="text-sm font-black text-green-500 px-2 py-1 rounded-lg bg-green-50">Done</span>
-              : <svg className="w-5 h-5" style={{ color: levelColor }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-            }
+        {/* Right side */}
+        {isCompleted ? (
+          <span className="text-xs font-black px-2.5 py-1 rounded-lg shrink-0" style={{ background: 'rgba(34,197,94,0.2)', color: '#4ADE80' }}>
+            Done
+          </span>
+        ) : (
+          <div
+            className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black text-white"
+            style={{ background: `linear-gradient(135deg, ${levelColor}, ${levelColor}BB)` }}
+          >
+            ▶ Start
           </div>
         )}
       </div>
@@ -162,131 +174,112 @@ function StageNode({
 // ── Level Card ─────────────────────────────────────────────────────────────────
 
 function LevelCard({
-  level, completedSet, isUnlocked, onStageClick,
+  level, completedSet, onStageClick,
 }: {
   level:        Level
   completedSet: Set<string>
-  isUnlocked:   boolean
   onStageClick: (stage: Stage, level: Level) => void
 }) {
-  const [expanded, setExpanded] = useState(isUnlocked)
+  // All levels start collapsed — student can open any
+  const [expanded, setExpanded] = useState(false)
   const totalStages     = level.stages.length
   const completedCount  = level.stages.filter(s => completedSet.has(s.stageId)).length
   const isLevelComplete = completedCount === totalStages
-  const pct             = Math.round((completedCount / totalStages) * 100)
 
   return (
     <div
-      className="rounded-3xl overflow-hidden mb-4 border-2 transition-all duration-200"
+      className="mb-4 overflow-hidden"
       style={{
-        borderColor: isLevelComplete ? '#4ADE80' : isUnlocked ? level.color : '#E5E7EB',
-        background:  'white',
-        opacity:     isUnlocked ? 1 : 0.6,
+        background: 'rgba(255,255,255,0.04)',
+        border: '1px solid rgba(255,255,255,0.1)',
+        borderLeft: `4px solid ${level.color}`,
+        borderRadius: 16,
       }}
     >
       {/* Level header */}
       <button
         className="w-full text-left"
-        onClick={() => isUnlocked && setExpanded(v => !v)}
-        disabled={!isUnlocked}
+        onClick={() => setExpanded(v => !v)}
       >
-        <div
-          className="px-5 py-4 flex items-center gap-4"
-          style={{ background: isLevelComplete ? 'linear-gradient(135deg,#F0FDF4,#DCFCE7)' : `${level.color}0A` }}
-        >
-          {/* Level badge */}
+        <div className="px-5 py-4 flex items-center gap-4">
+          {/* Level badge — colored circle */}
           <div
-            className="w-12 h-12 rounded-2xl flex flex-col items-center justify-center shrink-0 shadow-sm"
+            className="w-12 h-12 rounded-full flex flex-col items-center justify-center shrink-0"
             style={{ background: isLevelComplete ? '#22C55E' : level.color, color: 'white' }}
           >
-            <span className="text-lg leading-none">{isLevelComplete ? '🏆' : level.emoji}</span>
-            <span className="text-[9px] font-black mt-0.5">LVL {level.levelNum}</span>
+            <span className="text-[9px] font-black uppercase tracking-wide">LVL</span>
+            <span className="text-base font-black leading-none">{level.levelNum}</span>
           </div>
 
           {/* Title & progress */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-sm font-black text-gray-900 leading-tight">
-                Level {level.levelNum}: {level.title}
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <h3 className="text-sm font-black text-white leading-tight">
+                {level.title}
               </h3>
               {isLevelComplete && (
                 <span className="text-[10px] font-black px-2 py-0.5 rounded-full"
-                  style={{ background: '#DCFCE7', color: '#16A34A' }}>
+                  style={{ background: 'rgba(34,197,94,0.2)', color: '#4ADE80' }}>
                   +{POINTS.LEVEL_COMPLETE} XP
-                </span>
-              )}
-              {!isUnlocked && (
-                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-gray-100 text-gray-400">
-                  🔒 Locked
                 </span>
               )}
             </div>
             <div className="flex items-center gap-2">
-              <div className="flex-1 h-1.5 rounded-full" style={{ background: '#F3F4F6' }}>
+              <div className="flex-1 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.1)' }}>
                 <div
-                  className="h-1.5 rounded-full transition-all duration-700"
-                  style={{ width: `${pct}%`, background: isLevelComplete ? '#22C55E' : level.color }}
+                  className="h-1 rounded-full transition-all duration-700"
+                  style={{
+                    width: totalStages > 0 ? `${Math.round((completedCount / totalStages) * 100)}%` : '0%',
+                    background: isLevelComplete ? '#22C55E' : level.color,
+                  }}
                 />
               </div>
-              <span className="text-[11px] font-black shrink-0" style={{ color: isLevelComplete ? '#16A34A' : level.color }}>
+              <span className="text-[11px] font-black shrink-0" style={{ color: isLevelComplete ? '#4ADE80' : 'rgba(255,255,255,0.5)' }}>
                 {completedCount}/{totalStages}
               </span>
             </div>
           </div>
 
           {/* Chevron */}
-          {isUnlocked && (
-            <svg
-              className="w-5 h-5 shrink-0 transition-transform duration-200"
-              style={{ color: level.color, transform: expanded ? 'rotate(180deg)' : 'none' }}
-              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-            </svg>
-          )}
-        </div>
-
-        {/* Progress strip */}
-        {isLevelComplete && (
-          <div
-            className="px-5 py-2 flex items-center gap-2"
-            style={{ background: 'linear-gradient(135deg,#F0FDF4,#DCFCE7)', borderTop: '1px solid #BBF7D0' }}
+          <svg
+            className="w-5 h-5 shrink-0 transition-transform duration-200"
+            style={{ color: 'rgba(255,255,255,0.4)', transform: expanded ? 'rotate(180deg)' : 'none' }}
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
           >
-            <span className="text-sm">🎉</span>
-            <p className="text-xs font-black text-green-700">Level complete! +{POINTS.LEVEL_COMPLETE} XP earned</p>
-          </div>
-        )}
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
       </button>
 
       {/* Stages list */}
-      {isUnlocked && expanded && (
-        <div className="px-4 pb-4 pt-2 space-y-2.5">
-          {level.stages.map((stage, idx) => {
-            // First stage is always available; subsequent stages available once previous is done
-            const isLocked    = idx > 0 && !completedSet.has(level.stages[idx - 1].stageId)
+      {expanded && (
+        <div className="px-4 pb-4 pt-1 space-y-2">
+          {level.stages.map(stage => {
             const isCompleted = completedSet.has(stage.stageId)
             return (
-              <StageNode
+              <StageRow
                 key={stage.stageId}
                 stage={stage}
                 isCompleted={isCompleted}
-                isLocked={isLocked}
                 levelColor={level.color}
                 onClick={() => onStageClick(stage, level)}
               />
             )
           })}
 
-          {/* Level completion reward preview */}
+          {/* +1000 XP Level Bonus strip */}
           {!isLevelComplete && (
             <div
-              className="flex items-center gap-3 px-4 py-3 rounded-2xl border-2 border-dashed"
-              style={{ borderColor: '#FCD34D', background: '#FFFBEB' }}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl mt-1"
+              style={{
+                background: 'linear-gradient(135deg, rgba(251,191,36,0.1), rgba(251,191,36,0.05))',
+                border: '1px dashed rgba(251,191,36,0.3)',
+              }}
             >
               <span className="text-lg">🏆</span>
               <div>
-                <p className="text-xs font-black text-amber-700">Complete all stages to earn</p>
-                <p className="text-sm font-black" style={{ color: '#D97706' }}>+{POINTS.LEVEL_COMPLETE} XP Level Bonus</p>
+                <p className="text-[11px] font-black" style={{ color: 'rgba(251,191,36,0.7)' }}>Complete all stages to earn</p>
+                <p className="text-sm font-black" style={{ color: '#FBBF24' }}>+{POINTS.LEVEL_COMPLETE} XP Level Bonus</p>
               </div>
             </div>
           )}
@@ -309,49 +302,55 @@ function StageIntroSheet({
   return (
     <div
       className="fixed inset-0 z-50 flex items-end md:items-center justify-center"
-      style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+      style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)' }}
       onClick={onClose}
     >
       <div
         className="w-full max-w-lg mx-4 mb-4 md:mb-0 rounded-3xl overflow-hidden shadow-2xl"
-        style={{ background: 'white', maxHeight: '85vh', overflowY: 'auto' }}
+        style={{
+          background: '#0D1B2E',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderLeft: `4px solid ${level.color}`,
+          maxHeight: '88vh',
+          overflowY: 'auto',
+        }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div
-          className="px-6 pt-6 pb-5"
-          style={{ background: `linear-gradient(135deg,${level.color}15,${level.color}05)` }}
-        >
-          <div className="flex items-center gap-3 mb-3">
+        <div className="px-6 pt-6 pb-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+          <div className="flex items-center gap-3 mb-1">
             <div
-              className="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0"
+              className="w-12 h-12 rounded-full flex flex-col items-center justify-center shrink-0"
               style={{ background: level.color, color: 'white' }}
             >
-              {level.emoji}
+              <span className="text-[9px] font-black uppercase tracking-wide">LVL</span>
+              <span className="text-base font-black leading-none">{level.levelNum}</span>
             </div>
             <div>
               <p className="text-[10px] font-black uppercase tracking-wide" style={{ color: level.color }}>
                 Level {level.levelNum} · Stage {stage.code}
               </p>
-              <h3 className="text-lg font-black text-gray-900 leading-tight">{stage.title}</h3>
+              <h3 className="text-xl font-black text-white leading-tight">{stage.title}</h3>
             </div>
           </div>
         </div>
 
-        {/* Explanation */}
-        <div className="px-6 py-5">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-base">📖</span>
-            <h4 className="text-sm font-black text-gray-800">What you&apos;ll learn</h4>
-          </div>
-          <p className="text-sm leading-relaxed text-gray-600 mb-5">{stage.explanation}</p>
-
-          {/* Key concepts visual placeholder */}
+        {/* Body */}
+        <div className="px-6 py-5 space-y-5">
+          {/* Explanation */}
           <div
-            className="rounded-2xl p-4 mb-5"
-            style={{ background: `${level.color}0A`, border: `1.5px solid ${level.color}30` }}
+            className="rounded-2xl p-4"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
           >
-            <p className="text-[10px] font-black uppercase tracking-wide mb-2" style={{ color: level.color }}>
+            <p className="text-[11px] font-black uppercase tracking-wide mb-2" style={{ color: 'rgba(255,255,255,0.4)' }}>
+              📖 What you&apos;ll learn
+            </p>
+            <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.8)' }}>{stage.explanation}</p>
+          </div>
+
+          {/* Key concept tags */}
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-wide mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>
               🧠 Key concepts
             </p>
             <div className="flex flex-wrap gap-2">
@@ -359,7 +358,7 @@ function StageIntroSheet({
                 <span
                   key={tid}
                   className="text-[11px] font-bold px-3 py-1 rounded-full"
-                  style={{ background: level.color, color: 'white' }}
+                  style={{ background: `${level.color}22`, color: level.color, border: `1px solid ${level.color}44` }}
                 >
                   {tid}
                 </span>
@@ -367,15 +366,18 @@ function StageIntroSheet({
             </div>
           </div>
 
-          {/* Reward preview */}
+          {/* XP reward strip */}
           <div
-            className="flex items-center gap-3 px-4 py-3 rounded-2xl mb-5"
-            style={{ background: 'linear-gradient(135deg,#FFFBEB,#FEF3C7)', border: '1.5px solid #FCD34D' }}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,215,0,0.12), rgba(255,140,0,0.08))',
+              border: '1px solid rgba(255,215,0,0.2)',
+            }}
           >
             <span className="text-xl">⚡</span>
             <div>
-              <p className="text-xs font-black text-amber-700">Stage reward</p>
-              <p className="text-sm font-black text-amber-600">
+              <p className="text-[11px] font-black" style={{ color: 'rgba(255,215,0,0.7)' }}>XP rewards</p>
+              <p className="text-sm font-black" style={{ color: '#FFD700' }}>
                 +{POINTS.CORRECT} XP per question · +{POINTS.STAGE_COMPLETE} XP on completion
               </p>
             </div>
@@ -385,13 +387,14 @@ function StageIntroSheet({
           <button
             onClick={onStart}
             className="w-full py-4 rounded-2xl text-white font-black text-base transition-all active:scale-[0.97]"
-            style={{ background: `linear-gradient(135deg,${level.color},${level.color}CC)` }}
+            style={{ background: `linear-gradient(135deg, ${level.color}, ${level.color}CC)` }}
           >
-            Start Stage {stage.code} →
+            Start Stage {stage.code} ▶
           </button>
           <button
             onClick={onClose}
-            className="w-full py-3 mt-2 text-sm font-semibold text-gray-400 hover:text-gray-600 transition-colors"
+            className="w-full py-3 text-sm font-semibold transition-colors"
+            style={{ color: 'rgba(255,255,255,0.3)' }}
           >
             Not now
           </button>
@@ -429,12 +432,20 @@ export default function MissionClient({
   }
 
   return (
-    <div style={{ fontFamily: "'Nunito',sans-serif" }} className="pb-8">
+    <div
+      style={{
+        fontFamily: "'Nunito',sans-serif",
+        background: '#080D16',
+        minHeight: '100vh',
+        color: 'white',
+      }}
+      className="pb-8 px-4 pt-5"
+    >
 
       {/* Page title */}
       <div className="mb-5">
-        <h1 className="text-2xl font-black text-gray-900">🎯 Mission</h1>
-        <p className="text-sm mt-0.5 text-gray-500">
+        <h1 className="text-2xl font-black text-white">🎯 Mission</h1>
+        <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
           Complete stages and levels to earn XP and climb the leaderboard.
         </p>
       </div>
@@ -450,11 +461,14 @@ export default function MissionClient({
       {/* Overall mission progress */}
       <div
         className="rounded-2xl p-4 mb-6 flex items-center gap-4"
-        style={{ background: 'white', border: '1.5px solid #F3F4F6' }}
+        style={{
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.08)',
+        }}
       >
         <div className="flex-1">
-          <p className="text-xs font-black text-gray-700 mb-1">Mission progress</p>
-          <div className="h-2.5 rounded-full bg-gray-100">
+          <p className="text-xs font-black mb-1.5" style={{ color: 'rgba(255,255,255,0.5)' }}>Mission progress</p>
+          <div className="h-2.5 rounded-full" style={{ background: 'rgba(255,255,255,0.1)' }}>
             <div
               className="h-2.5 rounded-full transition-all duration-700"
               style={{
@@ -465,40 +479,38 @@ export default function MissionClient({
           </div>
         </div>
         <div className="text-right shrink-0">
-          <p className="text-xl font-black text-blue-700">{missionPct}%</p>
-          <p className="text-[10px] font-semibold text-gray-400">{completedCount}/{totalStages} stages</p>
+          <p className="text-xl font-black" style={{ color: '#60A5FA' }}>{missionPct}%</p>
+          <p className="text-[10px] font-semibold" style={{ color: 'rgba(255,255,255,0.3)' }}>
+            {completedCount}/{totalStages} stages
+          </p>
         </div>
       </div>
 
       {/* Levels */}
       <div className="mb-4">
-        <h2 className="text-sm font-black text-gray-500 uppercase tracking-wide mb-3">
+        <h2 className="text-xs font-black uppercase tracking-wide mb-3" style={{ color: 'rgba(255,255,255,0.35)' }}>
           {mission.levels.length} Levels to master
         </h2>
 
-        {mission.levels.map((level, levelIdx) => {
-          // Level is unlocked if it's the first, OR the previous level has at least 1 completed stage
-          const isUnlocked = levelIdx === 0
-            || mission.levels[levelIdx - 1].stages.some(s => completedSet.has(s.stageId))
-
-          return (
-            <LevelCard
-              key={level.levelId}
-              level={level}
-              completedSet={completedSet}
-              isUnlocked={isUnlocked}
-              onStageClick={handleStageClick}
-            />
-          )
-        })}
+        {mission.levels.map(level => (
+          <LevelCard
+            key={level.levelId}
+            level={level}
+            completedSet={completedSet}
+            onStageClick={handleStageClick}
+          />
+        ))}
       </div>
 
       {/* Motivation footer */}
       <div
         className="rounded-2xl px-5 py-4 text-center"
-        style={{ background: 'linear-gradient(135deg,#F0F9FF,#E0F2FE)' }}
+        style={{
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.07)',
+        }}
       >
-        <p className="text-sm font-black text-blue-800 mb-1">
+        <p className="text-sm font-black text-white mb-1">
           {completedCount === 0
             ? "🚀 Your mission starts here. Complete Stage 1A to earn your first XP!"
             : completedCount === totalStages
@@ -506,7 +518,7 @@ export default function MissionClient({
               : `💪 ${totalStages - completedCount} stage${totalStages - completedCount === 1 ? '' : 's'} remaining. Keep going — you've got this!`
           }
         </p>
-        <p className="text-xs text-blue-600">
+        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
           {formatPoints(totalPoints)} XP earned so far
         </p>
       </div>

@@ -6,6 +6,8 @@ import { getNextQuestion, submitAnswer }              from './actions'
 import { getHint, chatWithTutor, getConceptExplanation, getConceptVideo, assessOpenAnswer } from '@/lib/actions/tutor'
 import { logLearningEvent }                           from '@/lib/actions/events'
 import { awardQuestionPoints, checkAndAwardStageCompletion } from '@/lib/actions/gamification'
+import { findStage }                                  from '@/lib/curriculum'
+import { POINTS }                                     from '@/lib/gamification-constants'
 import WorkingInput                                   from '@/components/WorkingInput'
 import MathText                                        from '@/components/MathText'
 import DiagramRenderer, { extractDiagramSpec }         from '@/components/DiagramRenderer'
@@ -447,85 +449,143 @@ function MasteryPanel({ prevConf, newConf, delta, newStatus, predictedHscBand }:
 }
 
 // ─── Inline Steps ─────────────────────────────────────────────────────────────
-// Renders worked solution steps with special treatment for:
-//   📊 Visual: / 📐 Graph: / 📈 Chart: lines → blue visual callout
-//   ⚠️ Common mistake: lines → amber warning callout
-//   Tip: lines → green tip callout
+// ─── RichBody — renders multi-line body text with display math support ──────────
+//
+// Each line is checked:
+//   $$...$$  → centered display math block
+//   otherwise → inline rendering (bold, $math$, code)
+
+function RichBody({ text }: { text: string }) {
+  const lines = text.split('\n').filter(l => l.trim())
+  return (
+    <>
+      {lines.map((line, i) => {
+        const t = line.trim()
+        if (t.startsWith('$$') && t.endsWith('$$') && t.length > 4) {
+          return (
+            <div key={i} className="flex justify-center my-3 px-2">
+              <MathText text={t} style={{ color: 'white' }} />
+            </div>
+          )
+        }
+        return (
+          <p key={i} className={`text-sm leading-relaxed ${i > 0 ? 'mt-1.5' : ''}`}
+            style={{ color: 'rgba(255,255,255,0.8)' }}>
+            {renderInline(t)}
+          </p>
+        )
+      })}
+    </>
+  )
+}
+
+// ─── InlineSteps — dark-themed rich worked solution panel ────────────────────
 
 function InlineSteps({ steps }: { steps: string[] }) {
   if (!steps || steps.length === 0) return null
 
-  let stepCounter = 0
+  let sectionNum = 0
 
   return (
     <div className="rounded-2xl overflow-hidden animate-fade-in-up"
-      style={{ background: '#FAFAFA', border: '1.5px solid #F3F4F6' }}>
-      <div className="px-4 py-2.5 flex items-center gap-2"
-        style={{ background: 'linear-gradient(135deg,#F5F3FF,#FDF2F8)', borderBottom: '1px solid #EDE9FE' }}>
-        <span className="text-sm">📋</span>
-        <p className="text-xs font-black" style={{ color: '#5B21B6' }}>Worked Solution</p>
+      style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.1)' }}>
+
+      {/* Header */}
+      <div className="px-5 py-3"
+        style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <p className="text-[11px] font-black uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.35)' }}>
+          Step-by-step solution
+        </p>
       </div>
-      <div className="px-4 py-3 space-y-3">
+
+      <div className="px-5 py-4">
         {steps.map((step, i) => {
           const trimmed = step.trim()
 
-          // Visual / graph callout — may contain [SPEC]{...}[/SPEC] for rendering
-          if (/^(📊|📐|📈)\s*(Visual|Graph|Chart|Diagram):?/i.test(trimmed)) {
-            const raw  = trimmed.replace(/^(📊|📐|📈)\s*(Visual|Graph|Chart|Diagram):?\s*/i, '')
-            const { spec, text } = extractDiagramSpec(raw)
+          // ── ✅ Final Answer
+          if (/^✅\s*(Final Answer|Answer):?/i.test(trimmed)) {
+            const body = trimmed.replace(/^✅\s*(Final Answer|Answer):?\s*/i, '')
             return (
-              <div key={i} className="rounded-xl overflow-hidden animate-fade-in-up"
-                style={{ background: '#EFF6FF', border: '1.5px solid #BFDBFE', animationDelay: `${i * 0.07}s` }}>
-                <p className="text-[11px] font-black px-3 pt-2.5 pb-1" style={{ color: '#1D4ED8' }}>📊 Visual</p>
-                {spec && (
-                  <div className="px-2 pb-1">
-                    <DiagramRenderer spec={spec as DiagramSpec} />
-                  </div>
-                )}
-                {text && (
-                  <p className="text-xs leading-relaxed px-3 pb-2.5" style={{ color: '#1E40AF' }}>
-                    {renderInline(text)}
+              <div key={i} className="rounded-xl px-4 py-3.5 mt-4 animate-fade-in-up"
+                style={{ background: 'rgba(16,185,129,0.12)', border: '1.5px solid rgba(16,185,129,0.3)', animationDelay: `${i * 0.07}s` }}>
+                <p className="text-[11px] font-black uppercase tracking-wide mb-1.5" style={{ color: '#34D399' }}>✅ Final Answer</p>
+                <p className="text-sm font-bold" style={{ color: 'rgba(255,255,255,0.9)' }}>{renderInline(body)}</p>
+              </div>
+            )
+          }
+
+          // ── ⚠️ Common mistake
+          if (/^⚠️?\s*(Common mistake|Watch out|Note):?/i.test(trimmed)) {
+            const body = trimmed.replace(/^⚠️?\s*(Common mistake|Watch out|Note):?\s*/i, '')
+            return (
+              <div key={i} className="rounded-xl px-4 py-3 mt-3 animate-fade-in-up"
+                style={{ background: 'rgba(245,158,11,0.08)', border: '1.5px solid rgba(245,158,11,0.2)', animationDelay: `${i * 0.07}s` }}>
+                <p className="text-[11px] font-black uppercase tracking-wide mb-1" style={{ color: '#FBBF24' }}>⚠️ Common Mistake</p>
+                <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)' }}>{renderInline(body)}</p>
+              </div>
+            )
+          }
+
+          // ── 💡 Tip
+          if (/^(💡|Tip):?/i.test(trimmed)) {
+            const body = trimmed.replace(/^(💡|Tip):?\s*/i, '')
+            return (
+              <div key={i} className="rounded-xl px-4 py-3 mt-3 animate-fade-in-up"
+                style={{ background: 'rgba(96,165,250,0.08)', border: '1.5px solid rgba(96,165,250,0.15)', animationDelay: `${i * 0.07}s` }}>
+                <p className="text-[11px] font-black uppercase tracking-wide mb-1" style={{ color: '#60A5FA' }}>💡 Tip</p>
+                <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)' }}>{renderInline(body)}</p>
+              </div>
+            )
+          }
+
+          // ── 📊 Visual / Diagram
+          if (/^(📊|📐|📈)\s*(Visual|Graph|Chart|Diagram):?/i.test(trimmed)) {
+            const raw = trimmed.replace(/^(📊|📐|📈)\s*(Visual|Graph|Chart|Diagram):?\s*/i, '')
+            const { spec, text: descText } = extractDiagramSpec(raw)
+            return (
+              <div key={i} className="rounded-xl overflow-hidden mt-4 animate-fade-in-up"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', animationDelay: `${i * 0.07}s` }}>
+                <p className="text-[11px] font-black px-4 pt-3 pb-1.5 uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.3)' }}>📊 Visual</p>
+                {spec && <div className="px-3 pb-1"><DiagramRenderer spec={spec as DiagramSpec} /></div>}
+                {descText && (
+                  <p className="text-xs leading-relaxed px-4 pb-3" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                    {renderInline(descText)}
                   </p>
                 )}
               </div>
             )
           }
 
-          // Common mistake callout
-          if (/^⚠️?\s*(Common mistake|Watch out|Note):?/i.test(trimmed)) {
-            const text = trimmed.replace(/^⚠️?\s*(Common mistake|Watch out|Note):?\s*/i, '')
+          // ── **N. Section title** — rich section with body content on next line(s)
+          const sectionMatch = trimmed.match(/^\*\*(\d+)\.\s+(.+?)\*\*([\s\S]*)$/)
+          if (sectionMatch) {
+            sectionNum++
+            const title = sectionMatch[2].trim()
+            const body  = sectionMatch[3].trim()
             return (
-              <div key={i} className="rounded-xl px-3 py-2.5 animate-fade-in-up"
-                style={{ background: '#FFFBEB', border: '1.5px solid #FDE68A', animationDelay: `${i * 0.07}s` }}>
-                <p className="text-[11px] font-black mb-1" style={{ color: '#92400E' }}>⚠️ Common Mistake</p>
-                <p className="text-xs leading-relaxed" style={{ color: '#78350F' }}>{renderInline(text)}</p>
+              <div key={i}
+                className={`animate-fade-in-up ${i > 0 ? 'pt-5 mt-1' : 'pt-1'}`}
+                style={{ borderTop: i > 0 ? '1px solid rgba(255,255,255,0.06)' : 'none', animationDelay: `${i * 0.07}s` }}
+              >
+                <p className="text-[10px] font-black uppercase tracking-widest mb-1.5" style={{ color: 'rgba(255,255,255,0.22)' }}>
+                  {sectionNum}
+                </p>
+                <p className="text-sm font-black text-white mb-2.5">{title}</p>
+                {body && <RichBody text={body} />}
               </div>
             )
           }
 
-          // Tip callout
-          if (/^(💡|Tip):?/i.test(trimmed)) {
-            const text = trimmed.replace(/^(💡|Tip):?\s*/i, '')
-            return (
-              <div key={i} className="rounded-xl px-3 py-2.5 animate-fade-in-up"
-                style={{ background: '#F0FDF4', border: '1.5px solid #BBF7D0', animationDelay: `${i * 0.07}s` }}>
-                <p className="text-[11px] font-black mb-1" style={{ color: '#065F46' }}>💡 Tip</p>
-                <p className="text-xs leading-relaxed" style={{ color: '#14532D' }}>{renderInline(text)}</p>
-              </div>
-            )
-          }
-
-          // Regular numbered step
-          stepCounter++
-          const num = stepCounter
+          // ── Plain numbered step (fallback for old-format questions)
+          sectionNum++
           return (
-            <div key={i} className="flex gap-3 animate-fade-in-up"
-              style={{ animationDelay: `${i * 0.07}s` }}>
+            <div key={i} className="flex gap-3 py-3 animate-fade-in-up"
+              style={{ borderTop: i > 0 ? '1px solid rgba(255,255,255,0.05)' : 'none', animationDelay: `${i * 0.07}s` }}>
               <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5"
-                style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)', color: 'white' }}>
-                {num}
+                style={{ background: 'linear-gradient(135deg,#6D28D9,#A855F7)', color: 'white' }}>
+                {sectionNum}
               </div>
-              <p className="text-sm leading-relaxed flex-1" style={{ color: '#374151' }}>
+              <p className="text-sm leading-relaxed flex-1" style={{ color: 'rgba(255,255,255,0.8)' }}>
                 {renderInline(trimmed)}
               </p>
             </div>
@@ -589,6 +649,95 @@ function InlineAsk({ onAsk }: { onAsk: (text: string) => void }) {
           className="px-4 py-2.5 rounded-xl text-xs font-black text-white disabled:opacity-30 transition-all active:scale-95"
           style={{ background: 'linear-gradient(135deg,#7C3AED,#EC4899)' }}>
           Ask →
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ─── Stage Intro Screen ─────────────────────────────────────────────────────────
+
+function StageIntroScreen({ stageId, onStart }: { stageId: string; onStart: () => void }) {
+  const info = findStage(stageId)
+  if (!info) { onStart(); return null }
+  const { stage, level } = info
+
+  return (
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-6 py-10"
+      style={{ background: '#080D16', fontFamily: "'Nunito', sans-serif" }}
+    >
+      <div className="w-full max-w-lg">
+        {/* Level badge */}
+        <div className="flex items-center gap-3 mb-6">
+          <div
+            className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shrink-0"
+            style={{ background: `${level.color}22`, border: `2px solid ${level.color}55` }}
+          >
+            {level.emoji}
+          </div>
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-wider mb-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
+              {level.title}
+            </p>
+            <h1 className="text-xl font-black text-white leading-tight">
+              Stage {stage.code}: {stage.title}
+            </h1>
+          </div>
+        </div>
+
+        {/* Explanation card */}
+        <div
+          className="rounded-2xl p-5 mb-4"
+          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+        >
+          <p className="text-[11px] font-black uppercase tracking-wide mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>
+            What you&apos;ll learn
+          </p>
+          <p className="text-sm leading-relaxed text-white">{stage.explanation}</p>
+        </div>
+
+        {/* Video — only shown when videoHint is set */}
+        {stage.videoHint && (
+          <div
+            className="rounded-2xl overflow-hidden mb-4"
+            style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+          >
+            <iframe
+              className="w-full"
+              style={{ height: 220 }}
+              src={`https://www.youtube.com/embed/${stage.videoHint}`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              title={`${stage.title} intro`}
+            />
+          </div>
+        )}
+
+        {/* XP reward strip */}
+        <div
+          className="flex items-center gap-3 rounded-2xl px-5 py-4 mb-6"
+          style={{ background: 'rgba(255,218,0,0.07)', border: '1.5px solid rgba(255,218,0,0.2)' }}
+        >
+          <span className="text-2xl">⚡</span>
+          <div>
+            <p className="text-sm font-black text-white">
+              Complete this stage →{' '}
+              <span style={{ color: '#FFDA00' }}>+{POINTS.STAGE_COMPLETE} XP</span>
+            </p>
+            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
+              +{POINTS.CORRECT} XP per correct answer along the way
+            </p>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <button
+          onClick={onStart}
+          className="w-full py-4 rounded-2xl font-black text-base transition-all active:scale-[0.97]"
+          style={{ background: 'linear-gradient(135deg,#185FA5,#2563EB)', color: 'white', minHeight: 56 }}
+        >
+          Start Stage →
         </button>
       </div>
     </div>
@@ -666,6 +815,9 @@ export default function PracticeSession({
   // Stage / Level complete modal
   const [completionData,     setCompletionData]     = useState<CompletionData | null>(null)
   const [showStageComplete,  setShowStageComplete]  = useState(false)
+
+  // Stage intro screen (shown before first question when launched from a stage)
+  const [showStageIntro,     setShowStageIntro]     = useState(!!stageId)
 
   // Session tracking
   const sessionStartMsRef = useRef(Date.now())
@@ -749,7 +901,7 @@ export default function PracticeSession({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, topicFilter])
 
-  useEffect(() => { loadNext() }, [loadNext])
+  useEffect(() => { if (!showStageIntro) loadNext() }, [loadNext, showStageIntro])
 
   useEffect(() => () => {
     if (timerRef.current)      clearInterval(timerRef.current)
@@ -930,6 +1082,16 @@ export default function PracticeSession({
   function handleInlineAsk(text: string) {
     setShowChatPanel(true)
     void handleChatSend(text)
+  }
+
+  // ── Stage intro ───────────────────────────────────────────────────────────────
+  if (showStageIntro && stageId) {
+    return (
+      <StageIntroScreen
+        stageId={stageId}
+        onStart={() => { setShowStageIntro(false); void loadNext() }}
+      />
+    )
   }
 
   // ── Loading ──────────────────────────────────────────────────────────────────

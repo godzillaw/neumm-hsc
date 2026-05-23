@@ -464,324 +464,32 @@ function NextMovesSection({ moves }: { moves: NextMove[] }) {
   )
 }
 
-// ─── NESA Syllabus Roadmap — Term-by-Term ──────────────────────────────────────
-// Year 9 & 10 = NSW Stage 5 Mathematics
-// Year 11 & 12 = NSW Mathematics Advanced (Preliminary + HSC)
+// ─── Mission CTA ───────────────────────────────────────────────────────────────
 
-const TERM_ROADMAP = [
-  // ── Year 9 ───────────────────────────────────────────────────────────────────
-  {
-    year: 9, term: 1, months: 'Feb – Apr',
-    title: 'Indices, Surds, Algebra & Number',
-    nesaCodes: ['MA5-IDX', 'MA5-FIN', 'MA5-ALG'],
-    color: '#6366F1', emoji: '🔢',
-    topics: ['NSW9-IDX-01','NSW9-IDX-02','NSW9-SUR-01','NSW9-CON-01','NSW9-FIN-01','NSW9-ALG-01'],
-  },
-  {
-    year: 9, term: 2, months: 'May – Jul',
-    title: 'Equations, Relationships & Geometry',
-    nesaCodes: ['MA5-LIN', 'MA5-GEOM', 'MA5-ALG'],
-    color: '#0EA5E9', emoji: '📏',
-    topics: ['NSW9-ALG-02','NSW9-LIN-01','NSW9-LIN-02','NSW9-SIM-01','NSW9-INEQ-01',
-             'NSW9-GEOM-01','NSW9-GEOM-02','NSW9-GEOM-03'],
-  },
-  {
-    year: 9, term: 3, months: 'Jul – Sep',
-    title: 'Trigonometry, Measurement & Non-linear Graphs',
-    nesaCodes: ['MA5-TRIG', 'MA5-MEAS', 'MA5-GRA'],
-    color: '#10B981', emoji: '📐',
-    topics: ['NSW9-TRIG-01','NSW9-TRIG-02','NSW9-MEAS-01','NSW9-GRAPH-01'],
-  },
-  {
-    year: 9, term: 4, months: 'Oct – Nov',
-    title: 'Data, Statistics & Probability',
-    nesaCodes: ['MA5-DAT', 'MA5-PROB'],
-    color: '#F59E0B', emoji: '📊',
-    topics: ['NSW9-STAT-01','NSW9-STAT-02','NSW9-PROB-01'],
-  },
-  // ── Year 10 ──────────────────────────────────────────────────────────────────
-  {
-    year: 10, term: 1, months: 'Feb – Apr',
-    title: 'Algebra, Quadratics & Proof',
-    nesaCodes: ['MA5-ALG', 'MA5-QUA'],
-    color: '#8B5CF6', emoji: '✏️',
-    topics: ['NSW10-ALG-01','NSW10-ALG-02','NSW10-ALG-03','NSW10-SIM-01','NSW10-PROOF-01'],
-  },
-  {
-    year: 10, term: 2, months: 'May – Jul',
-    title: 'Functions, Graphs & Logarithms',
-    nesaCodes: ['MA5-FUNC', 'MA5-COORD', 'MA5-LOG'],
-    color: '#EC4899', emoji: '📉',
-    topics: ['NSW10-FUNC-01','NSW10-FUNC-02','NSW10-EXP-01','NSW10-GRAPH-01',
-             'NSW10-LOG-01','NSW10-COORD-01'],
-  },
-  {
-    year: 10, term: 3, months: 'Jul – Sep',
-    title: 'Trigonometry, Measurement & Circle Geometry',
-    nesaCodes: ['MA5-TRIG', 'MA5-MEAS', 'MA5-GEOM'],
-    color: '#14B8A6', emoji: '〜',
-    topics: ['NSW10-TRIG-01','NSW10-TRIG-02','NSW10-MEAS-01','NSW10-GEOM-01'],
-  },
-  {
-    year: 10, term: 4, months: 'Oct – Nov',
-    title: 'Statistics, Probability & Review',
-    nesaCodes: ['MA5-DAT', 'MA5-PROB'],
-    color: '#F97316', emoji: '📈',
-    topics: ['NSW10-STAT-01','NSW10-PROB-01','NSW10-PROB-02','NSW10-ALG-04'],
-  },
-  // ── Year 11 ──────────────────────────────────────────────────────────────────
-  {
-    year: 11, term: 1, months: 'Feb – Apr',
-    title: 'Working with Functions',
-    nesaCodes: ['MA-F1'],
-    color: '#6366F1', emoji: '📐',
-    topics: ['MA-ALG-01','MA-ALG-02','MA-ALG-03','MA-ALG-04','MA-ALG-05','MA-ALG-06','MA-ALG-07','MA-ALG-08',
-             'MA-FUNC-01','MA-FUNC-02','MA-FUNC-03','MA-FUNC-04','MA-FUNC-05','MA-FUNC-06'],
-  },
-  {
-    year: 11, term: 2, months: 'May – Jul',
-    title: 'Trigonometry & Exponential Functions',
-    nesaCodes: ['MA-T1', 'MA-E1'],
-    color: '#0EA5E9', emoji: '〜',
-    topics: ['MA-TRIG-01','MA-TRIG-02','MA-TRIG-09','MA-TRIG-07','MA-TRIG-08',
-             'MA-EXP-01','MA-EXP-02','MA-EXP-03'],
-  },
-  {
-    year: 11, term: 3, months: 'Jul – Sep',
-    title: 'Logarithms & Introduction to Differentiation',
-    nesaCodes: ['MA-E1', 'MA-C1'],
-    color: '#10B981', emoji: '∂',
-    topics: ['MA-EXP-04','MA-EXP-05',
-             'MA-CALC-D00','MA-CALC-D01','MA-CALC-D02','MA-CALC-D03','MA-CALC-D07'],
-  },
-  {
-    year: 11, term: 4, months: 'Oct – Nov',
-    title: 'Differentiation Applications & Statistics',
-    nesaCodes: ['MA-C1', 'MA-S1'],
-    color: '#F59E0B', emoji: '📊',
-    topics: ['MA-CALC-D08','MA-CALC-D09','MA-CALC-D10','MA-CALC-D11','MA-CALC-D12',
-             'MA-STAT-01','MA-STAT-02','MA-STAT-03','MA-PROB-01','MA-PROB-02','MA-PROB-03','MA-PROB-04','MA-PROB-05'],
-  },
-  // ── Year 12 ──────────────────────────────────────────────────────────────────
-  {
-    year: 12, term: 1, months: 'Feb – Apr',
-    title: 'Graphing Techniques & Trigonometric Functions',
-    nesaCodes: ['MA-F2', 'MA-T2', 'MA-T3'],
-    color: '#8B5CF6', emoji: '📉',
-    topics: ['MA-FUNC-07','MA-FUNC-08','MA-FUNC-09','MA-COORD-01','MA-COORD-02','MA-COORD-03','MA-COORD-04','MA-COORD-05',
-             'MA-TRIG-03','MA-TRIG-04','MA-TRIG-05','MA-TRIG-06',
-             'MA-EXT-02','MA-EXT-08'],
-  },
-  {
-    year: 12, term: 2, months: 'May – Jul',
-    title: 'Advanced Differentiation & Integration',
-    nesaCodes: ['MA-C2', 'MA-C3', 'MA-C4'],
-    color: '#EC4899', emoji: '∫',
-    topics: ['MA-CALC-D04','MA-CALC-D05','MA-CALC-D06',
-             'MA-CALC-I01','MA-CALC-I02','MA-CALC-I03','MA-CALC-I04','MA-CALC-I05','MA-CALC-I06',
-             'MA-CALC-I09','MA-CALC-I11',
-             'MA-EXT-03','MA-EXT-06'],
-  },
-  {
-    year: 12, term: 3, months: 'Jul – Sep',
-    title: 'Integration Applications, Exp & Statistical Analysis',
-    nesaCodes: ['MA-C4', 'MA-E2', 'MA-S2', 'MA-S3', 'MA-S4'],
-    color: '#EF4444', emoji: '📈',
-    topics: ['MA-CALC-I07','MA-CALC-I08','MA-CALC-I10','MA-CALC-I12',
-             'MA-EXP-06',
-             'MA-STAT-04','MA-STAT-05','MA-STAT-06',
-             'MA-EXT-04','MA-EXT-05'],
-  },
-  {
-    year: 12, term: 4, months: 'Oct – Nov',
-    title: 'Financial Mathematics & Exam Preparation',
-    nesaCodes: ['MA-M1'],
-    color: '#F97316', emoji: '💰',
-    topics: ['MA-FIN-01','MA-FIN-02','MA-FIN-03','MA-FIN-04','MA-FIN-05',
-             'MA-EXT-01','MA-EXT-07'],
-  },
-]
-
-// Year config for section headers
-const YEAR_SECTION_META: Record<number, { label: string; bg: string; color: string }> = {
-  9:  { label: '📚 Year 9 — Stage 5',          bg: '#FFF7ED', color: '#C2410C' },
-  10: { label: '📒 Year 10 — Stage 5',         bg: '#FEF9C3', color: '#854D0E' },
-  11: { label: '📘 Year 11 — Preliminary',     bg: '#EFF6FF', color: '#1D4ED8' },
-  12: { label: '📗 Year 12 — HSC',             bg: '#F0FDF4', color: '#15803D' },
-}
-
-function LearningJourneySection({
-  topics,
-  onTopicClick,
-  yearGroup,
-}: {
-  topics:       TopicStat[]
-  onTopicClick: (prefix: string) => void
-  yearGroup:    string
-}) {
-  const topicMap: Record<string, TopicStat> = {}
-  for (const t of topics) topicMap[t.prefix] = t
-
-  function renderNodes(prefixes: string[]) {
-    return prefixes.map((prefix, idx) => {
-      const topic = topicMap[prefix]
-      if (!topic) return null
-      const avg = topic.avg
-      let nodeColor = '#D1D5DB', nodeBg = '#F9FAFB', symbol = String(idx + 1)
-      if (avg !== null && avg >= 80)      { nodeColor = '#22C55E'; nodeBg = '#F0FDF4'; symbol = '✓' }
-      else if (avg !== null && avg >= 50) { nodeColor = '#F59E0B'; nodeBg = '#FFFBEB' }
-      else if (avg !== null && avg > 0)   { nodeColor = '#EF4444'; nodeBg = '#FEF2F2' }
-      return (
-        <div key={prefix} className="flex items-center">
-          <div className="flex flex-col items-center" style={{ minWidth: 48 }}>
-            <button
-              onClick={() => onTopicClick(prefix)}
-              className="flex items-center justify-center text-xs font-black transition-all active:scale-95"
-              style={{ width: 28, height: 28, borderRadius: '50%', background: nodeBg, border: `1.5px solid ${nodeColor}`, color: nodeColor }}>
-              {symbol}
-            </button>
-            <p className="text-[8px] font-bold text-center mt-1 leading-tight px-0.5"
-              style={{ color: '#9CA3AF', maxWidth: 44, wordBreak: 'break-word' }}>
-              {topic.name.split(' ').slice(0, 2).join(' ')}
-            </p>
-          </div>
-          {idx < prefixes.length - 1 && (
-            <div className="shrink-0 -mt-5" style={{ width: 8, height: 1.5, background: '#E5E7EB' }} />
-          )}
-        </div>
-      )
-    })
-  }
-
-  // Only show years from the student's current year onwards
-  const startYear =
-    yearGroup === 'year_9'  ? 9  :
-    yearGroup === 'year_10' ? 10 :
-    yearGroup === 'year_11' ? 11 : 12
-
-  const visibleYears = [9, 10, 11, 12].filter(y => y >= startYear)
-
-  function renderYearSection(yearTerms: typeof TERM_ROADMAP, yearLabel: string, yearBg: string, yearColor: string) {
-    return (
-      <div className="mb-5">
-        {/* Year header */}
-        <div className="flex items-center gap-3 mb-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-2xl"
-            style={{ background: yearBg }}>
-            <span className="text-xs font-black" style={{ color: yearColor }}>{yearLabel}</span>
-          </div>
-          <div className="flex-1 h-px" style={{ background: '#E5E7EB' }} />
-        </div>
-
-        <div className="space-y-2.5">
-          {yearTerms.map(term => {
-            const termTopics    = term.topics.map(p => topicMap[p]).filter((t): t is TopicStat => !!t)
-            const masteredCount = termTopics.filter(t => (t.avg ?? 0) >= 80).length
-            const total         = termTopics.length
-            const pct           = total > 0 ? Math.round((masteredCount / total) * 100) : 0
-            const allDone       = masteredCount === total && total > 0
-            const nextStep      = term.topics.map(p => topicMap[p]).find((t): t is TopicStat => !!t && (t.avg ?? 0) < 80)
-
-            return (
-              <div key={`${term.year}-${term.term}`} className="rounded-2xl bg-white border overflow-hidden"
-                style={{ borderColor: '#F3F4F6' }}>
-
-                {/* Term header */}
-                <div className="px-4 pt-3 pb-2.5" style={{ borderBottom: '1px solid #F3F4F6' }}>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-base leading-none shrink-0">{term.emoji}</span>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {/* Term badge */}
-                          <span className="text-[10px] font-black px-2 py-0.5 rounded-full shrink-0"
-                            style={{ background: `${term.color}18`, color: term.color }}>
-                            Term {term.term} · {term.months}
-                          </span>
-                          {/* NESA codes */}
-                          {term.nesaCodes.map(code => (
-                            <span key={code} className="text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0"
-                              style={{ background: '#F3F4F6', color: '#6B7280' }}>
-                              {code}
-                            </span>
-                          ))}
-                        </div>
-                        <p className="text-xs font-black mt-0.5 leading-tight" style={{ color: '#111827' }}>
-                          {term.title}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right shrink-0 ml-3">
-                      <p className="text-xs font-black" style={{ color: allDone ? '#16A34A' : '#374151' }}>
-                        {allDone ? '✓' : `${masteredCount}/${total}`}
-                      </p>
-                      <p className="text-[9px] font-semibold" style={{ color: '#9CA3AF' }}>mastered</p>
-                    </div>
-                  </div>
-                  {/* Progress bar */}
-                  <div className="h-1.5 rounded-full" style={{ background: '#F3F4F6' }}>
-                    <div className="h-1.5 rounded-full transition-all duration-700"
-                      style={{ width: `${pct}%`, background: allDone ? '#22C55E' : term.color }} />
-                  </div>
-                </div>
-
-                {/* Topic nodes */}
-                <div className="px-4 py-3">
-                  <div className="overflow-x-auto pb-1 no-scrollbar">
-                    <div className="flex items-start gap-0 min-w-max">{renderNodes(term.topics)}</div>
-                  </div>
-                </div>
-
-                {/* Next step / done banner */}
-                {!allDone && nextStep && (
-                  <div className="mx-4 mb-3 flex items-center gap-3 px-3 py-2 rounded-xl"
-                    style={{ background: `${term.color}0D`, border: `1px solid ${term.color}33` }}>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-black truncate" style={{ color: term.color }}>
-                        Next: {nextStep.name}
-                      </p>
-                      <p className="text-[11px] font-semibold" style={{ color: term.color, opacity: 0.75 }}>
-                        {nextStep.avg !== null && nextStep.avg > 0 ? `${nextStep.avg}% — keep pushing!` : 'Not started — begin now'}
-                      </p>
-                    </div>
-                    <button onClick={() => onTopicClick(nextStep.prefix)}
-                      className="px-3 py-1.5 rounded-xl text-xs font-black text-white shrink-0 transition-all active:scale-95"
-                      style={{ background: term.color }}>
-                      Practice →
-                    </button>
-                  </div>
-                )}
-                {allDone && (
-                  <div className="mx-4 mb-3 flex items-center gap-2 px-3 py-2 rounded-xl"
-                    style={{ background: '#F0FDF4', border: '1px solid #86EFAC' }}>
-                    <span className="text-sm">🎉</span>
-                    <p className="text-xs font-black" style={{ color: '#16A34A' }}>Term {term.term} complete!</p>
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      </div>
-    )
-  }
-
+function MissionCTASection() {
   return (
     <div className="mb-8">
-      <div className="mb-4">
-        <h2 className="text-base font-black" style={{ color: '#111827', fontFamily: "'Nunito',sans-serif" }}>
-          🗺️ NESA Syllabus Roadmap
-        </h2>
-        <p className="text-xs mt-0.5" style={{ color: '#6B7280' }}>
-          NSW Education Standards Authority (NESA) — Mathematics Advanced · Term-by-term progression.
-        </p>
+      <div
+        className="rounded-2xl px-6 py-5 flex items-center justify-between gap-4"
+        style={{ background: 'linear-gradient(135deg,#0D1B2E,#112240)', border: '1px solid rgba(255,255,255,0.08)' }}
+      >
+        <div className="flex-1 min-w-0">
+          <p className="text-[11px] font-black uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
+            Your Roadmap
+          </p>
+          <h3 className="text-base font-black text-white mb-1">Continue your Mission</h3>
+          <p className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+            Tackle stages, earn XP, and master every topic in the NESA syllabus.
+          </p>
+        </div>
+        <a
+          href="/math-nsw/app/dashboard/mission"
+          className="shrink-0 px-5 py-3 rounded-xl font-black text-sm text-white transition-all active:scale-[0.97] whitespace-nowrap"
+          style={{ background: 'linear-gradient(135deg,#185FA5,#2563EB)' }}
+        >
+          Open Mission →
+        </a>
       </div>
-
-      {visibleYears.map(yr => {
-        const meta  = YEAR_SECTION_META[yr]
-        const terms = TERM_ROADMAP.filter(t => t.year === yr)
-        return renderYearSection(terms, meta.label, meta.bg, meta.color)
-      })}
     </div>
   )
 }
@@ -993,7 +701,7 @@ function Legend() {
 
 export default function ProgressView({
   topics, mastered, shaky, gap, untested,
-  displayName, yearLabel, yearGroup, predictedBand, targetBand,
+  displayName, yearLabel, predictedBand, targetBand,
   bandConfidence, coveragePct, testedCount, weightedMastery,
   currentStreak, longestStreak, todayCount, dailyGoal,
   nextMoves,
@@ -1035,8 +743,8 @@ export default function ProgressView({
     <div style={{ fontFamily: "'Nunito',sans-serif" }}>
       {/* Page title */}
       <div className="mb-6">
-        <h1 className="text-2xl font-black" style={{ color: '#111827' }}>Progress</h1>
-        <p className="text-sm mt-0.5" style={{ color: '#6B7280' }}>
+        <h1 className="text-2xl font-black text-white">Progress</h1>
+        <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
           Your personalised map — where you are, where to go, how to get there.
         </p>
       </div>
@@ -1058,8 +766,8 @@ export default function ProgressView({
       {/* 3 — Next moves (expandable 3 → 6) */}
       <NextMovesSection moves={nextMoves} />
 
-      {/* 4 — Learning Journey: prerequisite-ordered topic tracks */}
-      <LearningJourneySection topics={topics} onTopicClick={handleTopicClick} yearGroup={yearGroup} />
+      {/* 4 — Mission shortcut */}
+      <MissionCTASection />
 
       {/* 5 — Achievements */}
       <MilestonesWidget

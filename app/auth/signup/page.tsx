@@ -1,9 +1,9 @@
 'use client'
 
-import { useState }                 from 'react'
-import Link                         from 'next/link'
-import { useRouter }                from 'next/navigation'
-import { signUp, signInWithGoogle } from '@/lib/auth'
+import { useState }                   from 'react'
+import Link                            from 'next/link'
+import { signInWithGoogle }            from '@/lib/auth'
+import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 
 // ─── Feature bullets (left panel) ─────────────────────────────────────────────
 const FEATURES = [
@@ -26,8 +26,6 @@ const FEATURES = [
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 export default function SignupPage() {
-  const router = useRouter()
-
   const [firstName,     setFirstName]     = useState('')
   const [lastName,      setLastName]      = useState('')
   const [email,         setEmail]         = useState('')
@@ -36,8 +34,6 @@ export default function SignupPage() {
   const [loading,       setLoading]       = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error,         setError]         = useState<string | null>(null)
-  const [success,       setSuccess]       = useState(false)
-
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
@@ -45,40 +41,51 @@ export default function SignupPage() {
     setLoading(true)
 
     const displayName = `${firstName} ${lastName}`.trim()
-    const { data, error: err } = await signUp(email, password, displayName)
-    if (err) { setError(err.message); setLoading(false); return }
-    if (data.user && !data.session) { setSuccess(true); setLoading(false) }
-    else { router.push('/onboarding/year'); router.refresh() }
+    const BASE = '/math-nsw/app'  // must match next.config basePath
+
+    // ── Step 1: create user + get session tokens from the Route Handler ───────
+    const res = await fetch(`${BASE}/api/auth/signup`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ email, password, displayName }),
+    })
+
+    const data = await res.json() as {
+      error?:         string
+      access_token?:  string
+      refresh_token?: string
+    }
+
+    if (!res.ok || data.error) {
+      setError(data.error ?? 'Signup failed. Please try again.')
+      setLoading(false)
+      return
+    }
+
+    // ── Step 2: store the session in browser cookies via setSession() ─────────
+    // The browser Supabase client writes directly to document.cookie — this is
+    // guaranteed to be present on the very next HTTP request, unlike server-side
+    // Set-Cookie headers which can be silently dropped or delayed.
+    const supabase = createSupabaseBrowserClient()
+    const { error: sessionErr } = await supabase.auth.setSession({
+      access_token:  data.access_token!,
+      refresh_token: data.refresh_token!,
+    })
+
+    if (sessionErr) {
+      setError('Account created, but could not sign you in. Please log in manually.')
+      setLoading(false)
+      return
+    }
+
+    // ── Step 3: hard-navigate so middleware sees the freshly written cookies ──
+    window.location.href = `${BASE}/onboarding/year`
   }
 
   async function handleGoogle() {
     setError(null); setGoogleLoading(true)
     const { error: err } = await signInWithGoogle('/onboarding/year')
     if (err) { setError(err.message); setGoogleLoading(false) }
-  }
-
-  // ── Success screen ──────────────────────────────────────────────────────────
-  if (success) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4"
-        style={{ backgroundColor: '#F0F7FF', fontFamily: "'Nunito', sans-serif" }}>
-        <div className="bg-white rounded-3xl shadow-xl text-center p-10 max-w-sm w-full">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4"
-            style={{ backgroundColor: '#E6F1FB' }}>🎉</div>
-          <h2 className="text-2xl font-black mb-2 text-gray-900">Check your email!</h2>
-          <p className="text-sm font-medium text-gray-500 mb-6">
-            We sent a confirmation link to{' '}
-            <strong className="text-gray-900">{email}</strong>.
-            Click it to activate your account and start your free trial.
-          </p>
-          <Link href="/auth/login"
-            className="inline-block px-6 py-3 rounded-2xl text-sm font-black text-white"
-            style={{ backgroundColor: '#185FA5' }}>
-            Back to sign in →
-          </Link>
-        </div>
-      </div>
-    )
   }
 
   return (

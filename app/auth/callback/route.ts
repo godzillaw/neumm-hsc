@@ -47,8 +47,25 @@ export async function GET(request: Request) {
       return NextResponse.redirect(`${appBase}${destination}`)
     }
 
-    const msg = encodeURIComponent(exchangeError?.message ?? 'Authentication failed')
-    return NextResponse.redirect(`${appBase}/auth/login?error=${msg}`)
+    // Code exchange failed (e.g. PKCE verifier missing, expired link).
+    // This can happen when a confirmation email is clicked in a different
+    // browser session after the user already signed in via password.
+    // Rather than showing a scary error, check if the user is already
+    // authenticated — if so, send them where they need to go.
+    const { data: { user: existingUser } } = await supabase.auth.getUser()
+    if (existingUser) {
+      // Already logged in — send to onboarding if not yet completed, else dashboard
+      const { data: profile } = await supabase
+        .from('student_profiles')
+        .select('year_group')
+        .eq('user_id', existingUser.id)
+        .maybeSingle()
+      const destination = profile?.year_group ? '/dashboard' : '/onboarding/year'
+      return NextResponse.redirect(`${appBase}${destination}`)
+    }
+
+    // Truly unauthenticated — redirect to login cleanly (no PKCE error message)
+    return NextResponse.redirect(`${appBase}/auth/login`)
   }
 
   // No code present — redirect to login

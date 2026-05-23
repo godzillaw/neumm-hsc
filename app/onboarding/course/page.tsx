@@ -34,6 +34,12 @@ const YEAR_11_COURSES: CourseOption[] = [
     description: 'Extension of Advanced. Includes harder algebra, inverse trig, advanced functions, introductory proof and further calculus.',
     emoji: '📙', color: '#F59E0B', bg: '#FEF3C7',
   },
+  {
+    id: 'extension2', label: 'Extension 2',
+    badge: 'Year 11 Extension 2',
+    description: 'The most advanced stream. Includes all Extension 1 content plus proof, complex algebra, and early calculus extensions.',
+    emoji: '📕', color: '#EF4444', bg: '#FEE2E2',
+  },
 ]
 
 const YEAR_12_COURSES: CourseOption[] = [

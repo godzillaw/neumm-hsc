@@ -324,7 +324,62 @@ const YEAR_11_ADVANCED_MISSION: Mission = {
   shortLabel: 'Adv',
   levels: [
     {
-      levelId: 'y11-adv-l1', levelNum: 1, title: 'Functions', emoji: '📐', color: '#6366F1',
+      levelId: 'y11-adv-l0', levelNum: 1, title: 'Algebra Review', emoji: '✏️', color: '#6366F1',
+      stages: [
+        {
+          stageId: 'y11-adv-l0-s1a', code: '1A', title: 'Expanding Expressions',
+          outcomeIds: ['MA-ALG-01'], topicIds: ['MA-ALG-01'],
+          explanation: 'Expand brackets by distributing every term: a(b+c) = ab+ac. For two brackets (a+b)(c+d) = ac+ad+bc+bd. Recognise perfect squares (a+b)² = a²+2ab+b² and difference of squares a²−b² = (a+b)(a−b).',
+        },
+        {
+          stageId: 'y11-adv-l0-s1b', code: '1B', title: 'Factorising Expressions',
+          outcomeIds: ['MA-ALG-01'], topicIds: ['MA-ALG-01'],
+          explanation: 'Factorise by: (1) taking the highest common factor (HCF), (2) recognising difference of squares a²−b²=(a+b)(a−b), (3) factorising trinomials x²+bx+c=(x+p)(x+q) where p+q=b and pq=c.',
+        },
+        {
+          stageId: 'y11-adv-l0-s1c', code: '1C', title: 'Algebraic Fractions',
+          outcomeIds: ['MA-ALG-01'], topicIds: ['MA-ALG-01'],
+          explanation: 'Simplify by factoring numerator and denominator, then cancel common factors. To add/subtract fractions, find the LCD. To multiply, cancel across numerators and denominators before multiplying.',
+        },
+        {
+          stageId: 'y11-adv-l0-s1d', code: '1D', title: 'Solving Quadratic Equations',
+          outcomeIds: ['MA-ALG-01'], topicIds: ['MA-ALG-01'],
+          explanation: 'Three methods: (1) Factorise and set each factor to zero. (2) Complete the square: write ax²+bx+c in vertex form. (3) Quadratic formula x = (−b ± √(b²−4ac))/2a. The discriminant Δ=b²−4ac tells you how many real solutions.',
+        },
+        {
+          stageId: 'y11-adv-l0-s1e', code: '1E', title: 'Simultaneous Equations',
+          outcomeIds: ['MA-ALG-03'], topicIds: ['MA-ALG-03'],
+          explanation: 'Solve two equations with two unknowns using substitution (rearrange one, substitute into the other) or elimination (add/subtract to cancel one variable). Non-linear systems may have 0, 1, or 2 solutions.',
+        },
+      ],
+    },
+    {
+      levelId: 'y11-adv-l0b', levelNum: 2, title: 'Numbers & Surds', emoji: '🔢', color: '#8B5CF6',
+      stages: [
+        {
+          stageId: 'y11-adv-l0b-s2a', code: '2A', title: 'Real Numbers and Intervals',
+          outcomeIds: ['MA-ALG-08'], topicIds: ['MA-ALG-08'],
+          explanation: 'Real numbers ℝ include rationals (fractions and decimals) and irrationals (surds, π, e). Intervals: [a,b] includes endpoints (closed), (a,b) excludes them (open). Represent as number lines or set notation.',
+        },
+        {
+          stageId: 'y11-adv-l0b-s2b', code: '2B', title: 'Surds and Their Arithmetic',
+          outcomeIds: ['MA-ALG-08'], topicIds: ['MA-ALG-08'],
+          explanation: 'A surd is an irrational root like √3. Simplify: √12 = 2√3. Add like surds: 3√2 + 5√2 = 8√2. Multiply: √a × √b = √(ab). Surds give exact answers — always preferred over rounded decimals in exams.',
+        },
+        {
+          stageId: 'y11-adv-l0b-s2c', code: '2C', title: 'Further Simplification of Surds',
+          outcomeIds: ['MA-ALG-08'], topicIds: ['MA-ALG-08'],
+          explanation: 'Expand surd expressions like (2+√3)² = 4+4√3+3 = 7+4√3. Use the identity (a+√b)(a−√b) = a²−b to produce rational results. Always look for the largest perfect-square factor to simplify surds.',
+        },
+        {
+          stageId: 'y11-adv-l0b-s2d', code: '2D', title: 'Rationalising the Denominator',
+          outcomeIds: ['MA-ALG-08'], topicIds: ['MA-ALG-08'],
+          explanation: 'Never leave a surd in the denominator. For 1/√a: multiply by √a/√a. For 1/(a+√b): multiply by (a−√b)/(a−√b) — the conjugate. The difference-of-squares identity eliminates the surd.',
+        },
+      ],
+    },
+    {
+      levelId: 'y11-adv-l1', levelNum: 3, title: 'Functions', emoji: '📐', color: '#0EA5E9',
       stages: [
         {
           stageId: 'y11-adv-l1-s1a', code: '1A', title: 'Functions & Function Notation',
@@ -354,7 +409,7 @@ const YEAR_11_ADVANCED_MISSION: Mission = {
       ],
     },
     {
-      levelId: 'y11-adv-l2', levelNum: 2, title: 'Trigonometry', emoji: '〜', color: '#0EA5E9',
+      levelId: 'y11-adv-l2', levelNum: 4, title: 'Trigonometry', emoji: '〜', color: '#14B8A6',
       stages: [
         {
           stageId: 'y11-adv-l2-s2a', code: '2A', title: 'Trigonometric Ratios & Exact Values',
@@ -380,7 +435,7 @@ const YEAR_11_ADVANCED_MISSION: Mission = {
       ],
     },
     {
-      levelId: 'y11-adv-l3', levelNum: 3, title: 'Exponential & Log Functions', emoji: '📈', color: '#10B981',
+      levelId: 'y11-adv-l3', levelNum: 5, title: 'Exponential & Log Functions', emoji: '📈', color: '#10B981',
       stages: [
         {
           stageId: 'y11-adv-l3-s3a', code: '3A', title: 'Exponential Functions',
@@ -400,7 +455,7 @@ const YEAR_11_ADVANCED_MISSION: Mission = {
       ],
     },
     {
-      levelId: 'y11-adv-l4', levelNum: 4, title: 'Introduction to Calculus', emoji: '∂', color: '#EC4899',
+      levelId: 'y11-adv-l4', levelNum: 6, title: 'Introduction to Calculus', emoji: '∂', color: '#EC4899',
       stages: [
         {
           stageId: 'y11-adv-l4-s4a', code: '4A', title: 'Limits & Differentiation from First Principles',
@@ -430,7 +485,7 @@ const YEAR_11_ADVANCED_MISSION: Mission = {
       ],
     },
     {
-      levelId: 'y11-adv-l5', levelNum: 5, title: 'Statistics', emoji: '📊', color: '#F59E0B',
+      levelId: 'y11-adv-l5', levelNum: 7, title: 'Statistics', emoji: '📊', color: '#F59E0B',
       stages: [
         {
           stageId: 'y11-adv-l5-s5a', code: '5A', title: 'Organizing & Displaying Data',
@@ -582,6 +637,160 @@ const YEAR_11_EXT1_MISSION: Mission = {
           stageId: 'y11-ext1-l5-s5c', code: '5C', title: 'Introduction to Integration',
           outcomeIds: ['MA-CALC-I01', 'MA-CALC-I02'], topicIds: ['MA-CALC-I01', 'MA-CALC-I02'],
           explanation: 'Antidifferentiation reverses differentiation. ∫xⁿ dx = xⁿ⁺¹/(n+1) + C. The definite integral ∫[a to b] f(x) dx gives the signed area between f(x) and the x-axis.',
+        },
+      ],
+    },
+  ],
+}
+
+// ── YEAR 11 EXTENSION 2 ───────────────────────────────────────────────────────
+// Note: NESA Extension 2 is formally a Year 12 course. Students on the Ext 2
+// pathway study Year 11 Extension 1 content. This mission mirrors Ext 1 with
+// additional enrichment stages and early Ext 2 preview topics.
+const YEAR_11_EXT2_MISSION: Mission = {
+  missionId: 'y11-ext2',
+  title: 'Year 11 Extension 2 Pathway',
+  year: 11,
+  course: 'extension2',
+  shortLabel: 'Ext 2',
+  levels: [
+    {
+      levelId: 'y11-ext2-l1', levelNum: 1, title: 'Algebra Review', emoji: '✏️', color: '#6366F1',
+      stages: [
+        {
+          stageId: 'y11-ext2-l1-s1a', code: '1A', title: 'Expanding & Special Identities',
+          outcomeIds: ['MA-ALG-01'], topicIds: ['MA-ALG-01'],
+          explanation: 'Perfect squares: (a±b)² = a²±2ab+b². Difference of squares: a²−b² = (a+b)(a−b). Sum/difference of cubes: a³±b³ = (a±b)(a²∓ab+b²). These patterns are the toolkit for all advanced algebra.',
+        },
+        {
+          stageId: 'y11-ext2-l1-s1b', code: '1B', title: 'Factorising (All Methods)',
+          outcomeIds: ['MA-ALG-01'], topicIds: ['MA-ALG-01'],
+          explanation: 'Master all factoring techniques: HCF, difference of squares, sum/difference of cubes, trinomials by inspection, grouping (splitting the middle term). Nested factoring: always take HCF first.',
+        },
+        {
+          stageId: 'y11-ext2-l1-s1c', code: '1C', title: 'Algebraic Fractions & Partial Fractions',
+          outcomeIds: ['MA-ALG-01'], topicIds: ['MA-ALG-01'],
+          explanation: 'Simplify, add, subtract, multiply, divide algebraic fractions. Partial fractions decompose A/((x+a)(x+b)) = P/(x+a) + Q/(x+b). Multiply both sides by the denominator and solve for P and Q.',
+        },
+        {
+          stageId: 'y11-ext2-l1-s1d', code: '1D', title: 'Solving Equations & Inequalities',
+          outcomeIds: ['MA-ALG-01'], topicIds: ['MA-ALG-01'],
+          explanation: 'Solve quadratic equations by factorising, completing the square, or the quadratic formula. For inequalities, remember to flip the sign when multiplying/dividing by negatives. Sign diagrams help with quadratic inequalities.',
+        },
+        {
+          stageId: 'y11-ext2-l1-s1e', code: '1E', title: 'Simultaneous Equations (Linear & Non-linear)',
+          outcomeIds: ['MA-ALG-03'], topicIds: ['MA-ALG-03'],
+          explanation: 'Linear: substitution or elimination. Non-linear: substitute the linear into the quadratic/other equation to form a single-variable equation. The discriminant of the resulting quadratic tells you the number of intersection points.',
+        },
+      ],
+    },
+    {
+      levelId: 'y11-ext2-l2', levelNum: 2, title: 'Numbers & Surds', emoji: '🔢', color: '#8B5CF6',
+      stages: [
+        {
+          stageId: 'y11-ext2-l2-s2a', code: '2A', title: 'Real Numbers, Intervals & Inequalities',
+          outcomeIds: ['MA-ALG-08'], topicIds: ['MA-ALG-08'],
+          explanation: 'ℝ = rationals ∪ irrationals. Intervals use [a,b] (closed), (a,b) (open), [a,b) (half-open). Number line graphs are essential. Solve compound inequalities: 2 < 3x+1 ≤ 10 by treating each part.',
+        },
+        {
+          stageId: 'y11-ext2-l2-s2b', code: '2B', title: 'Surds: Simplification & Arithmetic',
+          outcomeIds: ['MA-ALG-08'], topicIds: ['MA-ALG-08'],
+          explanation: 'Simplify surds using largest perfect-square factors: √72 = 6√2. Collect like surds. Expand products using FOIL. The conjugate (a+√b)(a−√b) = a²−b always rationalises and produces an integer.',
+        },
+        {
+          stageId: 'y11-ext2-l2-s2c', code: '2C', title: 'Rationalising Denominators',
+          outcomeIds: ['MA-ALG-08'], topicIds: ['MA-ALG-08'],
+          explanation: 'For 1/√a: multiply by √a/√a. For 1/(a+√b): multiply by conjugate (a−√b)/(a−√b). For nested surds like 1/(√a+√b): multiply by (√a−√b)/(√a−√b). Final answer must have a rational denominator.',
+        },
+      ],
+    },
+    {
+      levelId: 'y11-ext2-l3', levelNum: 3, title: 'Functions & Graphs', emoji: '📈', color: '#0EA5E9',
+      stages: [
+        {
+          stageId: 'y11-ext2-l3-s3a', code: '3A', title: 'Functions, Notation & Composition',
+          outcomeIds: ['MA-FUNC-01', 'MA-FUNC-02'], topicIds: ['MA-FUNC-01', 'MA-FUNC-02'],
+          explanation: 'f(x) maps each x in the domain to exactly one output. Composite: (f∘g)(x) = f(g(x)) — apply g first. Restrict domains to make relations into functions. Range = set of all outputs.',
+        },
+        {
+          stageId: 'y11-ext2-l3-s3b', code: '3B', title: 'Inverse Functions',
+          outcomeIds: ['MA-FUNC-04'], topicIds: ['MA-FUNC-04'],
+          explanation: 'f⁻¹ reverses f: if f(a)=b then f⁻¹(b)=a. To find f⁻¹: swap x and y, rearrange for y. Graphically, y=f⁻¹(x) is the reflection of y=f(x) in y=x. Only one-to-one functions have inverses.',
+        },
+        {
+          stageId: 'y11-ext2-l3-s3c', code: '3C', title: 'Transformations of Graphs',
+          outcomeIds: ['MA-FUNC-05'], topicIds: ['MA-FUNC-05'],
+          explanation: 'y=f(x)+k shifts up k. y=f(x−h) shifts right h. y=af(x) stretches vertically by |a|; reflects if a<0. y=f(bx) compresses horizontally by 1/|b|. Apply in the correct order for combined transformations.',
+        },
+        {
+          stageId: 'y11-ext2-l3-s3d', code: '3D', title: 'Quadratic Functions & Parabolas',
+          outcomeIds: ['MA-ALG-02'], topicIds: ['MA-ALG-02'],
+          explanation: 'Vertex form y=a(x−h)²+k: vertex (h,k), axis x=h. Intercept form y=a(x−p)(x−q): x-intercepts at p,q. Complete the square to convert between standard and vertex form. Key: discriminant determines x-intercept count.',
+        },
+        {
+          stageId: 'y11-ext2-l3-s3e', code: '3E', title: 'Absolute Value & Piecewise Functions',
+          outcomeIds: ['MA-FUNC-06'], topicIds: ['MA-FUNC-06'],
+          explanation: '|x|=x if x≥0, −x if x<0. Graph y=|f(x)| by reflecting negative parts above x-axis. Solve |ax+b|=c as ax+b=c or ax+b=−c. Piecewise functions use different rules for different x-intervals.',
+        },
+      ],
+    },
+    {
+      levelId: 'y11-ext2-l4', levelNum: 4, title: 'Trigonometric Functions', emoji: '〜', color: '#EC4899',
+      stages: [
+        {
+          stageId: 'y11-ext2-l4-s4a', code: '4A', title: 'Trig Ratios, ASTC & Exact Values',
+          outcomeIds: ['MA-TRIG-01'], topicIds: ['MA-TRIG-01'],
+          explanation: 'ASTC (All, Sin, Tan, Cos positive in Q1, Q2, Q3, Q4). Exact values from special triangles: sin30°=½, cos30°=√3/2, sin45°=cos45°=1/√2, sin60°=√3/2. Radians: π=180°.',
+        },
+        {
+          stageId: 'y11-ext2-l4-s4b', code: '4B', title: 'Graphing & Transforming Trig Functions',
+          outcomeIds: ['MA-TRIG-02'], topicIds: ['MA-TRIG-02'],
+          explanation: 'y=A sin(Bx+C)+D: amplitude |A|, period 2π/|B|, phase shift −C/B, vertical shift D. Mark 5 key points per period: start, peak, midline cross, trough, midline cross. tan has period π, vertical asymptotes where cos=0.',
+        },
+        {
+          stageId: 'y11-ext2-l4-s4c', code: '4C', title: 'Inverse Trig Functions',
+          outcomeIds: ['MA-TRIG-05'], topicIds: ['MA-TRIG-05'],
+          explanation: 'sin⁻¹: domain [−1,1] range [−π/2,π/2]. cos⁻¹: domain [−1,1] range [0,π]. tan⁻¹: domain ℝ range (−π/2,π/2). Restricted domains make each inverse a true function. Essential for solving trig equations.',
+        },
+      ],
+    },
+    {
+      levelId: 'y11-ext2-l5', levelNum: 5, title: 'Calculus', emoji: '∂', color: '#10B981',
+      stages: [
+        {
+          stageId: 'y11-ext2-l5-s5a', code: '5A', title: 'Differentiation: First Principles & Rules',
+          outcomeIds: ['MA-CALC-D01'], topicIds: ['MA-CALC-D01'],
+          explanation: 'First principles: f\'(x) = lim[h→0] (f(x+h)−f(x))/h. Power rule: d/dx(xⁿ)=nxⁿ⁻¹. Product rule: (uv)\'=u\'v+uv\'. Quotient rule: (u/v)\'=(u\'v−uv\')/v². Chain rule: d/dx[f(g(x))]=f\'(g(x))g\'(x).',
+        },
+        {
+          stageId: 'y11-ext2-l5-s5b', code: '5B', title: 'Applications of Differentiation',
+          outcomeIds: ['MA-CALC-D07', 'MA-CALC-D08'], topicIds: ['MA-CALC-D07', 'MA-CALC-D08'],
+          explanation: 'Tangent at (a, f(a)): gradient m=f\'(a), equation y−f(a)=m(x−a). Normal: gradient −1/f\'(a). Stationary points: f\'(x)=0. Nature: f\'\'(x)>0 (min), f\'\'(x)<0 (max). Optimise by finding and testing critical points.',
+        },
+        {
+          stageId: 'y11-ext2-l5-s5c', code: '5C', title: 'Introduction to Integration',
+          outcomeIds: ['MA-CALC-I01', 'MA-CALC-I02'], topicIds: ['MA-CALC-I01', 'MA-CALC-I02'],
+          explanation: 'Antidifferentiation reverses differentiation. ∫xⁿ dx = xⁿ⁺¹/(n+1)+C (n≠−1). Definite integral ∫[a,b] f(x) dx = F(b)−F(a) gives signed area. Check: differentiate your answer to verify it gives f(x).',
+        },
+      ],
+    },
+    {
+      levelId: 'y11-ext2-l6', levelNum: 6, title: 'Exponential & Log Functions', emoji: '📈', color: '#F59E0B',
+      stages: [
+        {
+          stageId: 'y11-ext2-l6-s6a', code: '6A', title: 'Exponential Functions & the Number e',
+          outcomeIds: ['MA-EXP-01', 'MA-EXP-02'], topicIds: ['MA-EXP-01', 'MA-EXP-02'],
+          explanation: 'y=aˣ: passes through (0,1), horizontal asymptote y=0. The natural base e≈2.718 is defined by d/dx(eˣ)=eˣ — uniquely its own derivative. Exponential growth: A=A₀eᵏᵗ; decay: k<0.',
+        },
+        {
+          stageId: 'y11-ext2-l6-s6b', code: '6B', title: 'Logarithms & Log Laws',
+          outcomeIds: ['MA-EXP-03', 'MA-EXP-04'], topicIds: ['MA-EXP-03', 'MA-EXP-04'],
+          explanation: 'log_a(x) is the inverse of aˣ. Laws: log(AB)=logA+logB; log(A/B)=logA−logB; log(Aⁿ)=n logA; change of base: log_a(x)=ln(x)/ln(a). ln x = log_e x is the natural log, the most important for calculus.',
+        },
+        {
+          stageId: 'y11-ext2-l6-s6c', code: '6C', title: 'Differentiating & Integrating Exp/Log',
+          outcomeIds: ['MA-CALC-D05', 'MA-CALC-I03'], topicIds: ['MA-CALC-D05', 'MA-CALC-I03'],
+          explanation: 'd/dx(eˣ)=eˣ; d/dx(ln x)=1/x. By chain rule: d/dx(e^f(x))=e^f(x)f\'(x); d/dx(ln f(x))=f\'(x)/f(x). ∫eˣ dx=eˣ+C; ∫(1/x) dx=ln|x|+C. Recognise f\'(x)/f(x) forms for integration.',
         },
       ],
     },
@@ -861,6 +1070,7 @@ const ALL_MISSIONS: Mission[] = [
   YEAR_11_STANDARD_MISSION,
   YEAR_11_ADVANCED_MISSION,
   YEAR_11_EXT1_MISSION,
+  YEAR_11_EXT2_MISSION,
   YEAR_12_STANDARD_MISSION,
   YEAR_12_ADVANCED_MISSION,
   YEAR_12_EXT1_MISSION,
@@ -922,6 +1132,7 @@ export const YEAR_COURSES: Array<{
   { year: 11, course: 'standard',   label: 'Year 11 Standard',         shortLabel: '11 Std',  missionId: 'y11-std',  available: true  },
   { year: 11, course: 'advanced',   label: 'Year 11 Advanced',         shortLabel: '11 Adv',  missionId: 'y11-adv',  available: true  },
   { year: 11, course: 'extension1', label: 'Year 11 Extension 1',      shortLabel: '11 Ext1', missionId: 'y11-ext1', available: true  },
+  { year: 11, course: 'extension2', label: 'Year 11 Extension 2',      shortLabel: '11 Ext2', missionId: 'y11-ext2', available: true  },
   { year: 12, course: 'standard',   label: 'Year 12 Standard',         shortLabel: '12 Std',  missionId: 'y12-std',  available: true  },
   { year: 12, course: 'advanced',   label: 'Year 12 Advanced',         shortLabel: '12 Adv',  missionId: 'y12-adv',  available: true  },
   { year: 12, course: 'extension1', label: 'Year 12 Extension 1',      shortLabel: '12 Ext1', missionId: 'y12-ext1', available: true  },
