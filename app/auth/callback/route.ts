@@ -4,15 +4,12 @@ import { createServerClient }        from '@supabase/ssr'
 /**
  * GET /auth/callback
  *
- * Supabase PKCE callback handler.
+ * Supabase PKCE + OAuth callback handler.
  *
- * CRITICAL: We bind the Supabase client directly to a response object so that
- * the Set-Cookie headers from exchangeCodeForSession are included on the
- * redirect response the browser follows.  Using createSupabaseServerClient()
- * (which writes via Next.js cookies()) does NOT reliably attach cookies to
- * a manually created NextResponse.redirect() — the browser follows the
- * redirect without session cookies and middleware sees an unauthenticated
- * request → redirects to /auth/login.
+ * Cookie strategy: accumulate every Set-Cookie call from exchangeCodeForSession
+ * into a plain array, then write them directly onto the final NextResponse.redirect.
+ * This guarantees the browser receives session cookies on the same response it
+ * uses to navigate — no secondary request needed to pick them up.
  */
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
@@ -21,7 +18,6 @@ export async function GET(request: NextRequest) {
   const error            = searchParams.get('error')
   const errorDescription = searchParams.get('error_description')
 
-  // Always use request origin — works on any domain (custom, vercel preview, localhost)
   const appBase = `${origin}/math-nsw/app`
 
   // ── OAuth provider returned an error (e.g. user cancelled, state reused) ───
@@ -31,22 +27,21 @@ export async function GET(request: NextRequest) {
   }
 
   if (code) {
-    // ── Use a collector response so exchangeCodeForSession can write cookies ──
-    // We write all Set-Cookie headers onto `collector`, then copy them to the
-    // final redirect response.  This guarantees the browser receives the
-    // session cookies even across a 307 redirect.
-    const collector = new NextResponse()
+    // Accumulate every cookie write so we can replay them onto the redirect
+    const pendingCookies: Array<{ name: string; value: string; options: Record<string, unknown> }> = []
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          getAll()             { return request.cookies.getAll() },
+          getAll() {
+            return request.cookies.getAll()
+          },
           setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              collector.cookies.set(name, value, options)
-            })
+            cookiesToSet.forEach(({ name, value, options }) =>
+              pendingCookies.push({ name, value, options: options ?? {} })
+            )
           },
         },
       },
@@ -55,18 +50,19 @@ export async function GET(request: NextRequest) {
     const { data: { user }, error: exchangeError } =
       await supabase.auth.exchangeCodeForSession(code)
 
-    // Helper: copy all Set-Cookie headers from collector onto a redirect
-    const redirectWithCookies = (destination: string) => {
+    /** Write every accumulated cookie onto a redirect response and return it */
+    const redirect = (destination: string) => {
       const res = NextResponse.redirect(destination)
-      collector.cookies.getAll().forEach(c => res.cookies.set(c))
+      pendingCookies.forEach(({ name, value, options }) =>
+        res.cookies.set(name, value, options as Parameters<typeof res.cookies.set>[2])
+      )
       return res
     }
 
     if (!exchangeError && user) {
-      // Determine where to send the user
+      // Determine destination — skip onboarding if user already set year_group
       let destination = next
 
-      // If this is an onboarding destination, check if they already finished
       if (next.startsWith('/onboarding')) {
         const { data: profile } = await supabase
           .from('student_profiles')
@@ -78,11 +74,11 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      return redirectWithCookies(`${appBase}${destination}`)
+      return redirect(`${appBase}${destination}`)
     }
 
-    // ── Code exchange failed (e.g. PKCE verifier missing / already used) ─────
-    // Check if the user is already authenticated in this browser session.
+    // ── Code exchange failed (PKCE verifier missing, code already used, etc.) ─
+    // Check if this browser session is already authenticated and route sensibly.
     const { data: { user: existingUser } } = await supabase.auth.getUser()
     if (existingUser) {
       const { data: profile } = await supabase
@@ -91,10 +87,10 @@ export async function GET(request: NextRequest) {
         .eq('user_id', existingUser.id)
         .maybeSingle()
       const destination = profile?.year_group ? '/dashboard' : '/onboarding/year'
-      return redirectWithCookies(`${appBase}${destination}`)
+      return redirect(`${appBase}${destination}`)
     }
 
-    // Truly unauthenticated — go to login without a scary error message
+    // Truly unauthenticated — go to login without a confusing error message
     return NextResponse.redirect(`${appBase}/auth/login`)
   }
 
