@@ -28,6 +28,7 @@ function CallbackHandler() {
   const [status, setStatus]   = useState('Completing sign in…')
 
   useEffect(() => {
+    const code             = searchParams.get('code')
     const error            = searchParams.get('error')
     const errorDescription = searchParams.get('error_description')
 
@@ -38,62 +39,77 @@ function CallbackHandler() {
       return
     }
 
-    // ── Use onAuthStateChange instead of manual exchangeCodeForSession ─────
+    // ── Session resolution strategy ────────────────────────────────────────
     //
-    // WHY: @supabase/ssr v0.9.0 hardcodes `detectSessionInUrl: isBrowser()`
-    // AFTER spreading options, so it cannot be overridden. The moment
-    // createBrowserClient() is called in a browser context with a `code`
-    // param in the URL, it automatically fires exchangeCodeForSession() in
-    // the background. Calling it again manually races with this — the loser
-    // gets "code already used" and we end up with no session.
+    // createBrowserClient() is a module-level singleton. If it was already
+    // initialised on the signup page (before the ?code= was in the URL),
+    // its internal detectSessionInUrl auto-exchange never ran for this code,
+    // so onAuthStateChange will never fire SIGNED_IN on its own.
     //
-    // The fix: subscribe to onAuthStateChange SYNCHRONOUSLY (before any
-    // network I/O can complete) so we reliably catch the SIGNED_IN event
-    // that the auto-exchange fires. We also check getSession() immediately
-    // in case the exchange somehow already finished.
+    // Strategy (in priority order):
+    //  1. onAuthStateChange subscription — catches SIGNED_IN/TOKEN_REFRESHED
+    //     fired by auto-exchange when the singleton is freshly created here.
+    //  2. getSession() — catches sessions the singleton already holds.
+    //  3. Manual exchangeCodeForSession(code) — covers the singleton-cached
+    //     case where auto-exchange never ran; onAuthStateChange then fires.
+    //  4. Post-exchange getSession() retry — covers the edge case where
+    //     exchangeCodeForSession wrote cookies but the event was missed.
+    //  5. 10-second fallback → login.
     const supabase = createSupabaseBrowserClient()
-
     let done = false
 
-    async function handleSession(userId: string) {
-      // New user signing up via Google → send to onboarding unless they've
-      // already completed it.
+    async function redirect(userId: string) {
       const { data: profile } = await supabase
         .from('student_profiles')
         .select('year_group')
         .eq('user_id', userId)
         .maybeSingle()
-
-      const destination = profile?.year_group ? '/dashboard' : '/onboarding/year'
       setStatus('Signed in! Redirecting…')
-      window.location.href = `${BASE}${destination}`
+      window.location.href = `${BASE}${profile?.year_group ? '/dashboard' : '/onboarding/year'}`
     }
 
-    // Subscribe BEFORE auto-exchange can complete (network I/O is async,
-    // this subscription setup is synchronous).
+    function finish(session: { user: { id: string } }) {
+      if (done) return
+      done = true
+      subscription.unsubscribe()
+      clearTimeout(fallbackTimer)
+      redirect(session.user.id)
+    }
+
+    // 1. Subscribe BEFORE any async work so we catch auto-exchange events.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session && !done) {
+      (_event, session) => { if (session) finish(session) }
+    )
+
+    // 2 + 3. Check existing session; if none, exchange the code manually.
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session) { finish(session); return }
+
+      if (!code) {
+        // No code and no session — nothing to do.
+        if (!done) {
           done = true
           subscription.unsubscribe()
           clearTimeout(fallbackTimer)
-          await handleSession(session.user.id)
+          window.location.href = `${BASE}/auth/login`
         }
+        return
       }
-    )
 
-    // Also check if a session already exists (handles the "code already
-    // used" case where detectSessionInUrl finished before our subscription).
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session && !done) {
-        done = true
-        subscription.unsubscribe()
-        clearTimeout(fallbackTimer)
-        await handleSession(session.user.id)
+      // Manual exchange — fires onAuthStateChange(SIGNED_IN) on success.
+      const { error: exchErr } = await supabase.auth.exchangeCodeForSession(code)
+
+      if (exchErr && !done) {
+        // 4. Exchange failed (e.g. code already used). Check session one more
+        //    time — auto-exchange may have written it before our subscription.
+        const { data: { session: retrySession } } = await supabase.auth.getSession()
+        if (retrySession) { finish(retrySession); return }
+        // Still nothing — fallback timer will redirect to login.
       }
+      // On success onAuthStateChange fires and finish() is called from there.
     })
 
-    // Fallback: if nothing resolves in 10 s, send to login.
+    // 5. Hard fallback.
     const fallbackTimer = setTimeout(() => {
       if (!done) {
         done = true
@@ -102,10 +118,7 @@ function CallbackHandler() {
       }
     }, 10_000)
 
-    return () => {
-      subscription.unsubscribe()
-      clearTimeout(fallbackTimer)
-    }
+    return () => { subscription.unsubscribe(); clearTimeout(fallbackTimer) }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
