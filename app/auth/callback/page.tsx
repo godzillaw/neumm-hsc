@@ -28,8 +28,6 @@ function CallbackHandler() {
   const [status, setStatus]   = useState('Completing sign in…')
 
   useEffect(() => {
-    const code             = searchParams.get('code')
-    const next             = searchParams.get('next') ?? '/dashboard'
     const error            = searchParams.get('error')
     const errorDescription = searchParams.get('error_description')
 
@@ -40,58 +38,74 @@ function CallbackHandler() {
       return
     }
 
-    if (!code) {
-      window.location.href = `${BASE}/auth/login`
-      return
-    }
-
-    // ── Exchange the code for a session IN THE BROWSER ────────────────────
-    // createBrowserClient writes the session directly to document.cookie.
-    // The next window.location.href navigation sends those cookies to the
-    // server so middleware can authenticate the request.
+    // ── Use onAuthStateChange instead of manual exchangeCodeForSession ─────
+    //
+    // WHY: @supabase/ssr v0.9.0 hardcodes `detectSessionInUrl: isBrowser()`
+    // AFTER spreading options, so it cannot be overridden. The moment
+    // createBrowserClient() is called in a browser context with a `code`
+    // param in the URL, it automatically fires exchangeCodeForSession() in
+    // the background. Calling it again manually races with this — the loser
+    // gets "code already used" and we end up with no session.
+    //
+    // The fix: subscribe to onAuthStateChange SYNCHRONOUSLY (before any
+    // network I/O can complete) so we reliably catch the SIGNED_IN event
+    // that the auto-exchange fires. We also check getSession() immediately
+    // in case the exchange somehow already finished.
     const supabase = createSupabaseBrowserClient()
 
-    supabase.auth.exchangeCodeForSession(code).then(async ({ data, error: exchangeErr }) => {
-      if (exchangeErr) {
-        setStatus('Something went wrong — checking your session…')
+    let done = false
 
-        // The code may have already been used (e.g. back-button re-visit).
-        // If the user is already signed in, send them where they need to go.
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          const { data: profile } = await supabase
-            .from('student_profiles')
-            .select('year_group')
-            .eq('user_id', user.id)
-            .maybeSingle()
-          window.location.href = profile?.year_group
-            ? `${BASE}/dashboard`
-            : `${BASE}/onboarding/year`
-        } else {
-          window.location.href = `${BASE}/auth/login`
-        }
-        return
-      }
+    async function handleSession(userId: string) {
+      // New user signing up via Google → send to onboarding unless they've
+      // already completed it.
+      const { data: profile } = await supabase
+        .from('student_profiles')
+        .select('year_group')
+        .eq('user_id', userId)
+        .maybeSingle()
 
-      // ── Exchange succeeded — decide where to send the user ───────────────
-      const user = data.user
-      let destination = next
-
-      if (next.startsWith('/onboarding') && user) {
-        // Skip onboarding if the user already set their year group
-        const { data: profile } = await supabase
-          .from('student_profiles')
-          .select('year_group')
-          .eq('user_id', user.id)
-          .maybeSingle()
-        if (profile?.year_group) {
-          destination = '/dashboard'
-        }
-      }
-
+      const destination = profile?.year_group ? '/dashboard' : '/onboarding/year'
       setStatus('Signed in! Redirecting…')
       window.location.href = `${BASE}${destination}`
+    }
+
+    // Subscribe BEFORE auto-exchange can complete (network I/O is async,
+    // this subscription setup is synchronous).
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session && !done) {
+          done = true
+          subscription.unsubscribe()
+          clearTimeout(fallbackTimer)
+          await handleSession(session.user.id)
+        }
+      }
+    )
+
+    // Also check if a session already exists (handles the "code already
+    // used" case where detectSessionInUrl finished before our subscription).
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session && !done) {
+        done = true
+        subscription.unsubscribe()
+        clearTimeout(fallbackTimer)
+        await handleSession(session.user.id)
+      }
     })
+
+    // Fallback: if nothing resolves in 10 s, send to login.
+    const fallbackTimer = setTimeout(() => {
+      if (!done) {
+        done = true
+        subscription.unsubscribe()
+        window.location.href = `${BASE}/auth/login`
+      }
+    }, 10_000)
+
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(fallbackTimer)
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
