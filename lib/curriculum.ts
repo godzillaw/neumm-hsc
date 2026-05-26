@@ -1129,15 +1129,15 @@ const YEAR_11_EXT1_MISSION: Mission = {
               'Divide: Flip the second fraction (take its reciprocal), then multiply.',
               'Add/Subtract: Find the Lowest Common Denominator (LCD), rewrite each fraction with the LCD, then combine numerators.',
             ]},
-            { type: 'example', question: 'Simplify \\dfrac{x^2 - 4}{x^2 + 5x + 6}', steps: [
+            { type: 'example', question: 'Simplify $\\dfrac{x^2 - 4}{x^2 + 5x + 6}$', steps: [
               'Numerator: x² − 4 = (x+2)(x−2)',
               'Denominator: x² + 5x + 6 = (x+2)(x+3)',
-              'Cancel (x+2): answer = \\dfrac{x-2}{x+3}',
+              'Cancel (x+2): answer = $\\dfrac{x-2}{x+3}$',
             ]},
-            { type: 'example', question: 'Add \\dfrac{3}{x+1} + \\dfrac{2}{x-1}', steps: [
+            { type: 'example', question: 'Add $\\dfrac{3}{x+1} + \\dfrac{2}{x-1}$', steps: [
               'LCD = (x+1)(x−1)',
-              '\\dfrac{3(x-1)}{(x+1)(x-1)} + \\dfrac{2(x+1)}{(x+1)(x-1)}',
-              '= \\dfrac{3x - 3 + 2x + 2}{(x+1)(x-1)} = \\dfrac{5x - 1}{x^2 - 1}',
+              '$\\dfrac{3(x-1)}{(x+1)(x-1)} + \\dfrac{2(x+1)}{(x+1)(x-1)}$',
+              '$= \\dfrac{3x - 3 + 2x + 2}{(x+1)(x-1)} = \\dfrac{5x - 1}{x^2 - 1}$',
             ]},
             { type: 'tip', body: 'Never cancel terms — only cancel factors. You cannot cancel the x in (x + 2)/x, because x is a term inside x + 2, not a factor of it. Factorise first, then cancel.' },
           ],
@@ -1335,15 +1335,15 @@ const YEAR_11_EXT1_MISSION: Mission = {
               'p(a − √b) / [(a + √b)(a − √b)] = p(a − √b) / (a² − b)',
               'The denominator is now rational.',
             ]},
-            { type: 'example', question: 'Rationalise the denominator of \\dfrac{4}{3 + \\sqrt{5}}', steps: [
+            { type: 'example', question: 'Rationalise the denominator of $\\dfrac{4}{3 + \\sqrt{5}}$', steps: [
               'Conjugate of (3 + √5) is (3 − √5).',
-              '= \\dfrac{4(3 - \\sqrt{5})}{(3+\\sqrt{5})(3-\\sqrt{5})}',
+              '$= \\dfrac{4(3 - \\sqrt{5})}{(3+\\sqrt{5})(3-\\sqrt{5})}$',
               'Denominator: 3² − (√5)² = 9 − 5 = 4.',
-              '= \\dfrac{4(3 - \\sqrt{5})}{4} = 3 - \\sqrt{5}',
+              '$= \\dfrac{4(3 - \\sqrt{5})}{4} = 3 - \\sqrt{5}$',
             ]},
-            { type: 'example', question: 'Rationalise \\dfrac{1}{\\sqrt{3} + \\sqrt{2}}', steps: [
+            { type: 'example', question: 'Rationalise $\\dfrac{1}{\\sqrt{3} + \\sqrt{2}}$', steps: [
               'Conjugate: (√3 − √2).',
-              '= \\dfrac{\\sqrt{3} - \\sqrt{2}}{(\\sqrt{3})^2 - (\\sqrt{2})^2} = \\dfrac{\\sqrt{3} - \\sqrt{2}}{3 - 2} = \\sqrt{3} - \\sqrt{2}',
+              '$= \\dfrac{\\sqrt{3} - \\sqrt{2}}{(\\sqrt{3})^2 - (\\sqrt{2})^2} = \\dfrac{\\sqrt{3} - \\sqrt{2}}{3 - 2} = \\sqrt{3} - \\sqrt{2}$',
             ]},
             { type: 'tip', body: 'Always state the conjugate you are using before multiplying. This makes your working clear to the marker and helps you avoid sign errors in the denominator.' },
           ],
@@ -1376,7 +1376,7 @@ const YEAR_11_EXT1_MISSION: Mission = {
               ['1/f(x)', 'f(x) ≠ 0', 'Cannot divide by zero'],
               ['log(f(x))', 'f(x) > 0', 'Log is only defined for positive arguments'],
             ]},
-            { type: 'example', question: 'Find the natural domain of f(x) = \\sqrt{4 - x^2}', steps: [
+            { type: 'example', question: 'Find the natural domain of $f(x) = \\sqrt{4 - x^2}$', steps: [
               'Need 4 − x² ≥ 0   →   x² ≤ 4   →   −2 ≤ x ≤ 2',
               'Domain: [−2, 2]',
               'Note: this function describes the upper semicircle of radius 2.',
@@ -1555,7 +1555,7 @@ const YEAR_11_EXT1_MISSION: Mission = {
               'The overall shape is identical to y = 1/x, just translated.',
               'The branches shift accordingly: if k > 0, both branches shift up.',
             ]},
-            { type: 'example', question: 'Sketch y = \\dfrac{1}{x-2} + 3 and state its asymptotes', steps: [
+            { type: 'example', question: 'Sketch $y = \\dfrac{1}{x-2} + 3$ and state its asymptotes', steps: [
               'Start with y = 1/x and apply transformations:',
               'Shift right 2: vertical asymptote moves to x = 2.',
               'Shift up 3: horizontal asymptote moves to y = 3.',
@@ -1615,7 +1615,7 @@ const YEAR_11_EXT1_MISSION: Mission = {
               'Multiplying or dividing by a NEGATIVE number: REVERSE the inequality sign.',
               'Example: −3x > 6  →  x < −2  (sign reversed when dividing by −3).',
             ]},
-            { type: 'example', question: 'Solve \\dfrac{2x-1}{3} - \\dfrac{x+2}{2} \\leq 1', steps: [
+            { type: 'example', question: 'Solve $\\dfrac{2x-1}{3} - \\dfrac{x+2}{2} \\leq 1$', steps: [
               'Multiply through by 6 (LCD of 3 and 2): 2(2x−1) − 3(x+2) ≤ 6',
               '4x − 2 − 3x − 6 ≤ 6',
               'x − 8 ≤ 6',
@@ -1959,9 +1959,9 @@ const YEAR_11_EXT1_MISSION: Mission = {
               'Multiply both sides by [f(x)]² — this is always ≥ 0, so the sign never reverses.',
               'Be careful: if f(x) = 0, that x-value must be excluded from the domain.',
             ]},
-            { type: 'example', question: 'Solve \\dfrac{1}{x-1} > 2', steps: [
-              'Method (sign diagram): \\dfrac{1}{x-1} - 2 > 0  →  \\dfrac{1 - 2(x-1)}{x-1} > 0',
-              '= \\dfrac{1 - 2x + 2}{x-1} = \\dfrac{3 - 2x}{x-1} > 0',
+            { type: 'example', question: 'Solve $\\dfrac{1}{x-1} > 2$', steps: [
+              'Rearrange: $\\dfrac{1}{x-1} - 2 > 0$  →  $\\dfrac{1 - 2(x-1)}{x-1} > 0$',
+              '$= \\dfrac{3 - 2x}{x-1} > 0$',
               'Zeros: x = 3/2 (numerator = 0) and x = 1 (undefined).',
               'Sign diagram: test x = 0: (3)/(−1) < 0; x = 1.2: (0.6)/(0.2) > 0; x = 2: (−1)/(1) < 0.',
               'Solution: 1 < x < 3/2, i.e. (1, 3/2).',
@@ -1988,7 +1988,7 @@ const YEAR_11_EXT1_MISSION: Mission = {
               'At a double root (even power): the sign does NOT change (touches zero and bounces).',
               'At a vertical asymptote: the sign changes (function jumps from +∞ to −∞ or vice versa).',
             ]},
-            { type: 'example', question: 'Determine the sign of f(x) = \\dfrac{(x-1)^2(x+2)}{x-3}', steps: [
+            { type: 'example', question: 'Determine the sign of $f(x) = \\dfrac{(x-1)^2(x+2)}{x-3}$', steps: [
               'Critical values: x = 1 (double root), x = −2 (simple root), x = 3 (undefined).',
               'Test x = −3 (left of −2): (16)(−1)/(−6) = positive. So: + | − | + | −',
               'Sign diagram (left to right): +, then − after x = −2, then stays − at x = 1 (double root, no sign change), then + after x = 3.',
@@ -2048,7 +2048,7 @@ const YEAR_11_EXT1_MISSION: Mission = {
               'Where one function dominates (much larger): the sum looks like that function.',
               'As x → ±∞: the dominant term determines the end behaviour.',
             ]},
-            { type: 'example', question: 'Sketch y = x + \\frac{1}{x} for x > 0', steps: [
+            { type: 'example', question: 'Sketch $y = x + \\frac{1}{x}$ for x > 0', steps: [
               'f(x) = x (line through origin); g(x) = 1/x (hyperbola branch in Q1).',
               'At x = 1: y = 1 + 1 = 2. At x = 2: y = 2 + 0.5 = 2.5. At x = 0.5: y = 0.5 + 2 = 2.5.',
               'As x → 0⁺: 1/x → +∞, so sum → +∞ (asymptote at x = 0).',
@@ -2134,7 +2134,7 @@ const YEAR_11_EXT1_MISSION: Mission = {
               '3. Rearrange to make y the subject: y = f⁻¹(x).',
               '4. State the domain of f⁻¹ (= range of f).',
             ]},
-            { type: 'example', question: 'Find f⁻¹(x) if f(x) = \\sqrt{x - 3} for x ≥ 3', steps: [
+            { type: 'example', question: 'Find f⁻¹(x) if $f(x) = \\sqrt{x - 3}$ for x ≥ 3', steps: [
               'y = √(x − 3).',
               'Swap: x = √(y − 3).',
               'Square both sides: x² = y − 3  →  y = x² + 3.',
@@ -2553,12 +2553,12 @@ const YEAR_11_EXT1_MISSION: Mission = {
               "dy/dx = 3x² · ln x + x³ · (1/x) = 3x² ln x + x².",
               '= x²(3 ln x + 1).',
             ]},
-            { type: 'example', question: "Differentiate y = \\dfrac{x^2 + 1}{\\sqrt{x}}", steps: [
+            { type: 'example', question: 'Differentiate $y = \\dfrac{x^2 + 1}{\\sqrt{x}}$', steps: [
               'u = x² + 1, v = x^(1/2).',
               "u' = 2x, v' = (1/2)x^(−1/2).",
               "dy/dx = (2x · x^(1/2) − (x²+1)(1/2)x^(−1/2)) / x",
-              '= (2x^(3/2) − (x²+1)/(2√x)) / x. Multiply numerator and denominator by 2√x:',
-              '= (4x² − x² − 1) / (2x^(3/2)) = (3x² − 1) / (2x√x).',
+              'Multiply numerator and denominator by 2√x: = (4x² − x² − 1) / (2x^(3/2))',
+              '$= \\dfrac{3x^2 - 1}{2x\\sqrt{x}}$',
             ]},
             { type: 'tip', body: 'Write out u, v, u\', v\' as four separate lines before applying any formula. This single habit eliminates most errors in product and quotient rule questions. The formula itself is mechanical — the errors happen in computing u\' and v\'.' },
           ],

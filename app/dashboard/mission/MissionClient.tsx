@@ -41,6 +41,21 @@ function KaTeXFormula({ latex, block = true }: { latex: string; block?: boolean 
   return <span ref={ref} />
 }
 
+// Renders a string that may contain $...$ inline math segments
+function InlineMath({ text }: { text: string }) {
+  const parts = text.split(/(\$[^$]+\$)/g)
+  if (parts.length === 1) return <>{text}</>
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.startsWith('$') && part.endsWith('$') && part.length > 2
+          ? <KaTeXFormula key={i} latex={part.slice(1, -1)} block={false} />
+          : <span key={i}>{part}</span>
+      )}
+    </>
+  )
+}
+
 // ── Rich explanation block renderer ──────────────────────────────────────────
 
 function ExplanationRenderer({ blocks, color }: { blocks: ExplanationBlock[]; color: string }) {
@@ -122,13 +137,15 @@ function ExplanationRenderer({ blocks, color }: { blocks: ExplanationBlock[]; co
               <div key={i} className="rounded-xl overflow-hidden" style={{ border: `1px solid ${color}44` }}>
                 <div className="px-4 py-2" style={{ background: `${color}28` }}>
                   <p className="text-[10px] font-black uppercase tracking-wide" style={{ color }}>✏️ Worked Example</p>
-                  <p className="text-sm font-semibold text-white mt-0.5">{block.question}</p>
+                  <p className="text-sm font-semibold text-white mt-0.5">
+                    <InlineMath text={block.question} />
+                  </p>
                 </div>
                 <div className="px-4 py-3 space-y-1.5" style={{ background: 'rgba(0,0,0,0.2)' }}>
                   {block.steps.map((step, j) => (
                     <p key={j} className="text-sm" style={{ color: 'rgba(255,255,255,0.75)' }}>
                       <span className="font-bold" style={{ color: `${color}CC` }}>Step {j + 1}: </span>
-                      {step}
+                      <InlineMath text={step} />
                     </p>
                   ))}
                 </div>
