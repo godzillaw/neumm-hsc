@@ -1,8 +1,8 @@
 'use client'
 
-import { useState }    from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter }   from 'next/navigation'
-import type { Mission, Level, Stage } from '@/lib/curriculum'
+import type { Mission, Level, Stage, ExplanationBlock } from '@/lib/curriculum'
 import { POINTS }      from '@/lib/gamification-constants'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -21,6 +21,166 @@ interface Props {
 function formatPoints(n: number): string {
   if (n >= 1000) return `${(n / 1000).toFixed(1)}K`
   return String(n)
+}
+
+// ── KaTeX Formula renderer ────────────────────────────────────────────────────
+
+function KaTeXFormula({ latex, block = true }: { latex: string; block?: boolean }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  useEffect(() => {
+    if (!ref.current) return
+    import('katex').then(katex => {
+      katex.default.render(latex, ref.current!, {
+        throwOnError:   false,
+        displayMode:    block,
+        output:         'html',
+        trust:          false,
+      })
+    })
+  }, [latex, block])
+  return <span ref={ref} />
+}
+
+// ── Rich explanation block renderer ──────────────────────────────────────────
+
+function ExplanationRenderer({ blocks, color }: { blocks: ExplanationBlock[]; color: string }) {
+  return (
+    <div className="space-y-3">
+      {blocks.map((block, i) => {
+        switch (block.type) {
+
+          case 'text':
+            return (
+              <p key={i} className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.82)' }}>
+                {block.body}
+              </p>
+            )
+
+          case 'formula':
+            return (
+              <div
+                key={i}
+                className="rounded-xl px-4 py-3 flex flex-col items-center gap-1"
+                style={{ background: `${color}18`, border: `1px solid ${color}44` }}
+              >
+                {block.label && (
+                  <p className="text-[10px] font-black uppercase tracking-wide self-start" style={{ color: `${color}BB` }}>
+                    {block.label}
+                  </p>
+                )}
+                <div className="text-white text-base overflow-x-auto w-full text-center py-1">
+                  <KaTeXFormula latex={block.latex} block={true} />
+                </div>
+              </div>
+            )
+
+          case 'rules':
+            return (
+              <div key={i} className="rounded-xl px-4 py-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                {block.heading && (
+                  <p className="text-[10px] font-black uppercase tracking-wide mb-2" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                    {block.heading}
+                  </p>
+                )}
+                <ul className="space-y-1.5">
+                  {block.items.map((item, j) => (
+                    <li key={j} className="flex items-start gap-2 text-sm" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                      <span className="mt-1 w-1.5 h-1.5 rounded-full shrink-0" style={{ background: color }} />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )
+
+          case 'steps':
+            return (
+              <div key={i} className="rounded-xl px-4 py-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                {block.heading && (
+                  <p className="text-[10px] font-black uppercase tracking-wide mb-2" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                    {block.heading}
+                  </p>
+                )}
+                <ol className="space-y-1.5">
+                  {block.items.map((item, j) => (
+                    <li key={j} className="flex items-start gap-2.5 text-sm" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                      <span
+                        className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black mt-0.5"
+                        style={{ background: color, color: 'white' }}
+                      >
+                        {j + 1}
+                      </span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )
+
+          case 'example':
+            return (
+              <div key={i} className="rounded-xl overflow-hidden" style={{ border: `1px solid ${color}44` }}>
+                <div className="px-4 py-2" style={{ background: `${color}28` }}>
+                  <p className="text-[10px] font-black uppercase tracking-wide" style={{ color }}>✏️ Worked Example</p>
+                  <p className="text-sm font-semibold text-white mt-0.5">{block.question}</p>
+                </div>
+                <div className="px-4 py-3 space-y-1.5" style={{ background: 'rgba(0,0,0,0.2)' }}>
+                  {block.steps.map((step, j) => (
+                    <p key={j} className="text-sm" style={{ color: 'rgba(255,255,255,0.75)' }}>
+                      <span className="font-bold" style={{ color: `${color}CC` }}>Step {j + 1}: </span>
+                      {step}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )
+
+          case 'tip':
+            return (
+              <div
+                key={i}
+                className="rounded-xl px-4 py-3 flex items-start gap-2"
+                style={{ background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.25)' }}
+              >
+                <span className="text-base shrink-0 mt-0.5">💡</span>
+                <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.8)' }}>{block.body}</p>
+              </div>
+            )
+
+          case 'table':
+            return (
+              <div key={i} className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr style={{ background: `${color}28` }}>
+                      {block.headers.map((h, j) => (
+                        <th key={j} className="px-3 py-2 text-left text-[11px] font-black uppercase tracking-wide" style={{ color }}>
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {block.rows.map((row, j) => (
+                      <tr key={j} style={{ background: j % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.05)' }}>
+                        {row.map((cell, k) => (
+                          <td key={k} className="px-3 py-2" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                            {cell}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )
+
+          default:
+            return null
+        }
+      })}
+    </div>
+  )
 }
 
 // ── Points Banner ──────────────────────────────────────────────────────────────
@@ -345,7 +505,10 @@ function StageIntroSheet({
             <p className="text-[11px] font-black uppercase tracking-wide mb-2" style={{ color: 'rgba(255,255,255,0.4)' }}>
               📖 What you&apos;ll learn
             </p>
-            <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.8)' }}>{stage.explanation}</p>
+            {stage.content && stage.content.length > 0
+              ? <ExplanationRenderer blocks={stage.content} color={level.color} />
+              : <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.8)' }}>{stage.explanation}</p>
+            }
           </div>
 
           {/* Key concept tags */}
