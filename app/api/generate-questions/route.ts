@@ -192,15 +192,29 @@ export async function POST(req: NextRequest) {
     auth: { persistSession: false },
   })
 
-  // Check if questions already exist (idempotency guard)
+  // ── Idempotency guard — regenerate if MC ratio is too high ───────────────────
+  // Fetch existing questions for this topic (format column tells us open vs MC).
+  // If < 80% are open-response we delete the old set and regenerate so students
+  // get the correct 90% open mix going forward.
   const { data: existing } = await supabase
     .from('questions')
-    .select('id')
+    .select('id, format')
     .ilike('outcome_id', `${topic}-%`)
-    .limit(1)
+    .limit(50)
 
   if (existing && existing.length > 0) {
-    return NextResponse.json({ status: 'already_exists' })
+    const openCount = existing.filter(q => q.format === 'open').length
+    const openRatio = openCount / existing.length
+
+    if (openRatio >= 0.8) {
+      // Already has a good open ratio — nothing to do
+      return NextResponse.json({ status: 'already_exists' })
+    }
+
+    // MC-heavy set — delete it so we can regenerate with 90% open
+    const ids = existing.map(q => q.id)
+    await supabase.from('questions').delete().in('id', ids)
+    console.log(`[generate-questions] Deleted ${ids.length} MC-heavy questions for ${topic}, regenerating...`)
   }
 
   // ── Generate via Claude Haiku ─────────────────────────────────────────────

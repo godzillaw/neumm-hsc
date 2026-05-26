@@ -273,7 +273,7 @@ export async function getNextQuestion(userId: string, topicFilter?: string): Pro
   // Solution: fetch ALL questions (no server filter), filter 100% in JS.
   // ~1000 rows × small fields ≈ <500ms, well worth the reliability guarantee.
 
-  const SELECT = 'id, outcome_id, difficulty_band, content_json, correct_answer, explanation, step_by_step, nesa_outcome_code'
+  const SELECT = 'id, outcome_id, difficulty_band, format, content_json, correct_answer, explanation, step_by_step, nesa_outcome_code'
 
   // ── Use exact .in() matching when a topic filter is given ──────────────────
   // outcome_id format in DB: "MA-TRIG-02-B3" (prefix + "-B" + band 1-6)
@@ -400,7 +400,29 @@ export async function getNextQuestion(userId: string, topicFilter?: string): Pro
     ? unanswered.slice(0, 10)     // pick from top-10 unanswered by confidence priority
     : sorted.slice(0, 10)         // all answered — restart, pick from top-10
 
-  const row = candidates[Math.floor(Math.random() * candidates.length)]
+  // ── 90 / 10 open-question bias ────────────────────────────────────────────────
+  // A question is open if format === 'open' OR content_json.question_type === 'open'
+  // (the latter catches legacy rows where the format column was not set).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const isOpen = (r: any): boolean =>
+    r.format === 'open' || (r.content_json as Record<string, unknown>)?.question_type === 'open'
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const openCandidates: any[] = candidates.filter(isOpen)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mcCandidates:   any[] = candidates.filter((r: any) => !isOpen(r))
+
+  // Pick from open 90% of the time; fall back to the other bucket if empty
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let finalCandidates: any[] = candidates
+  if (openCandidates.length > 0 && mcCandidates.length > 0) {
+    finalCandidates = Math.random() < 0.9 ? openCandidates : mcCandidates
+  } else if (openCandidates.length > 0) {
+    finalCandidates = openCandidates    // only open available → always open
+  }
+  // if only MC questions exist, finalCandidates stays as `candidates` (no infinite loop)
+
+  const row = finalCandidates[Math.floor(Math.random() * finalCandidates.length)]
   const oid: string = row.outcome_id ?? ''
   const confidence = masteryMap[oid] ?? 50
   // masteryOutcomeId is the full stored key (e.g. "MA-TRIG-02-B3") or construct it
