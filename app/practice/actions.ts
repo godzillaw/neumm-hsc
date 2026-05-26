@@ -337,6 +337,17 @@ export async function getNextQuestion(userId: string, topicFilter?: string): Pro
   // to create questions via Claude, then retries.
   if (pool.length === 0) return null
 
+  // ── Format-ratio guard ────────────────────────────────────────────────────────
+  // If the pool is MC-heavy (< 20% open), treat it as "no questions" so
+  // PracticeSession triggers /api/generate-questions to replace them.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const openInPool  = pool.filter((r: any) =>
+    r.format === 'open' || r.correct_answer === 'open' ||
+    (r.content_json as Record<string, unknown>)?.question_type === 'open'
+  ).length
+  const openRatioInPool = openInPool / pool.length
+  if (openRatioInPool < 0.2) return null   // triggers regeneration
+
   // 2. Get recently answered question IDs (for exclusion)
   const { data: answeredRows } = await supabase
     .from('error_log')
