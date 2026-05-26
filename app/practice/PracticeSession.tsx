@@ -816,8 +816,8 @@ export default function PracticeSession({
   const [completionData,     setCompletionData]     = useState<CompletionData | null>(null)
   const [showStageComplete,  setShowStageComplete]  = useState(false)
 
-  // Stage intro screen (shown before first question when launched from a stage)
-  const [showStageIntro,     setShowStageIntro]     = useState(!!stageId)
+  // Stage intro screen — disabled; go straight to first question
+  const [showStageIntro,     setShowStageIntro]     = useState(false)
 
   // Session tracking
   const sessionStartMsRef = useRef(Date.now())
