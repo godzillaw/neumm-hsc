@@ -600,7 +600,10 @@ export default function MissionClient({
   const missionPct     = Math.round((completedCount / totalStages) * 100)
 
   function handleStageClick(stage: Stage, level: Level) {
-    setActiveStage({ stage, level })
+    // Go straight to practice — no intro popup
+    const topic = stage.topicIds[0] ?? stage.outcomeIds[0]
+    void level  // level arg kept for future use
+    router.push(`/practice?topic=${encodeURIComponent(topic)}&stage=${encodeURIComponent(stage.stageId)}`)
   }
 
   function handleStartStage() {
