@@ -214,21 +214,21 @@ export async function POST(req: NextRequest) {
   }
   const maxBand = MAX_BAND[yearGroup] ?? 6
 
-  // Spread difficulty_band evenly across 1..maxBand (8 questions)
-  const bands: number[] = Array.from({ length: 8 }, (_, i) =>
-    Math.min(Math.round(1 + (i / 7) * (maxBand - 1)), maxBand)
+  // Spread difficulty_band evenly across 1..maxBand (10 questions)
+  const bands: number[] = Array.from({ length: 10 }, (_, i) =>
+    Math.min(Math.round(1 + (i / 9) * (maxBand - 1)), maxBand)
   )
 
-  // Questions 0-1 are MC, questions 2-7 are open response
-  const prompt = `Generate exactly 8 NSW Mathematics questions on: "${meta.name}" (NESA code ${meta.nesa}).
+  // Question 0 is MC, questions 1-9 are open response (90% open)
+  const prompt = `Generate exactly 10 NSW Mathematics questions on: "${meta.name}" (NESA code ${meta.nesa}).
 
 These questions are for a ${yearLabel} student. Use age-appropriate language, real-world contexts, and ensure difficulty suits that stage.
 
-Difficulty bands range from 1 (easiest) to ${maxBand} (hardest). The 8 questions must be assigned these bands in order: ${bands.join(', ')}.
+Difficulty bands range from 1 (easiest) to ${maxBand} (hardest). The 10 questions must be assigned these bands in order: ${bands.join(', ')}.
 
 QUESTION MIX (must follow exactly):
-- Questions 1-2 (bands ${bands[0]}, ${bands[1]}): MULTIPLE CHOICE — 4 options (A-D), one correct answer
-- Questions 3-8 (bands ${bands[2]}–${bands[7]}): OPEN RESPONSE — student must show full written working; no options
+- Question 1 (band ${bands[0]}): MULTIPLE CHOICE — 4 options (A-D), one correct answer
+- Questions 2-10 (bands ${bands[1]}–${bands[9]}): OPEN RESPONSE — student must show full written working; no options
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DIAGRAM SPECS — READ CAREFULLY
@@ -279,11 +279,12 @@ For MULTIPLE CHOICE questions:
   "diagram_spec": {"type":"cartesian",...} or null,
   "explanation": "2-3 sentences explaining WHY the correct answer is right and why each distractor is wrong",
   "step_by_step": [
-    "Step 1 [concept/rule]: Formula or rule used and why.",
-    "Step 2 [substitute]: Show exact substitution with numbers.",
-    "Step 3 [calculate]: Each arithmetic step clearly.",
-    "📊 Visual: [SPEC]{...spec json...}[/SPEC] Description of graph/diagram.",
-    "⚠️ Common mistake: Most frequent error students make."
+    "**1. Understand the concept**\nThe **degree** of a polynomial is the **highest power** of $x$ when the expression is fully expanded.",
+    "**2. Identify the factors**\nYou are given:\n$$f(x) = (x-2)(x+3)(x-1)$$\nEach bracket is a **linear factor** — meaning each has degree **1**.",
+    "**3. Add the degrees**\nWhen multiplying polynomials, the degrees **add**:\n$$1 + 1 + 1 = 3$$",
+    "📊 Visual: [SPEC]{\"type\":\"cartesian\",...}[/SPEC] Brief description of what the graph shows.",
+    "✅ Final Answer: The degree of the polynomial is **3**",
+    "⚠️ Common mistake: Confusing the number of factors with the degree — they only match here because each factor is linear."
   ]
 }
 
@@ -300,29 +301,32 @@ For OPEN RESPONSE questions:
   "diagram": "Text description of the diagram/sketch context for the student (e.g. 'A parabola y = x² − 4 is shown. Mark the vertex and x-intercepts.'). Set null if no diagram.",
   "diagram_spec": {"type":"cartesian",...} or null,
   "step_by_step": [
-    "Step 1 [identify given/find]: Known values and unknown.",
-    "Step 2 [method/formula]: Rule with formula. Why it applies.",
-    "Step 3 [substitute]: Substitution with actual numbers.",
-    "Step 4 [solve]: Each algebraic manipulation — do not skip.",
-    "Step 5 [final answer + units]: Answer rounded, with units.",
-    "📊 Visual: [SPEC]{...spec json...}[/SPEC] Description of graph/diagram.",
-    "⚠️ Common mistake: Most frequent error."
+    "**1. What we know and what we need to find**\nGiven: **[list known values]**. Find: **[unknown]**.",
+    "**2. Choose the method / formula**\nUse the **[rule name]** because [reason it applies]:\n$$\\text{formula here}$$",
+    "**3. Substitute**\nReplace variables with the actual numbers:\n$$\\text{substituted expression} = \\text{result}$$",
+    "**4. Solve step by step**\nWork through each algebraic manipulation — do not skip:\n$$\\text{step 1}$$\n$$\\text{step 2}$$",
+    "📊 Visual: [SPEC]{\"type\":\"cartesian\",...}[/SPEC] Description of the graph/diagram.",
+    "✅ Final Answer: [answer with units and rounding as required]",
+    "⚠️ Common mistake: [Most common error students make on this type of question]."
   ]
 }
 
 RULES for step_by_step:
-- Each step names the concept in [square brackets]
-- Show actual numbers — never write "substitute the values"
-- Every question with a graph/geometry/trig MUST have a 📊 Visual step with [SPEC]...[/SPEC]
-- ⚠️ Common mistake at the end
-
-Use proper Unicode math symbols — no LaTeX. Examples: x² not x^2, √x not sqrt(x), × not *, π not pi, θ not theta, ° for degrees, ≠ ≤ ≥ ± ∫ → as needed.`
+- EVERY step must use the **N. Title** format: start with **N. Section Title** on its own (the title in double-asterisks), then a newline, then the body explanation
+- Body text may use **bold** for key terms and $inline math$ for symbols
+- Put display equations on their own line using $$LaTeX$$ (centred block math) — one equation per line
+- Use LaTeX notation: $x^2$ not x², $\\sqrt{x}$ not √x, $\\pi$ not π, $\\theta$ not θ, $\\frac{a}{b}$ for fractions
+- Show ACTUAL numbers in every step — never write "substitute the values"
+- Every question involving graphs/geometry/trig/areas MUST have a 📊 Visual step with [SPEC]...[/SPEC]
+- Always end with ✅ Final Answer: then ⚠️ Common mistake:
+- Aim for 4-6 main numbered sections plus the Visual, Final Answer, and Common Mistake entries
+- Make explanations rich and educational — a student who got it wrong should understand exactly WHY after reading`
 
   let rawText = ''
   try {
     const res = await client.messages.create({
       model:      'claude-haiku-4-5',
-      max_tokens: 6000,
+      max_tokens: 9000,
       messages:   [{ role: 'user', content: prompt }],
     })
     rawText = res.content

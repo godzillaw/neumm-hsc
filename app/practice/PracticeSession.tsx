@@ -1476,7 +1476,7 @@ export default function PracticeSession({
             {question.question_type === 'open' ? (
               <button onClick={handleOpenSubmit} disabled={!workingBase64}
                 className="btn-gradient flex-1 py-3 rounded-2xl text-sm font-black min-h-[48px]">
-                {workingBase64 ? 'Submit Working ✨' : 'Draw or photo your working first…'}
+                {workingBase64 ? '✅ Submit for Marking' : '✏️ Draw or 📷 photo your working first'}
               </button>
             ) : (
               <button onClick={handleSubmit} disabled={!selectedOption}
@@ -1519,24 +1519,69 @@ export default function PracticeSession({
                 {question.question_type === 'open' && openFeedback && (
                   <div className="rounded-2xl overflow-hidden animate-fade-in-up"
                     style={{ background: '#FAFAFA', border: '1.5px solid #F3F4F6' }}>
-                    {/* Header */}
+
+                    {/* ── Header with score badge ─────────────────────────── */}
                     <div className="px-4 py-2.5 flex items-center gap-2"
                       style={{ background: 'linear-gradient(135deg,#F5F3FF,#FDF2F8)', borderBottom: '1px solid #EDE9FE' }}>
                       <span className="text-sm">🤖</span>
-                      <p className="text-xs font-black" style={{ color: '#5B21B6' }}>AI Assessment</p>
+                      <p className="text-xs font-black" style={{ color: '#5B21B6' }}>AI Marking</p>
                       <span className="ml-auto text-xs font-black px-2.5 py-0.5 rounded-full text-white"
                         style={{ background: openFeedback.isCorrect ? '#10B981' : '#F59E0B' }}>
                         {openFeedback.score}/{openFeedback.totalMarks} marks
                       </span>
                     </div>
-                    {/* Body */}
+
                     <div className="px-4 py-3 space-y-3">
-                      {/* Overall feedback */}
+
+                      {/* ── Overall feedback ───────────────────────────────── */}
                       <p className="text-sm leading-relaxed" style={{ color: '#374151' }}>
                         {openFeedback.feedback}
                       </p>
-                      {/* What was right */}
-                      {openFeedback.whatWasRight.length > 0 && (
+
+                      {/* ── Per-step criterion checking ────────────────────── */}
+                      {openFeedback.stepResults && openFeedback.stepResults.length > 0 && (
+                        <div>
+                          <p className="text-[11px] font-black mb-2" style={{ color: '#5B21B6' }}>
+                            📋 Step-by-step marking
+                          </p>
+                          <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #EDE9FE' }}>
+                            {openFeedback.stepResults.map((step, i) => (
+                              <div key={i}
+                                className="flex items-start gap-3 px-3 py-2.5"
+                                style={{
+                                  background:   step.passed ? '#F0FDF4' : '#FEF2F2',
+                                  borderBottom: i < openFeedback.stepResults.length - 1 ? '1px solid #F3F4F6' : 'none',
+                                }}>
+                                {/* Tick / cross badge */}
+                                <span className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black mt-0.5"
+                                  style={{
+                                    background: step.passed ? '#10B981' : '#EF4444',
+                                    color:      'white',
+                                  }}>
+                                  {step.passed ? '✓' : '✗'}
+                                </span>
+                                <div className="flex-1 min-w-0">
+                                  {/* Criterion label */}
+                                  <p className="text-xs font-bold leading-snug"
+                                    style={{ color: step.passed ? '#065F46' : '#991B1B' }}>
+                                    {step.criterion}
+                                  </p>
+                                  {/* AI comment on this step */}
+                                  {step.comment && (
+                                    <p className="text-[11px] leading-snug mt-0.5"
+                                      style={{ color: step.passed ? '#047857' : '#B91C1C', opacity: 0.85 }}>
+                                      {step.comment}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* ── What was right (fallback when no stepResults) ─── */}
+                      {(!openFeedback.stepResults || openFeedback.stepResults.length === 0) && openFeedback.whatWasRight.length > 0 && (
                         <div>
                           <p className="text-[11px] font-black mb-1.5" style={{ color: '#059669' }}>✅ What you got right</p>
                           <div className="space-y-1">
@@ -1549,7 +1594,8 @@ export default function PracticeSession({
                           </div>
                         </div>
                       )}
-                      {/* What was missing */}
+
+                      {/* ── What was missing (always shown) ───────────────── */}
                       {openFeedback.whatWasMissing.length > 0 && (
                         <div>
                           <p className="text-[11px] font-black mb-1.5" style={{ color: '#DC2626' }}>❌ What was missing</p>
@@ -1563,7 +1609,8 @@ export default function PracticeSession({
                           </div>
                         </div>
                       )}
-                      {/* Tip */}
+
+                      {/* ── Tip ────────────────────────────────────────────── */}
                       {openFeedback.tip && (
                         <div className="rounded-xl px-3 py-2.5"
                           style={{ background: '#FFFBEB', border: '1px solid #FDE68A' }}>

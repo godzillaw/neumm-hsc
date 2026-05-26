@@ -386,14 +386,21 @@ The student is asking follow-up questions. Continue in Socratic mode — guide t
 // Uses Claude vision to assess a student's handwritten working image against
 // the model answer and marking criteria. Returns a structured assessment.
 
+export interface StepResult {
+  criterion: string   // the marking criterion text
+  passed:    boolean  // did the student achieve this?
+  comment:   string   // brief specific comment on this step
+}
+
 export interface AssessOpenAnswerResult {
-  score:           number     // marks awarded
-  totalMarks:      number     // total possible marks
-  isCorrect:       boolean    // true if score >= 50% of totalMarks
-  feedback:        string     // 1-2 sentence overall assessment
-  whatWasRight:    string[]   // up to 3 correct aspects
-  whatWasMissing:  string[]   // up to 3 missing/incorrect aspects
-  tip:             string     // one specific improvement tip
+  score:           number        // marks awarded
+  totalMarks:      number        // total possible marks
+  isCorrect:       boolean       // true if score >= 50% of totalMarks
+  feedback:        string        // 1-2 sentence overall assessment
+  whatWasRight:    string[]      // up to 3 correct aspects
+  whatWasMissing:  string[]      // up to 3 missing/incorrect aspects
+  tip:             string        // one specific improvement tip
+  stepResults:     StepResult[]  // per-criterion step checking
 }
 
 export async function assessOpenAnswer(params: {
@@ -409,22 +416,40 @@ export async function assessOpenAnswer(params: {
     markingCriteria, workingImageBase64,
   } = params
 
-  const criteriaText = markingCriteria.length > 0
-    ? markingCriteria.join('\n')
-    : `${marks} marks for a complete correct solution with all working shown.`
+  // Build marking criteria list — one entry per mark
+  const criteriaList: string[] = markingCriteria.length > 0
+    ? markingCriteria
+    : Array.from({ length: marks }, (_, i) => `Mark ${i + 1}: correct working step ${i + 1}`)
+
+  const criteriaText = criteriaList.map((c, i) => `${i + 1}. ${c}`).join('\n')
+
+  // Build step results template so Claude knows the exact array format required
+  const stepTemplate = criteriaList
+    .map((c, i) => `{"criterion":"${c.replace(/"/g, "'")}","passed":<true|false>,"comment":"<specific 1-sentence comment>"}`)
+    .join(',\n  ')
 
   // Concise prompt — fewer input tokens = faster response
   const prompt = `NSW HSC Mathematics marker. Mark the student's handwritten working in the image.
 
 Q: ${questionText}
-Marks: ${marks}
-Criteria: ${criteriaText}
+Marks available: ${marks}
+Marking criteria (check EACH one individually):
+${criteriaText}
 Model answer: ${modelAnswer || solutionSteps.slice(0, 4).join(' | ')}
 
-Return ONLY valid JSON (no markdown, nothing else):
-{"score":<int 0-${marks}>,"feedback":"<2 encouraging sentences about their attempt>","whatWasRight":["<up to 3 items>"],"whatWasMissing":["<up to 3 items>"],"tip":"<1 actionable sentence>"}
+Return ONLY valid JSON (no markdown, no commentary):
+{
+  "score": <int 0-${marks}>,
+  "feedback": "<2 encouraging sentences>",
+  "whatWasRight": ["<up to 3 items>"],
+  "whatWasMissing": ["<up to 3 items>"],
+  "tip": "<1 actionable sentence>",
+  "stepResults": [
+  ${stepTemplate}
+  ]
+}
 
-If image is blank/unreadable set score to 0. Use Unicode math symbols, not LaTeX.`
+If image is blank/unreadable set score to 0 and all stepResults passed to false. Use Unicode math symbols, not LaTeX.`
 
   // Detect image format from base64 magic bytes:
   //   PNG  → starts with "iVBOR"  (\x89PNG)
@@ -437,7 +462,7 @@ If image is blank/unreadable set score to 0. Use Unicode math symbols, not LaTeX
     const response = await anthropic.messages.create({
       // Haiku is 3-5× faster than Sonnet and fully capable of reading handwritten maths
       model:      'claude-haiku-4-5',
-      max_tokens: 350,
+      max_tokens: 700,
       messages: [{
         role: 'user',
         content: [
@@ -467,6 +492,17 @@ If image is blank/unreadable set score to 0. Use Unicode math symbols, not LaTeX
     const parsed = JSON.parse(raw.slice(jsonStart, jsonEnd + 1)) as Record<string, unknown>
     const score  = Math.max(0, Math.min(marks, Number(parsed.score ?? 0)))
 
+    // Parse per-step results
+    const rawSteps = Array.isArray(parsed.stepResults) ? parsed.stepResults as Record<string, unknown>[] : []
+    const stepResults: StepResult[] = criteriaList.map((criterion, i) => {
+      const s = rawSteps[i]
+      return {
+        criterion,
+        passed:  s ? Boolean(s.passed) : false,
+        comment: s ? String(s.comment ?? '') : '',
+      }
+    })
+
     return {
       score,
       totalMarks:     marks,
@@ -475,6 +511,7 @@ If image is blank/unreadable set score to 0. Use Unicode math symbols, not LaTeX
       whatWasRight:   Array.isArray(parsed.whatWasRight)   ? (parsed.whatWasRight   as string[]) : [],
       whatWasMissing: Array.isArray(parsed.whatWasMissing) ? (parsed.whatWasMissing as string[]) : [],
       tip:            String(parsed.tip ?? 'Keep practising — you are improving!'),
+      stepResults,
     }
   } catch (err) {
     console.error('[assessOpenAnswer] error:', err)
@@ -487,6 +524,7 @@ If image is blank/unreadable set score to 0. Use Unicode math symbols, not LaTeX
       whatWasRight:   [],
       whatWasMissing: ['Could not assess — please resubmit'],
       tip:            'Write larger and ensure the photo is well-lit.',
+      stepResults:    criteriaList.map(criterion => ({ criterion, passed: false, comment: 'Could not assess' })),
     }
   }
 }
