@@ -393,10 +393,14 @@ RULES for step_by_step:
   // ── Insert into Supabase ──────────────────────────────────────────────────
   const rows = parsed.map(q => {
     const isOpen = String(q.question_type ?? 'multiple_choice') === 'open'
+    // Always derive outcome_id from the known topic + Claude's difficulty_band.
+    // Claude frequently generates wrong outcome_ids (e.g. NESA codes like "MA-A1-01"
+    // instead of "MA-ALG-08-B1") — never trust q.outcome_id.
+    const band = Math.max(1, Math.min(6, Number(q.difficulty_band ?? 3)))
     return {
-      outcome_id:      String(q.outcome_id      ?? `${topic}-B3`),
+      outcome_id:      `${topic}-B${band}`,
       course:          'Advanced Mathematics',
-      difficulty_band: Number(q.difficulty_band ?? 3),
+      difficulty_band: band,
       format:          isOpen ? 'open' : 'multiple_choice',
       content_json:    isOpen
         ? {
