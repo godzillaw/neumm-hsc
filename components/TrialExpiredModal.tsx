@@ -1,6 +1,7 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useState }     from 'react'
+import { goToCheckout } from '@/lib/goToCheckout'
 
 // ─── Plan data ──────────────────────────────────────────────────────────────────
 
@@ -40,7 +41,7 @@ const PLANS = [
 // ─── Component ──────────────────────────────────────────────────────────────────
 
 export default function TrialExpiredModal({ tier }: { tier: string }) {
-  const router  = useRouter()
+  const [loading, setLoading] = useState<string | null>(null)
   const isPaymentFailed = tier === 'payment_failed'
 
   const heading = isPaymentFailed
@@ -109,10 +110,11 @@ export default function TrialExpiredModal({ tier }: { tier: string }) {
                 ))}
               </ul>
               <button
-                onClick={() => router.push(`/account/upgrade?plan=${plan.id}`)}
-                className="w-full py-3 rounded-xl font-bold text-sm text-white transition-all active:scale-[0.98] min-h-[44px]"
+                onClick={() => void goToCheckout(plan.id as 'basic' | 'pro', v => setLoading(v ? plan.id : null))}
+                disabled={loading !== null}
+                className="w-full py-3 rounded-xl font-bold text-sm text-white transition-all active:scale-[0.98] min-h-[44px] disabled:opacity-70"
                 style={{ backgroundColor: plan.color }}>
-                Choose {plan.name} →
+                {loading === plan.id ? 'Redirecting…' : `Choose ${plan.name} →`}
               </button>
             </div>
           ))}

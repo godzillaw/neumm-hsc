@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter }                                  from 'next/navigation'
 import { getNextQuestion, submitAnswer }              from './actions'
 import { getHint, chatWithTutor, getConceptExplanation, getConceptVideo, assessOpenAnswer } from '@/lib/actions/tutor'
+import { goToCheckout } from '@/lib/goToCheckout'
 import { logLearningEvent }                           from '@/lib/actions/events'
 import { awardQuestionPoints, checkAndAwardStageCompletion } from '@/lib/actions/gamification'
 import { findStage }                                  from '@/lib/curriculum'
@@ -824,9 +825,11 @@ export default function PracticeSession({
   const [showStageIntro,     setShowStageIntro]     = useState(false)
 
   // Trial soft banner (shown every 5 questions during trial)
-  const [showTrialBanner,    setShowTrialBanner]    = useState(false)
+  const [showTrialBanner,      setShowTrialBanner]      = useState(false)
   // Trial hard-limit modal (shown when trial daily cap hit mid-session)
-  const [showTrialLimitModal, setShowTrialLimitModal] = useState(false)
+  const [showTrialLimitModal,  setShowTrialLimitModal]  = useState(false)
+  // Loading state for checkout buttons inside the mid-session modal
+  const [checkoutLoading,      setCheckoutLoading]      = useState<'basic' | 'pro' | null>(null)
 
   // Session tracking
   const sessionStartMsRef = useRef(Date.now())
@@ -1193,11 +1196,12 @@ export default function PracticeSession({
             ⚡ Enjoying Neumm? Upgrade to Basic or Pro for more daily questions.
           </span>
           <div className="flex items-center gap-2 shrink-0">
-            <a href="/account/upgrade"
+            <button
+              onClick={() => void goToCheckout('pro')}
               className="text-xs font-black px-3 py-1 rounded-full bg-white"
               style={{ color: '#7C3AED' }}>
               Upgrade →
-            </a>
+            </button>
             <button
               onClick={() => setShowTrialBanner(false)}
               className="text-white/70 hover:text-white transition-colors"
@@ -1249,11 +1253,13 @@ export default function PracticeSession({
                       </li>
                     ))}
                   </ul>
-                  <a href={`/account/upgrade?plan=${plan.id}`}
-                    className="block w-full py-3 rounded-xl font-black text-sm text-white text-center"
+                  <button
+                    onClick={() => void goToCheckout(plan.id as 'basic' | 'pro', v => setCheckoutLoading(v ? plan.id as 'basic' | 'pro' : null))}
+                    disabled={checkoutLoading !== null}
+                    className="block w-full py-3 rounded-xl font-black text-sm text-white text-center disabled:opacity-70"
                     style={{ backgroundColor: plan.color }}>
-                    Choose {plan.name} →
-                  </a>
+                    {checkoutLoading === plan.id ? 'Redirecting…' : `Choose ${plan.name} →`}
+                  </button>
                 </div>
               ))}
             </div>

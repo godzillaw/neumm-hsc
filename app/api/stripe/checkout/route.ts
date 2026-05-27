@@ -22,9 +22,18 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json().catch(() => ({})) as Record<string, unknown>
-    const rawId = body.priceId as string | undefined
+
+    // Accept either a direct priceId/productId OR a plan name ('basic' | 'pro')
+    let rawId = body.priceId as string | undefined
+    if (!rawId && body.plan) {
+      const planMap: Record<string, string | undefined> = {
+        basic: process.env.STRIPE_BASIC_PRICE_ID,
+        pro:   process.env.STRIPE_PRO_PRICE_ID,
+      }
+      rawId = planMap[body.plan as string]
+    }
     if (!rawId) {
-      return NextResponse.json({ error: 'Missing priceId' }, { status: 400 })
+      return NextResponse.json({ error: 'Missing priceId or plan' }, { status: 400 })
     }
 
     // If a product ID was passed (prod_xxx) instead of a price ID (price_xxx),
