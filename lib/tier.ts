@@ -5,9 +5,9 @@
  *
  * Tier hierarchy:
  *  free               — permanent free plan, 5 questions per UTC day
- *  basic_trial        — 7-day free trial, unlimited questions while active
+ *  basic_trial        — 7-day free trial, 8 questions per UTC day
  *  basic_trial_expired — trial ended without subscribing → falls back to free (5q/day)
- *  basic              — paid Basic plan $29/mo, 25 questions per UTC day
+ *  basic              — paid Basic plan $29/mo, 30 questions per UTC day
  *  pro                — paid Pro plan $49/mo, unlimited
  *  payment_failed     — card declined → dashboard + upgrade only
  */
@@ -25,22 +25,24 @@ export interface TierAccess {
   isBlocked:          boolean   // payment failed → only dashboard + upgrade
   isTrial:            boolean   // currently in active trial
   canAnswer:          boolean   // false when blocked OR daily limit reached
-  dailyLimit:         number    // -1 = unlimited; 5 for free; 25 for basic
+  dailyLimit:         number    // -1 = unlimited; 5 for free; 8 for trial; 30 for basic
   questionsRemaining: number    // -1 = unlimited
   questionsToday:     number
-  showSoftBanner:     boolean   // ≤ 3 remaining on free or ≤ 5 on basic — show soft warning
+  showSoftBanner:     boolean   // ≤ 2 remaining on free/trial; ≤ 5 on basic
   dailyLimitReached:  boolean   // hit daily cap
+  trialSoftBannerAt:  number    // questionsToday multiple of 5 while in trial (0 = no banner)
 }
 
-const FREE_DAILY_LIMIT  = 5
-const BASIC_DAILY_LIMIT = 25
+const FREE_DAILY_LIMIT         = 5
+const BASIC_TRIAL_DAILY_LIMIT  = 8
+const BASIC_DAILY_LIMIT        = 30
 
 // Only hard-block on payment failure (card declined)
 const BLOCKED_TIERS = new Set<string>(['payment_failed'])
 const TRIAL_TIERS   = new Set<string>(['basic_trial', 'pro_trial'])
 
 // Tiers that have a daily question limit
-const LIMITED_TIERS = new Set<string>(['free', 'basic', 'basic_trial_expired', 'trial_expired'])
+const LIMITED_TIERS = new Set<string>(['free', 'basic', 'basic_trial', 'basic_trial_expired', 'trial_expired'])
 
 export async function checkTierAccess(userId: string): Promise<TierAccess> {
   const supabase = createSupabaseServerClient()
@@ -70,9 +72,11 @@ export async function checkTierAccess(userId: string): Promise<TierAccess> {
 
   // Resolve daily limit for this tier
   const dailyLimit: number = (() => {
+    if (tier === 'pro')                                      return -1
     if (tier === 'basic')                                    return BASIC_DAILY_LIMIT
-    if (tier === 'free' || LIMITED_TIERS.has(tier))         return FREE_DAILY_LIMIT
-    return -1  // unlimited for trial / pro
+    if (tier === 'basic_trial' && isTrial)                   return BASIC_TRIAL_DAILY_LIMIT
+    if (LIMITED_TIERS.has(tier))                             return FREE_DAILY_LIMIT
+    return -1
   })()
 
   // ── Daily question count ───────────────────────────────────────────────────
@@ -96,11 +100,16 @@ export async function checkTierAccess(userId: string): Promise<TierAccess> {
   }
 
   const canAnswer      = !isBlocked && !dailyLimitReached
-  const softThreshold  = dailyLimit === FREE_DAILY_LIMIT ? 2 : 5
+  const softThreshold  = dailyLimit === BASIC_DAILY_LIMIT ? 5 : 2
   const showSoftBanner = dailyLimit > 0
     && questionsRemaining >= 0
     && questionsRemaining <= softThreshold
     && !dailyLimitReached
+
+  // For trial users: fire a soft banner every 5 questions (5, 10 — but limit is 8 so only 5)
+  const trialSoftBannerAt = isTrial && questionsToday > 0 && questionsToday % 5 === 0
+    ? questionsToday
+    : 0
 
   return {
     tier,
@@ -112,5 +121,6 @@ export async function checkTierAccess(userId: string): Promise<TierAccess> {
     questionsToday,
     showSoftBanner,
     dailyLimitReached,
+    trialSoftBannerAt,
   }
 }

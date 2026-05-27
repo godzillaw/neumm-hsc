@@ -12,7 +12,7 @@ const PLANS = [
     period:   '/mo',
     color:    '#185FA5',
     features: [
-      '25 questions per day',
+      '30 questions per day',
       'Mission roadmap & XP',
       'Adaptive difficulty',
       'AI hint system',

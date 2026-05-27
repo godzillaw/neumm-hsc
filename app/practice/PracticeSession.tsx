@@ -758,6 +758,9 @@ export default function PracticeSession({
   yearGroup,
   tier = 'pro',   // default to full access if tier not passed
   stageId,
+  questionsToday  = 0,
+  isTrial         = false,
+  dailyLimit      = -1,
 }: {
   userId:       string
   sessionId:    string
@@ -765,8 +768,9 @@ export default function PracticeSession({
   yearGroup?:   string | null
   tier?:        string
   stageId?:     string | null
-  questionsRemaining?: number
-  dailyLimit?:         number
+  questionsToday?: number
+  isTrial?:        boolean
+  dailyLimit?:     number
 }) {
   const router = useRouter()
   const [phase,          setPhase]          = useState<Phase>('loading')
@@ -818,6 +822,11 @@ export default function PracticeSession({
 
   // Stage intro screen — disabled; go straight to first question
   const [showStageIntro,     setShowStageIntro]     = useState(false)
+
+  // Trial soft banner (shown every 5 questions during trial)
+  const [showTrialBanner,    setShowTrialBanner]    = useState(false)
+  // Trial hard-limit modal (shown when trial daily cap hit mid-session)
+  const [showTrialLimitModal, setShowTrialLimitModal] = useState(false)
 
   // Session tracking
   const sessionStartMsRef = useRef(Date.now())
@@ -917,6 +926,16 @@ export default function PracticeSession({
     setSessionCount(c => c + 1)
     sessionAnswersRef.current += 1
     if (res.isCorrect) sessionCorrectRef.current += 1
+
+    // Trial daily-limit check (mid-session)
+    if (isTrial && dailyLimit > 0) {
+      const totalDone = questionsToday + sessionAnswersRef.current
+      if (totalDone >= dailyLimit) {
+        setShowTrialLimitModal(true)
+      } else if (totalDone > 0 && totalDone % 5 === 0) {
+        setShowTrialBanner(true)
+      }
+    }
 
     // Streak toast
     if (res.streakUpdated && res.newStreak >= 1) {
@@ -1166,8 +1185,90 @@ export default function PracticeSession({
   return (
     <div className="flex min-h-screen" style={{ background: 'linear-gradient(135deg, #F7F3FF 0%, #FDF2F8 60%, #F0FDF4 100%)' }}>
 
+      {/* ── Trial soft upgrade banner (every 5 questions) ─────────── */}
+      {showTrialBanner && (
+        <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between gap-3 px-4 py-2.5 text-sm"
+          style={{ background: 'linear-gradient(90deg,#7C3AED,#A855F7)', color: '#fff' }}>
+          <span className="font-semibold text-xs sm:text-sm">
+            ⚡ Enjoying Neumm? Upgrade to Basic or Pro for more daily questions.
+          </span>
+          <div className="flex items-center gap-2 shrink-0">
+            <a href="/account/upgrade"
+              className="text-xs font-black px-3 py-1 rounded-full bg-white"
+              style={{ color: '#7C3AED' }}>
+              Upgrade →
+            </a>
+            <button
+              onClick={() => setShowTrialBanner(false)}
+              className="text-white/70 hover:text-white transition-colors"
+              aria-label="Dismiss">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Trial mid-session limit modal ──────────────────────────── */}
+      {showTrialLimitModal && (
+        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4"
+          style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+          <div className="w-full sm:max-w-xl bg-white sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden"
+            style={{ maxHeight: '92vh', overflowY: 'auto', paddingBottom: 'env(safe-area-inset-bottom,0px)' }}>
+            <div className="px-6 pt-7 pb-5 text-center border-b border-gray-100">
+              <div className="text-5xl mb-3">⚡</div>
+              <h2 className="text-xl font-black text-gray-900">You&apos;ve used all {dailyLimit} trial questions today</h2>
+              <p className="text-sm text-gray-500 mt-2 max-w-sm mx-auto">
+                Upgrade to keep practising. Resets at midnight UTC.<br/>
+                Your progress, XP and streak are all saved.
+              </p>
+            </div>
+            <div className="px-4 sm:px-6 py-5 flex flex-col sm:flex-row gap-4">
+              {[
+                { id: 'basic', name: 'Basic', price: '$29', period: '/mo', color: '#185FA5',
+                  features: ['30 questions per day', 'Mission roadmap & XP', 'Adaptive difficulty', 'AI hints', 'Streak tracking'] },
+                { id: 'pro',   name: 'Pro',   price: '$49', period: '/mo', color: '#7C3AED', badge: 'Most popular',
+                  features: ['Unlimited questions', 'Mission roadmap & XP', 'Adaptive difficulty', 'Full AI tutor', 'Streak tracking', 'Priority support'] },
+              ].map(plan => (
+                <div key={plan.id} className="flex-1 rounded-2xl border-2 p-5 flex flex-col relative"
+                  style={{ borderColor: plan.color }}>
+                  {plan.badge && (
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs font-bold px-3 py-0.5 rounded-full text-white"
+                      style={{ backgroundColor: plan.color }}>{plan.badge}</span>
+                  )}
+                  <p className="font-black text-gray-900 text-base">{plan.name}</p>
+                  <div className="flex items-baseline gap-1 mt-1 mb-4">
+                    <span className="text-3xl font-extrabold" style={{ color: plan.color }}>{plan.price}</span>
+                    <span className="text-xs text-gray-400">{plan.period}</span>
+                  </div>
+                  <ul className="space-y-2 flex-1 mb-5">
+                    {plan.features.map(f => (
+                      <li key={f} className="flex items-start gap-2 text-sm text-gray-600">
+                        <span className="mt-0.5 shrink-0" style={{ color: plan.color }}>✓</span>{f}
+                      </li>
+                    ))}
+                  </ul>
+                  <a href={`/account/upgrade?plan=${plan.id}`}
+                    className="block w-full py-3 rounded-xl font-black text-sm text-white text-center"
+                    style={{ backgroundColor: plan.color }}>
+                    Choose {plan.name} →
+                  </a>
+                </div>
+              ))}
+            </div>
+            <p className="text-center text-xs text-gray-400 pb-5">Cancel anytime · No lock-in</p>
+            <div className="text-center pb-6">
+              <a href="/dashboard/mission" className="text-xs font-semibold text-gray-400 hover:text-gray-600">
+                ← Back to mission
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Left: Question Panel ─────────────────────────────────── */}
-      <div className="flex-1 min-w-0 flex flex-col px-5 md:px-8 py-6 md:max-w-2xl">
+      <div className={`flex-1 min-w-0 flex flex-col px-5 md:px-8 py-6 md:max-w-2xl${showTrialBanner ? ' mt-10' : ''}`}>
 
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
