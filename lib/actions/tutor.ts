@@ -425,7 +425,7 @@ export async function assessOpenAnswer(params: {
 
   // Build step results template so Claude knows the exact array format required
   const stepTemplate = criteriaList
-    .map((c, i) => `{"criterion":"${c.replace(/"/g, "'")}","passed":<true|false>,"comment":"<specific 1-sentence comment>"}`)
+    .map((c) => `{"criterion":"${c.replace(/"/g, "'")}","passed":<true|false>,"comment":"<specific 1-sentence comment>"}`)
     .join(',\n  ')
 
   // Concise prompt — fewer input tokens = faster response
