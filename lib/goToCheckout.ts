@@ -11,7 +11,11 @@ export async function goToCheckout(
 ): Promise<void> {
   setLoading?.(true)
   try {
-    const res  = await fetch('/api/stripe/checkout', {
+    // Next.js basePath ('/math-nsw/app') is NOT automatically prepended to
+    // raw fetch() calls — only next/link and router.push get it for free.
+    const apiPath = `${process.env.NEXT_PUBLIC_APP_URL ?? '/math-nsw/app'}/api/stripe/checkout`
+      .replace(/^https?:\/\/[^/]+/, '')   // keep path-only for same-origin POST
+    const res  = await fetch(apiPath, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ plan }),
