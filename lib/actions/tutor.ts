@@ -7,10 +7,14 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
 // ─── Tier guard ────────────────────────────────────────────────────────────────
 //
-// Returns true when the current user has access to Pro-level AI features.
-// basic_trial / pro_trial (active) and pro → true.  basic (paid) → false.
+// Returns true when the current user has access to full AI features
+// (hints, concept explainer, tutor chat, step marking).
+//
+// Tiers with full AI access: basic (paid), basic_trial, pro_trial, pro
+// Tiers WITHOUT AI access:   free, basic_trial_expired, trial_expired, payment_failed
 
-const TRIAL_TIERS = new Set(['basic_trial', 'pro_trial'])
+const TRIAL_TIERS    = new Set(['basic_trial', 'pro_trial'])
+const AI_ACCESS_TIERS = new Set(['basic', 'basic_trial', 'pro_trial', 'pro'])
 
 async function hasProAIAccess(): Promise<boolean> {
   try {
@@ -30,8 +34,7 @@ async function hasProAIAccess(): Promise<boolean> {
     const trialExpired  = trialEndDate ? new Date(trialEndDate) < new Date() : false
     const effectiveTier = TRIAL_TIERS.has(rawTier) && trialExpired ? 'basic_trial_expired' : rawTier
 
-    // basic (paid plan) is the only active tier WITHOUT Pro AI features
-    return effectiveTier !== 'basic'
+    return AI_ACCESS_TIERS.has(effectiveTier)
   } catch {
     return true   // fail-open so a DB hiccup doesn't break the app
   }

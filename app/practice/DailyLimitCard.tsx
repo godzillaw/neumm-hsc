@@ -29,7 +29,7 @@ export default function DailyLimitCard({ tier, dailyLimit }: { tier: string; dai
           <div className="px-4 sm:px-6 py-5 flex flex-col sm:flex-row gap-4">
             {([
               { id: 'basic' as const, name: 'Basic', price: '$29', period: '/mo', color: '#185FA5',
-                features: ['30 questions per day', 'Mission roadmap & XP', 'Adaptive difficulty', 'AI hints', 'Streak tracking'] },
+                features: ['30 questions per day', 'AI hints, concept explainer & tutor chat', 'AI step-by-step marking', 'Mission roadmap & XP', 'Adaptive difficulty', 'Streak tracking'] },
               { id: 'pro' as const,   name: 'Pro',   price: '$49', period: '/mo', color: '#7C3AED', badge: 'Most popular',
                 features: ['Unlimited questions', 'Mission roadmap & XP', 'Adaptive difficulty', 'Full AI tutor', 'Streak tracking', 'Priority support'] },
             ]).map(plan => (

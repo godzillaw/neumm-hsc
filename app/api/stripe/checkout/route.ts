@@ -20,15 +20,16 @@ const PLAN_COPY: Record<string, {
 }> = {
   basic: {
     name:        'Neumm Basic',
-    description: 'Structured daily HSC Maths practice with adaptive difficulty and AI hints. Build a winning study habit — 30 questions a day, every day.',
+    description: 'Everything you need to master HSC Maths — 30 questions a day with full AI support, adaptive difficulty, and step-by-step marking.',
     features: [
       '30 questions per day (resets midnight UTC)',
-      'Adaptive difficulty — questions grow harder as you improve',
+      'AI hints — guided nudges without giving away the answer',
+      'AI concept explainer — deep-dive any topic instantly',
+      'AI tutor chat — ask anything about the question or concept',
+      'Draw or photo your working — AI marks every step',
+      'Adaptive difficulty — challenges grow harder as you improve',
       'Mission roadmap — unlock stages and earn XP',
-      'AI hint system — guided nudges without giving away the answer',
-      'Draw or photo your working — AI marks each step',
-      'Streak tracking — stay consistent all the way to the HSC',
-      'Full progress dashboard across all topics',
+      'Streak tracking & full progress dashboard',
     ],
     submitMessage: 'Cancel anytime — no lock-in contracts. Your XP, streak and progress are saved forever.',
   },

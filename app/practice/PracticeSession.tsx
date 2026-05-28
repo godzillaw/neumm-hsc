@@ -747,10 +747,9 @@ function StageIntroScreen({ stageId, onStart }: { stageId: string; onStart: () =
 
 // ─── Main Component ─────────────────────────────────────────────────────────────
 
-// Tiers that include full Pro AI features (hint + explain + tutor chat)
-// basic_trial / pro_trial (active) and pro all get full access.
-// Only the paid 'basic' plan is limited to hints.
-const PRO_AI_TIERS = new Set(['pro', 'basic_trial', 'pro_trial'])
+// Tiers that include full AI features (hints + concept explainer + tutor chat)
+// basic (paid), basic_trial, pro_trial, and pro all get full access.
+const PRO_AI_TIERS = new Set(['pro', 'basic', 'basic_trial', 'pro_trial'])
 
 export default function PracticeSession({
   userId,
@@ -1231,7 +1230,7 @@ export default function PracticeSession({
             <div className="px-4 sm:px-6 py-5 flex flex-col sm:flex-row gap-4">
               {[
                 { id: 'basic', name: 'Basic', price: '$29', period: '/mo', color: '#185FA5',
-                  features: ['30 questions per day', 'Mission roadmap & XP', 'Adaptive difficulty', 'AI hints', 'Streak tracking'] },
+                  features: ['30 questions per day', 'AI hints, concept explainer & tutor chat', 'AI step-by-step marking', 'Mission roadmap & XP', 'Adaptive difficulty', 'Streak tracking'] },
                 { id: 'pro',   name: 'Pro',   price: '$49', period: '/mo', color: '#7C3AED', badge: 'Most popular',
                   features: ['Unlimited questions', 'Mission roadmap & XP', 'Adaptive difficulty', 'Full AI tutor', 'Streak tracking', 'Priority support'] },
               ].map(plan => (
