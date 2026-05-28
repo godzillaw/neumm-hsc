@@ -9,8 +9,8 @@ const PLANS = [
   {
     id:       'basic',
     name:     'Basic',
-    price:    '$29',
-    period:   '/mo',
+    price:    '$29.00',
+    period:   '/month (GST incl.)',
     color:    '#185FA5',
     features: [
       '30 questions per day',
@@ -23,8 +23,8 @@ const PLANS = [
   {
     id:       'pro',
     name:     'Pro',
-    price:    '$49',
-    period:   '/mo',
+    price:    '$49.00',
+    period:   '/month (GST incl.)',
     color:    '#7C3AED',
     badge:    'Most popular',
     features: [

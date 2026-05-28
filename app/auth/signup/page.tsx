@@ -4,6 +4,9 @@ import { useState }                   from 'react'
 import Link                            from 'next/link'
 import { signInWithGoogle }            from '@/lib/auth'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
+import AgeGate                         from '@/components/auth/AgeGate'
+import ConsentCheckboxes               from '@/components/auth/ConsentCheckboxes'
+import MinorConsentNotice              from '@/components/auth/MinorConsentNotice'
 
 // ─── Feature bullets (left panel) ─────────────────────────────────────────────
 const FEATURES = [
@@ -24,8 +27,17 @@ const FEATURES = [
   },
 ]
 
+type Step = 'age-gate' | 'form'
+
 // ─── Component ─────────────────────────────────────────────────────────────────
 export default function SignupPage() {
+  const [step,           setStep]           = useState<Step>('age-gate')
+  const [birthYear,      setBirthYear]      = useState<number | null>(null)
+  const [isMinor,        setIsMinor]        = useState(false)
+  const [under13,        setUnder13]        = useState(false)
+  const [showMinorModal, setShowMinorModal] = useState(false)
+  const [consentChecked, setConsentChecked] = useState(false)
+
   const [firstName,     setFirstName]     = useState('')
   const [lastName,      setLastName]      = useState('')
   const [email,         setEmail]         = useState('')
@@ -34,22 +46,64 @@ export default function SignupPage() {
   const [loading,       setLoading]       = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error,         setError]         = useState<string | null>(null)
+
+  // ── Age gate handlers ─────────────────────────────────────────────────────
+  function handleAgeComplete(year: number, minor: boolean) {
+    setBirthYear(year)
+    setIsMinor(minor)
+    setStep('form')
+  }
+
+  function handleUnder13() {
+    setUnder13(true)
+  }
+
+  // ── Consent checkbox handler ──────────────────────────────────────────────
+  function handleConsentChange(checked: boolean) {
+    if (checked && isMinor) {
+      setShowMinorModal(true)
+    } else {
+      setConsentChecked(checked)
+    }
+  }
+
+  function handleMinorConfirm() {
+    setShowMinorModal(false)
+    setConsentChecked(true)
+  }
+
+  function handleMinorCancel() {
+    setShowMinorModal(false)
+    setConsentChecked(false)
+  }
+
+  // ── Signup ────────────────────────────────────────────────────────────────
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
     if (password.length < 8) { setError('Password must be at least 8 characters.'); return }
+    if (!consentChecked) { setError('Please agree to the Terms and Privacy Policy.'); return }
     setLoading(true)
 
     const displayName = `${firstName} ${lastName}`.trim()
-    const BASE = '/math-nsw/app'  // must match next.config basePath
+    const BASE = '/math-nsw/app'
 
-    // ── Step 1: create the user account via Route Handler (Admin API) ─────────
-    // The Route Handler uses the Supabase Admin API to create the account with
-    // email_confirm: true so no verification email is sent.
+    const now = new Date().toISOString()
     const res = await fetch(`${BASE}/api/auth/signup`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ email, password, displayName }),
+      body:    JSON.stringify({
+        email,
+        password,
+        displayName,
+        birthYear,
+        isMinor,
+        termsAcceptedAt:        now,
+        termsVersion:           '1.0',
+        privacyAcceptedAt:      now,
+        privacyVersion:         '1.0',
+        minorGuardianConfirmed: isMinor ? true : null,
+      }),
     })
 
     const data = await res.json() as { error?: string; success?: boolean }
@@ -60,24 +114,16 @@ export default function SignupPage() {
       return
     }
 
-    // ── Step 2: sign in using the browser client ──────────────────────────────
-    // createBrowserClient (used inside createSupabaseBrowserClient) writes the
-    // session directly to document.cookie — the SAME code path as the login
-    // page which is known to work.  This is more reliable than any server-side
-    // Set-Cookie approach because document.cookie is guaranteed to be present
-    // on the very next HTTP request.
     const supabase = createSupabaseBrowserClient()
     const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password })
 
     if (signInErr) {
-      // Account was created — tell the user to log in manually.
       setError('Account created! Please sign in below.')
       setLoading(false)
       window.location.href = `${BASE}/auth/login`
       return
     }
 
-    // ── Step 3: hard-navigate so middleware sees the freshly written cookies ──
     window.location.href = `${BASE}/onboarding/year`
   }
 
@@ -85,6 +131,31 @@ export default function SignupPage() {
     setError(null); setGoogleLoading(true)
     const { error: err } = await signInWithGoogle('/onboarding/year')
     if (err) { setError(err.message); setGoogleLoading(false) }
+  }
+
+  // ── Under-13 screen ───────────────────────────────────────────────────────
+  if (under13) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 bg-white" style={{ fontFamily: "'Nunito', sans-serif" }}>
+        <div style={{ maxWidth: 400, width: '100%', textAlign: 'center' }}>
+          <div style={{ fontSize: 56, marginBottom: 16 }}>🔒</div>
+          <h2 style={{ color: '#0D3349', fontWeight: 900, fontSize: 20, marginBottom: 12, marginTop: 0 }}>
+            Age Restriction
+          </h2>
+          <p style={{ color: '#6B7280', fontSize: 14, lineHeight: 1.7, marginBottom: 20 }}>
+            Neumm is not available to users under 13 years of age.
+            Contact{' '}
+            <a href="mailto:support@neumm.com.au" style={{ color: '#185FA5', fontWeight: 700 }}>
+              support@neumm.com.au
+            </a>{' '}
+            if this is an error.
+          </p>
+          <Link href="/auth/login" style={{ color: '#185FA5', fontWeight: 700, fontSize: 14 }}>
+            ← Back to login
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -154,7 +225,7 @@ export default function SignupPage() {
 
         {/* Footer */}
         <p className="text-xs relative z-10" style={{ color: 'rgba(255,255,255,0.35)' }}>
-          © 2025 Neumm. Built for Australian HSC students.
+          © 2026 Caplix Pty Ltd. Built for Australian HSC students.
         </p>
       </div>
 
@@ -162,151 +233,188 @@ export default function SignupPage() {
       <div className="flex-1 flex items-center justify-center px-6 py-12 bg-white overflow-y-auto">
         <div className="w-full max-w-md">
 
-          {/* Heading */}
-          <div className="mb-7">
-            <h2 className="text-2xl font-black text-gray-900">Create your account</h2>
-            <p className="text-sm text-gray-500 mt-1">
-              Already have an account?{' '}
-              <Link href="/auth/login" className="font-bold" style={{ color: '#185FA5' }}>
-                Log in here
-              </Link>
-            </p>
-          </div>
-
-          {/* Google */}
-          <button
-            onClick={handleGoogle}
-            disabled={googleLoading || loading}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl text-sm font-bold border transition-all disabled:opacity-50 mb-5 min-h-[48px]"
-            style={{ borderColor: '#E5E7EB', backgroundColor: '#FAFAFA', color: '#374151' }}
-          >
-            {googleLoading ? <Spinner /> : <GoogleIcon />}
-            Continue with Google
-          </button>
-
-          {/* Divider */}
-          <div className="flex items-center gap-3 mb-5">
-            <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-xs font-semibold text-gray-400">or sign up with email</span>
-            <div className="flex-1 h-px bg-gray-200" />
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSignup} className="space-y-4">
-            {/* First + Last name row */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5">First name</label>
-                <input
-                  type="text" value={firstName} onChange={e => setFirstName(e.target.value)}
-                  required placeholder="Alex" autoComplete="given-name"
-                  className="w-full px-3.5 py-3 text-sm rounded-xl border outline-none transition-all"
-                  style={{ borderColor: '#E5E7EB', fontFamily: 'inherit' }}
-                  onFocus={e => (e.target.style.borderColor = '#185FA5')}
-                  onBlur={e => (e.target.style.borderColor = '#E5E7EB')}
-                />
+          {/* ── STEP 1: AGE GATE ── */}
+          {step === 'age-gate' && (
+            <>
+              <div className="mb-7">
+                <h2 className="text-2xl font-black text-gray-900">Create your account</h2>
+                <p className="text-sm text-gray-500 mt-1">First, let&apos;s verify your age.</p>
               </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5">Last name</label>
-                <input
-                  type="text" value={lastName} onChange={e => setLastName(e.target.value)}
-                  required placeholder="Chen" autoComplete="family-name"
-                  className="w-full px-3.5 py-3 text-sm rounded-xl border outline-none transition-all"
-                  style={{ borderColor: '#E5E7EB', fontFamily: 'inherit' }}
-                  onFocus={e => (e.target.style.borderColor = '#185FA5')}
-                  onBlur={e => (e.target.style.borderColor = '#E5E7EB')}
-                />
+              <AgeGate onComplete={handleAgeComplete} onUnder13={handleUnder13} />
+              <p className="mt-6 text-center text-sm text-gray-400">
+                Already have an account?{' '}
+                <Link href="/auth/login"
+                  className="font-black transition-colors hover:opacity-80"
+                  style={{ color: '#185FA5' }}>
+                  Sign in →
+                </Link>
+              </p>
+            </>
+          )}
+
+          {/* ── STEP 2: SIGNUP FORM ── */}
+          {step === 'form' && (
+            <>
+              {/* Heading */}
+              <div className="mb-7">
+                <h2 className="text-2xl font-black text-gray-900">Create your account</h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Already have an account?{' '}
+                  <Link href="/auth/login" className="font-bold" style={{ color: '#185FA5' }}>
+                    Log in here
+                  </Link>
+                </p>
               </div>
-            </div>
 
-            {/* Email */}
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">Email address</label>
-              <input
-                type="email" value={email} onChange={e => setEmail(e.target.value)}
-                required placeholder="alex@email.com" autoComplete="email"
-                className="w-full px-3.5 py-3 text-sm rounded-xl border outline-none transition-all"
-                style={{ borderColor: '#E5E7EB', fontFamily: 'inherit' }}
-                onFocus={e => (e.target.style.borderColor = '#185FA5')}
-                onBlur={e => (e.target.style.borderColor = '#E5E7EB')}
-              />
-            </div>
+              {/* Minor badge */}
+              {isMinor && (
+                <div className="mb-4 flex items-center gap-2 rounded-xl px-4 py-2.5 border"
+                  style={{ backgroundColor: '#FFF7ED', borderColor: '#FED7AA' }}>
+                  <span className="text-base">👶</span>
+                  <span className="text-sm font-bold text-orange-700">
+                    Under-18 account — parent/guardian consent required
+                  </span>
+                </div>
+              )}
 
-            {/* Password */}
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">Password</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password} onChange={e => setPassword(e.target.value)}
-                  required minLength={8} placeholder="At least 8 characters"
-                  autoComplete="new-password"
-                  className="w-full px-3.5 py-3 pr-11 text-sm rounded-xl border outline-none transition-all"
-                  style={{ borderColor: '#E5E7EB', fontFamily: 'inherit' }}
-                  onFocus={e => (e.target.style.borderColor = '#185FA5')}
-                  onBlur={e => (e.target.style.borderColor = '#E5E7EB')}
-                />
+              {/* Google */}
+              <button
+                onClick={handleGoogle}
+                disabled={googleLoading || loading}
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl text-sm font-bold border transition-all disabled:opacity-50 mb-5 min-h-[48px]"
+                style={{ borderColor: '#E5E7EB', backgroundColor: '#FAFAFA', color: '#374151' }}
+              >
+                {googleLoading ? <Spinner /> : <GoogleIcon />}
+                Continue with Google
+              </button>
+
+              {/* Divider */}
+              <div className="flex items-center gap-3 mb-5">
+                <div className="flex-1 h-px bg-gray-200" />
+                <span className="text-xs font-semibold text-gray-400">or sign up with email</span>
+                <div className="flex-1 h-px bg-gray-200" />
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleSignup} className="space-y-4">
+                {/* First + Last name row */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1.5">First name</label>
+                    <input
+                      type="text" value={firstName} onChange={e => setFirstName(e.target.value)}
+                      required placeholder="Alex" autoComplete="given-name"
+                      className="w-full px-3.5 py-3 text-sm rounded-xl border outline-none transition-all"
+                      style={{ borderColor: '#E5E7EB', fontFamily: 'inherit' }}
+                      onFocus={e => (e.target.style.borderColor = '#185FA5')}
+                      onBlur={e => (e.target.style.borderColor = '#E5E7EB')}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Last name</label>
+                    <input
+                      type="text" value={lastName} onChange={e => setLastName(e.target.value)}
+                      required placeholder="Chen" autoComplete="family-name"
+                      className="w-full px-3.5 py-3 text-sm rounded-xl border outline-none transition-all"
+                      style={{ borderColor: '#E5E7EB', fontFamily: 'inherit' }}
+                      onFocus={e => (e.target.style.borderColor = '#185FA5')}
+                      onBlur={e => (e.target.style.borderColor = '#E5E7EB')}
+                    />
+                  </div>
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5">Email address</label>
+                  <input
+                    type="email" value={email} onChange={e => setEmail(e.target.value)}
+                    required placeholder="alex@email.com" autoComplete="email"
+                    className="w-full px-3.5 py-3 text-sm rounded-xl border outline-none transition-all"
+                    style={{ borderColor: '#E5E7EB', fontFamily: 'inherit' }}
+                    onFocus={e => (e.target.style.borderColor = '#185FA5')}
+                    onBlur={e => (e.target.style.borderColor = '#E5E7EB')}
+                  />
+                </div>
+
+                {/* Password */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5">Password</label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password} onChange={e => setPassword(e.target.value)}
+                      required minLength={8} placeholder="At least 8 characters"
+                      autoComplete="new-password"
+                      className="w-full px-3.5 py-3 pr-11 text-sm rounded-xl border outline-none transition-all"
+                      style={{ borderColor: '#E5E7EB', fontFamily: 'inherit' }}
+                      onFocus={e => (e.target.style.borderColor = '#185FA5')}
+                      onBlur={e => (e.target.style.borderColor = '#E5E7EB')}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(v => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Consent checkbox */}
+                <ConsentCheckboxes checked={consentChecked} onChange={handleConsentChange} />
+
+                {/* Error */}
+                {error && (
+                  <div className="text-sm rounded-xl px-4 py-3 font-semibold text-red-700 bg-red-50 border border-red-200">
+                    {error}
+                  </div>
+                )}
+
+                {/* Free trial badge */}
+                <div className="flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 border"
+                  style={{ backgroundColor: '#F0FFF4', borderColor: '#BBF7D0' }}>
+                  <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
+                  <span className="text-sm font-bold text-green-800">
+                    7-day free trial — no credit card required
+                  </span>
+                </div>
+
+                {/* Submit */}
                 <button
-                  type="button"
-                  onClick={() => setShowPassword(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                  tabIndex={-1}
+                  type="submit"
+                  disabled={loading || googleLoading || !consentChecked}
+                  className="w-full py-3.5 rounded-xl text-sm font-black text-white transition-all active:scale-[0.98] disabled:opacity-50 min-h-[50px]"
+                  style={{ backgroundColor: '#185FA5' }}
                 >
-                  {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                  {loading
+                    ? <span className="flex items-center justify-center gap-2"><Spinner light />Creating account…</span>
+                    : 'Create my account →'}
                 </button>
-              </div>
-            </div>
 
-            {/* Error */}
-            {error && (
-              <div className="text-sm rounded-xl px-4 py-3 font-semibold text-red-700 bg-red-50 border border-red-200">
-                {error}
-              </div>
-            )}
+                <p className="text-xs text-center text-gray-400 leading-relaxed">
+                  Your data is stored securely in Australia and never sold to third parties.
+                </p>
+              </form>
 
-            {/* Free trial badge */}
-            <div className="flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 border"
-              style={{ backgroundColor: '#F0FFF4', borderColor: '#BBF7D0' }}>
-              <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
-              <span className="text-sm font-bold text-green-800">
-                7-day free trial — no credit card required
-              </span>
-            </div>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading || googleLoading}
-              className="w-full py-3.5 rounded-xl text-sm font-black text-white transition-all active:scale-[0.98] disabled:opacity-50 min-h-[50px]"
-              style={{ backgroundColor: '#185FA5' }}
-            >
-              {loading
-                ? <span className="flex items-center justify-center gap-2"><Spinner light />Creating account…</span>
-                : 'Create my account →'}
-            </button>
-
-            {/* Legal */}
-            <p className="text-xs text-center text-gray-400 leading-relaxed">
-              By creating an account you agree to our{' '}
-              <Link href="/terms" className="font-semibold text-gray-600 hover:underline">Terms of Service</Link>
-              {' '}and{' '}
-              <Link href="/privacy" className="font-semibold text-gray-600 hover:underline">Privacy Policy</Link>.
-              <br />
-              Your data is stored securely in Australia and never sold to third parties.
-            </p>
-          </form>
-
-          {/* Login link — visible at bottom on mobile where left panel is hidden */}
-          <p className="mt-6 text-center text-sm text-gray-400">
-            Already have an account?{' '}
-            <Link href="/auth/login"
-              className="font-black transition-colors hover:opacity-80"
-              style={{ color: '#185FA5' }}>
-              Sign in →
-            </Link>
-          </p>
+              {/* Login link */}
+              <p className="mt-6 text-center text-sm text-gray-400">
+                Already have an account?{' '}
+                <Link href="/auth/login"
+                  className="font-black transition-colors hover:opacity-80"
+                  style={{ color: '#185FA5' }}>
+                  Sign in →
+                </Link>
+              </p>
+            </>
+          )}
         </div>
       </div>
+
+      {/* Minor consent modal */}
+      {showMinorModal && (
+        <MinorConsentNotice onConfirm={handleMinorConfirm} onCancel={handleMinorCancel} />
+      )}
     </div>
   )
 }

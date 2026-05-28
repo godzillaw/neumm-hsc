@@ -11,6 +11,7 @@ async function getGlobalLeaderboard(userId: string): Promise<LeaderboardEntry[]>
   const { data } = await supabase
     .from('users')
     .select('id, display_name, total_points, streak')
+    .neq('leaderboard_visible', false)   // filter out users who opted out
     .order('total_points', { ascending: false })
     .limit(20)
 

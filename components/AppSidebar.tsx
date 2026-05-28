@@ -46,12 +46,13 @@ function SidebarStats() {
 // ── Nav items ──────────────────────────────────────────────────────────────────
 
 const NAV_ITEMS = [
-  { href: '/dashboard/mission',   label: 'Mission',       icon: '🎯' },
-  { href: '/dashboard/progress',  label: 'Progress',      icon: '📊' },
-  { href: '/practice',            label: 'Practice',      icon: '⚡' },
-  { href: '/exam',                label: 'Exam',          icon: '📝' },
-  { href: '/dashboard/leaderboard', label: 'Leaderboard', icon: '🏆' },
-  { href: '/dashboard/account',   label: 'Account',       icon: '👤' },
+  { href: '/dashboard/mission',           label: 'Mission',          icon: '🎯' },
+  { href: '/dashboard/progress',          label: 'Progress',         icon: '📊' },
+  { href: '/practice',                    label: 'Practice',         icon: '⚡' },
+  { href: '/exam',                        label: 'Exam',             icon: '📝' },
+  { href: '/dashboard/leaderboard',       label: 'Leaderboard',      icon: '🏆' },
+  { href: '/dashboard/account',           label: 'Account',          icon: '👤' },
+  { href: '/dashboard/settings/privacy',  label: 'Privacy Settings', icon: '🔒' },
 ]
 
 // ── Component ──────────────────────────────────────────────────────────────────

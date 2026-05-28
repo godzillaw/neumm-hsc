@@ -52,11 +52,17 @@ export async function middleware(request: NextRequest) {
   if (user) {
     const { data: userRow } = await supabase
       .from('users')
-      .select('tier, trial_end_date')
+      .select('tier, trial_end_date, terms_version, privacy_version')
       .eq('id', user.id)
       .single()
 
-    const raw          = userRow as { tier?: string; trial_end_date?: string | null } | null
+    const raw          = userRow as {
+      tier?: string
+      trial_end_date?: string | null
+      terms_version?: string | null
+      privacy_version?: string | null
+    } | null
+
     const rawTier      = raw?.tier           ?? 'basic_trial'
     const trialEndDate = raw?.trial_end_date ?? null
 
@@ -72,6 +78,28 @@ export async function middleware(request: NextRequest) {
         const url = request.nextUrl.clone()
         url.pathname = '/account/upgrade'
         url.searchParams.set('reason', 'expired')
+        return NextResponse.redirect(url)
+      }
+    }
+
+    // ── 4. Legal version check — only for dashboard/* paths ─────────────────
+    // Skip for /auth/* to avoid redirect loops
+    const isDashboardPath = pathname.startsWith('/dashboard')
+    const isAuthPath      = pathname.startsWith('/auth')
+
+    if (isDashboardPath && !isAuthPath) {
+      const currentTermsVersion   = process.env.CURRENT_TERMS_VERSION   ?? '1.0'
+      const currentPrivacyVersion = process.env.CURRENT_PRIVACY_VERSION ?? '1.0'
+
+      const userTermsVersion   = raw?.terms_version   ?? null
+      const userPrivacyVersion = raw?.privacy_version ?? null
+
+      const termsOutdated   = !userTermsVersion   || userTermsVersion   !== currentTermsVersion
+      const privacyOutdated = !userPrivacyVersion || userPrivacyVersion !== currentPrivacyVersion
+
+      if (termsOutdated || privacyOutdated) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/auth/reaccept'
         return NextResponse.redirect(url)
       }
     }

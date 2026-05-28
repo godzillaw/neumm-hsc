@@ -44,14 +44,22 @@ export default async function PracticePage({
     )
   }
 
-  // Fetch year_group so PracticeSession can pass it to generate-questions
+  // Fetch year_group + AI disclosure status
   const supabase = createSupabaseServerClient()
-  const { data: profile } = await supabase
-    .from('student_profiles')
-    .select('year_group')
-    .eq('user_id', user.id)
-    .single()
-  const yearGroup = (profile as { year_group?: string } | null)?.year_group ?? 'year_12'
+  const [profileData, userData] = await Promise.all([
+    supabase
+      .from('student_profiles')
+      .select('year_group')
+      .eq('user_id', user.id)
+      .single(),
+    supabase
+      .from('users')
+      .select('ai_disclosure_dismissed')
+      .eq('id', user.id)
+      .single(),
+  ])
+  const yearGroup = (profileData.data as { year_group?: string } | null)?.year_group ?? 'year_12'
+  const aiDisclosureDismissed = (userData.data as { ai_disclosure_dismissed?: boolean } | null)?.ai_disclosure_dismissed ?? false
 
   const sessionId = await createPracticeSession(user.id)
 
@@ -81,6 +89,7 @@ export default async function PracticePage({
           questionsToday={access.questionsToday}
           isTrial={access.isTrial}
           dailyLimit={access.dailyLimit}
+          aiDisclosureDismissed={aiDisclosureDismissed}
         />
       </div>
       <MobileBottomNav />

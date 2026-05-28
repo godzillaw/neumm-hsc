@@ -5,28 +5,48 @@ import { createClient }              from '@supabase/supabase-js'
  * POST /api/auth/signup
  *
  * Creates the user via Supabase Admin API (email pre-confirmed — no
- * verification email).  Returns { success: true } and lets the browser
- * call signInWithPassword() via createBrowserClient, which is the exact
- * same code path as a normal login and reliably writes session cookies to
- * document.cookie.
+ * verification email). Saves compliance fields to the users table.
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json() as { email: string; password: string; displayName: string }
-    const { email, password, displayName } = body
+    const body = await request.json() as {
+      email: string
+      password: string
+      displayName: string
+      birthYear?: number | null
+      isMinor?: boolean
+      termsAcceptedAt?: string
+      termsVersion?: string
+      privacyAcceptedAt?: string
+      privacyVersion?: string
+      minorGuardianConfirmed?: boolean | null
+    }
+
+    const {
+      email, password, displayName,
+      birthYear, isMinor,
+      termsAcceptedAt, termsVersion,
+      privacyAcceptedAt, privacyVersion,
+      minorGuardianConfirmed,
+    } = body
 
     if (!email || !password) {
       return NextResponse.json({ error: 'Email and password are required.' }, { status: 400 })
     }
 
-    // ── 1. Create user via Admin API (email pre-confirmed) ───────────────────
+    // ── 1. Capture IP for consent logging ────────────────────────────────────
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+             ?? request.headers.get('x-real-ip')
+             ?? null
+
+    // ── 2. Create user via Admin API (email pre-confirmed) ───────────────────
     const admin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
       { auth: { autoRefreshToken: false, persistSession: false } },
     )
 
-    const { error: createErr } = await admin.auth.admin.createUser({
+    const { data: newUser, error: createErr } = await admin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
@@ -37,10 +57,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: createErr.message }, { status: 400 })
     }
 
-    // ── 2. User created — return success so the browser can sign in ───────────
-    // The browser will call signInWithPassword() using createBrowserClient,
-    // which is the SAME code path as a normal login and reliably writes session
-    // cookies to document.cookie. No server-side cookie handoff needed.
+    // ── 3. Save compliance fields to users table ──────────────────────────────
+    if (newUser?.user?.id) {
+      const complianceUpdate: Record<string, unknown> = {}
+
+      if (birthYear != null)              complianceUpdate.birth_year              = birthYear
+      if (isMinor != null)                complianceUpdate.is_minor                = isMinor
+      if (termsAcceptedAt)                complianceUpdate.terms_accepted_at        = termsAcceptedAt
+      if (termsVersion)                   complianceUpdate.terms_version            = termsVersion
+      if (privacyAcceptedAt)              complianceUpdate.privacy_accepted_at      = privacyAcceptedAt
+      if (privacyVersion)                 complianceUpdate.privacy_version          = privacyVersion
+      if (ip)                             complianceUpdate.consent_ip               = ip
+      if (minorGuardianConfirmed != null) complianceUpdate.minor_guardian_confirmed = minorGuardianConfirmed
+
+      if (Object.keys(complianceUpdate).length > 0) {
+        const { error: updateErr } = await admin
+          .from('users')
+          .update(complianceUpdate)
+          .eq('id', newUser.user.id)
+
+        if (updateErr) {
+          // Non-fatal — log but don't fail signup
+          console.warn('[POST /api/auth/signup] compliance update failed:', updateErr.message)
+        }
+      }
+    }
+
+    // ── 4. User created — return success so the browser can sign in ──────────
     return NextResponse.json({ success: true })
 
   } catch (err) {

@@ -9,6 +9,7 @@ import { logLearningEvent }                           from '@/lib/actions/events
 import { awardQuestionPoints, checkAndAwardStageCompletion } from '@/lib/actions/gamification'
 import { findStage }                                  from '@/lib/curriculum'
 import { POINTS }                                     from '@/lib/gamification-constants'
+import AIDisclosureBanner                              from '@/components/tutor/AIDisclosureBanner'
 import WorkingInput                                   from '@/components/WorkingInput'
 import MathText                                        from '@/components/MathText'
 import DiagramRenderer, { extractDiagramSpec }         from '@/components/DiagramRenderer'
@@ -761,6 +762,7 @@ export default function PracticeSession({
   questionsToday  = 0,
   isTrial         = false,
   dailyLimit      = -1,
+  aiDisclosureDismissed = false,
 }: {
   userId:       string
   sessionId:    string
@@ -771,6 +773,7 @@ export default function PracticeSession({
   questionsToday?: number
   isTrial?:        boolean
   dailyLimit?:     number
+  aiDisclosureDismissed?: boolean
 }) {
   const router = useRouter()
   const [phase,          setPhase]          = useState<Phase>('loading')
@@ -779,6 +782,7 @@ export default function PracticeSession({
   const [result,         setResult]         = useState<SubmitResult | null>(null)
   const [hintUsed,       setHintUsed]       = useState(false)
   const [hintCount,      setHintCount]      = useState(0)
+  const [showAIDisclosure, setShowAIDisclosure] = useState(!aiDisclosureDismissed)
   const [sessionId]                         = useState(initialSessionId)
   const [sessionCount,   setSessionCount]   = useState(0)
   const [elapsed,        setElapsed]        = useState(0)
@@ -1229,9 +1233,9 @@ export default function PracticeSession({
             </div>
             <div className="px-4 sm:px-6 py-5 flex flex-col sm:flex-row gap-4">
               {[
-                { id: 'basic', name: 'Basic', price: '$29', period: '/mo', color: '#185FA5',
+                { id: 'basic', name: 'Basic', price: '$29.00', period: '/month (GST incl.)', color: '#185FA5',
                   features: ['30 questions per day', 'AI hints, concept explainer & tutor chat', 'AI step-by-step marking', 'Mission roadmap & XP', 'Adaptive difficulty', 'Streak tracking'] },
-                { id: 'pro',   name: 'Pro',   price: '$49', period: '/mo', color: '#7C3AED', badge: 'Most popular',
+                { id: 'pro',   name: 'Pro',   price: '$49.00', period: '/month (GST incl.)', color: '#7C3AED', badge: 'Most popular',
                   features: ['Unlimited questions', 'Mission roadmap & XP', 'Adaptive difficulty', 'Full AI tutor', 'Streak tracking', 'Priority support'] },
               ].map(plan => (
                 <div key={plan.id} className="flex-1 rounded-2xl border-2 p-5 flex flex-col relative"
@@ -1549,6 +1553,14 @@ export default function PracticeSession({
               )}
             </div>
           </div>
+        )}
+
+        {/* AI Disclosure Banner — shown before first AI interaction */}
+        {showAIDisclosure && (
+          <AIDisclosureBanner
+            userId={userId}
+            onDismiss={() => setShowAIDisclosure(false)}
+          />
         )}
 
         {/* Action buttons */}

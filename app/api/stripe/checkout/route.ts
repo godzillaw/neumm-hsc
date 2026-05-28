@@ -120,6 +120,7 @@ export async function POST(request: Request) {
       success_url:          `${origin}${basePath}/dashboard?upgraded=1`,
       cancel_url:           `${origin}${basePath}/account/upgrade?cancelled=1`,
       metadata:             { user_id: user.id },
+      automatic_tax:        { enabled: true },
       custom_text: {
         submit: {
           message: planName && PLAN_COPY[planName]
