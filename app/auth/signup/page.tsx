@@ -157,9 +157,11 @@ export default function SignupPage() {
             </a>{' '}
             if this is an error.
           </p>
-          <Link href="/auth/signup" style={{ color: '#185FA5', fontWeight: 700, fontSize: 14 }}>
+          <button
+            onClick={() => setUnder13(false)}
+            style={{ color: '#185FA5', fontWeight: 700, fontSize: 14, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
             ← Back to sign up
-          </Link>
+          </button>
         </div>
       </div>
     )
