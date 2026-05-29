@@ -115,12 +115,14 @@ export default function SignupPage() {
     }
 
     const supabase = createSupabaseBrowserClient()
-    const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password })
+    const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({ email, password })
 
-    if (signInErr) {
-      setError('Account created! Please sign in below.')
-      setLoading(false)
-      window.location.href = `${BASE}/auth/login`
+    // Supabase can return { session: null, error: null } when email confirmation
+    // is required — check both the error AND that a session was actually issued.
+    if (signInErr || !signInData.session) {
+      // Account is created; auto sign-in failed (email confirmation or brief
+      // propagation delay). Send to login page with a success notice.
+      window.location.href = `${BASE}/auth/login?signup=success`
       return
     }
 
