@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense }   from 'react'
 import Link                                from 'next/link'
 import { useRouter, useSearchParams }      from 'next/navigation'
 import { signInWithEmail, signInWithGoogle } from '@/lib/auth'
+import { createSupabaseBrowserClient }       from '@/lib/supabase-browser'
 
 // ─── Left-panel highlights ─────────────────────────────────────────────────────
 const HIGHLIGHTS = [
@@ -66,7 +67,7 @@ function LoginPageInner() {
     e.preventDefault()
     setError(null); setLoading(true)
 
-    const { error: err } = await signInWithEmail(email, password)
+    const { error: err, data } = await signInWithEmail(email, password)
     if (err) {
       // Supabase returns "Invalid login credentials" for both wrong password
       // and non-existent accounts — surface a clearer message
@@ -78,7 +79,20 @@ function LoginPageInner() {
       return
     }
 
-    router.push('/dashboard')
+    // Route to onboarding if the user hasn't completed it yet,
+    // otherwise go straight to the dashboard.
+    const supabase = createSupabaseBrowserClient()
+    const { data: profile } = await supabase
+      .from('student_profiles')
+      .select('year_group')
+      .eq('user_id', data.user!.id)
+      .maybeSingle()
+
+    if (profile?.year_group) {
+      router.push('/dashboard')
+    } else {
+      router.push('/onboarding/year')
+    }
     router.refresh()
   }
 

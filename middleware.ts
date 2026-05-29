@@ -41,22 +41,43 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // ── 2. Authenticated on auth pages → send to dashboard ────────────────────
-  if (user && (pathname.startsWith('/auth/login') || pathname.startsWith('/auth/signup'))) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
-    return NextResponse.redirect(url)
-  }
-
-  // ── 3. Tier-based route control (authenticated users only) ─────────────────
+  // ── 2-4. Authenticated user checks ────────────────────────────────────────
   if (user) {
-    const { data: userRow } = await supabase
-      .from('users')
-      .select('tier, trial_end_date, terms_version, privacy_version')
-      .eq('id', user.id)
-      .single()
+    // Run both DB queries in parallel to keep latency low
+    const [{ data: userRow }, { data: profile }] = await Promise.all([
+      supabase.from('users')
+        .select('tier, trial_end_date, terms_version, privacy_version')
+        .eq('id', user.id)
+        .single(),
+      supabase.from('student_profiles')
+        .select('year_group')
+        .eq('user_id', user.id)
+        .maybeSingle(),
+    ])
 
-    const raw          = userRow as {
+    const hasCompletedOnboarding = !!(profile as { year_group?: string | null } | null)?.year_group
+
+    // ── 2. Authenticated on auth pages → route based on onboarding status ─────
+    if (pathname.startsWith('/auth/login') || pathname.startsWith('/auth/signup')) {
+      const url = request.nextUrl.clone()
+      url.pathname = hasCompletedOnboarding ? '/dashboard' : '/onboarding/year'
+      return NextResponse.redirect(url)
+    }
+
+    // ── 2.5. No onboarding completed → block dashboard / practice / exam ──────
+    // Redirect to onboarding so the user completes year-group selection first.
+    const requiresOnboarding =
+      pathname.startsWith('/dashboard') ||
+      pathname.startsWith('/practice')  ||
+      pathname.startsWith('/exam')
+    if (requiresOnboarding && !hasCompletedOnboarding) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/onboarding/year'
+      return NextResponse.redirect(url)
+    }
+
+    // ── 3. Tier-based route control ────────────────────────────────────────────
+    const raw = userRow as {
       tier?: string
       trial_end_date?: string | null
       terms_version?: string | null
