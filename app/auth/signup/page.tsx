@@ -128,7 +128,12 @@ export default function SignupPage() {
   }
 
   async function handleGoogle() {
-    setError(null); setGoogleLoading(true)
+    setError(null)
+    if (!consentChecked) {
+      setError('Please agree to the Terms and Privacy Policy before continuing.')
+      return
+    }
+    setGoogleLoading(true)
     const { error: err } = await signInWithGoogle('/onboarding/year')
     if (err) { setError(err.message); setGoogleLoading(false) }
   }
@@ -150,8 +155,8 @@ export default function SignupPage() {
             </a>{' '}
             if this is an error.
           </p>
-          <Link href="/auth/login" style={{ color: '#185FA5', fontWeight: 700, fontSize: 14 }}>
-            ← Back to login
+          <Link href="/auth/signup" style={{ color: '#185FA5', fontWeight: 700, fontSize: 14 }}>
+            ← Back to sign up
           </Link>
         </div>
       </div>
@@ -280,7 +285,7 @@ export default function SignupPage() {
               {/* Google */}
               <button
                 onClick={handleGoogle}
-                disabled={googleLoading || loading}
+                disabled={googleLoading || loading || !consentChecked}
                 className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl text-sm font-bold border transition-all disabled:opacity-50 mb-5 min-h-[48px]"
                 style={{ borderColor: '#E5E7EB', backgroundColor: '#FAFAFA', color: '#374151' }}
               >

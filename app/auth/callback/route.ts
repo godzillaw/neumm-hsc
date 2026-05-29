@@ -72,13 +72,33 @@ export async function GET(request: NextRequest) {
   }
 
   // ── Decide destination ──────────────────────────────────────────────────────
-  // New Google user → no profile row yet → send to onboarding.
+  // New Google user from signup page  → no profile yet → send to onboarding.
   // Returning user who completed onboarding → send to dashboard.
+  // New Google user from login page  → no profile → BLOCK (not signed up).
+  const next = searchParams.get('next') ?? '/dashboard'
+
   const { data: profile } = await supabase
     .from('student_profiles')
     .select('year_group')
     .eq('user_id', data.user.id)
     .maybeSingle()
+
+  // ── Block new Google accounts coming through the login page ────────────────
+  // If next=/dashboard the user clicked "Continue with Google" on the LOGIN
+  // page.  A legitimate returning user will already have a student_profiles
+  // row (they completed onboarding).  If there is no row, this Google account
+  // was never registered through Neumm's signup flow — reject them and tell
+  // them to sign up first.  We intentionally do NOT attach the pendingCookies
+  // so the browser never receives a session, even though the code was exchanged.
+  const cameFromLoginPage = !next.includes('onboarding')
+  if (cameFromLoginPage && !profile?.year_group) {
+    const url = new URL(`${BASE}/auth/login`, request.url)
+    url.searchParams.set(
+      'error',
+      encodeURIComponent('No account found for this Google account. Please sign up first.')
+    )
+    return NextResponse.redirect(url)
+  }
 
   const dest = profile?.year_group ? `${BASE}/dashboard` : `${BASE}/onboarding/year`
 

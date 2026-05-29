@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense }   from 'react'
 import Link                                from 'next/link'
 import { useRouter, useSearchParams }      from 'next/navigation'
 import { signInWithEmail, signInWithGoogle } from '@/lib/auth'
+import { createSupabaseBrowserClient }     from '@/lib/supabase-browser'
 
 // ─── Left-panel highlights ─────────────────────────────────────────────────────
 const HIGHLIGHTS = [
@@ -58,9 +59,50 @@ function LoginPageInner() {
   async function handleEmailLogin(e: React.FormEvent) {
     e.preventDefault()
     setError(null); setLoading(true)
+
     const { error: err } = await signInWithEmail(email, password)
-    if (err) { setError(err.message); setLoading(false) }
-    else { router.push('/dashboard'); router.refresh() }
+    if (err) {
+      // Supabase returns "Invalid login credentials" for wrong password AND
+      // for non-existent accounts — give a clearer hint to sign up
+      const msg = err.message.toLowerCase().includes('invalid login credentials')
+        ? 'No account found with those details. Please sign up first or check your password.'
+        : err.message
+      setError(msg)
+      setLoading(false)
+      return
+    }
+
+    // Belt-and-suspenders: verify this user went through the proper signup flow
+    // (i.e. has a student_profiles row from completing onboarding, OR a users
+    // row with terms_version set).  An account that bypassed signup won't have
+    // either.
+    const supabase = createSupabaseBrowserClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { data: profile } = await supabase
+        .from('student_profiles')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      const { data: userRow } = await supabase
+        .from('users')
+        .select('terms_version')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      const hasCompletedSignup = !!profile || !!(userRow as { terms_version?: string | null } | null)?.terms_version
+
+      if (!hasCompletedSignup) {
+        await supabase.auth.signOut()
+        setError('No account found. Please sign up first to access Neumm.')
+        setLoading(false)
+        return
+      }
+    }
+
+    router.push('/dashboard')
+    router.refresh()
   }
 
   async function handleGoogleLogin() {
