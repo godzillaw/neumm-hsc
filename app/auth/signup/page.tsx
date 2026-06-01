@@ -106,22 +106,41 @@ export default function SignupPage() {
       }),
     })
 
-    const data = await res.json() as { error?: string; success?: boolean }
+    const apiData = await res.json() as {
+      error?: string
+      success?: boolean
+      access_token?: string
+      refresh_token?: string
+    }
 
-    if (!res.ok || data.error) {
-      setError(data.error ?? 'Signup failed. Please try again.')
+    if (!res.ok || apiData.error) {
+      setError(apiData.error ?? 'Signup failed. Please try again.')
       setLoading(false)
       return
     }
 
     const supabase = createSupabaseBrowserClient()
-    const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({ email, password })
 
-    // Supabase can return { session: null, error: null } when email confirmation
-    // is required — check both the error AND that a session was actually issued.
+    // ── Fast path: server returned session tokens ────────────────────────────
+    // The API route signs in server-side (no race condition) and returns the
+    // tokens. We call setSession() to establish the session in the browser,
+    // then navigate directly to onboarding.
+    if (apiData.access_token && apiData.refresh_token) {
+      const { error: setErr } = await supabase.auth.setSession({
+        access_token:  apiData.access_token,
+        refresh_token: apiData.refresh_token,
+      })
+      if (!setErr) {
+        window.location.href = `${BASE}/onboarding/year`
+        return
+      }
+    }
+
+    // ── Fallback: try client-side signIn (in case server sign-in failed) ─────
+    const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({ email, password })
     if (signInErr || !signInData.session) {
-      // Account is created; auto sign-in failed (email confirmation or brief
-      // propagation delay). Send to login page with a success notice.
+      // Account is created; auto sign-in failed. Send to login page with a
+      // success notice so the user knows to sign in manually.
       window.location.href = `${BASE}/auth/login?signup=success`
       return
     }

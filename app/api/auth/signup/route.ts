@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient }              from '@supabase/supabase-js'
 
+// Used to sign the user in server-side immediately after creation so we can
+// return session tokens — avoids the client-side race between Admin user
+// creation and a subsequent signInWithPassword call.
+function createAnonClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } },
+  )
+}
+
 /**
  * POST /api/auth/signup
  *
@@ -83,8 +94,22 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // ── 4. User created — return success so the browser can sign in ──────────
-    return NextResponse.json({ success: true })
+    // ── 4. Sign in server-side and return session tokens ────────────────────
+    // Doing this here (same request, same server process) avoids the
+    // race condition where a client-side signInWithPassword call fires
+    // before the new user row has fully propagated.
+    const anon = createAnonClient()
+    const { data: signInData } = await anon.auth.signInWithPassword({ email, password })
+
+    return NextResponse.json({
+      success: true,
+      ...(signInData?.session
+        ? {
+            access_token:  signInData.session.access_token,
+            refresh_token: signInData.session.refresh_token,
+          }
+        : {}),
+    })
 
   } catch (err) {
     console.error('[POST /api/auth/signup] unexpected error:', err)
