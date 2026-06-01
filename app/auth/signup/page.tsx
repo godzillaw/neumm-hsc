@@ -88,64 +88,50 @@ export default function SignupPage() {
     const displayName = `${firstName} ${lastName}`.trim()
     const BASE = '/math-nsw/app'
 
-    const now = new Date().toISOString()
-    const res = await fetch(`${BASE}/api/auth/signup`, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({
-        email,
-        password,
-        displayName,
-        birthYear,
-        isMinor,
-        termsAcceptedAt:        now,
-        termsVersion:           '1.0',
-        privacyAcceptedAt:      now,
-        privacyVersion:         '1.0',
-        minorGuardianConfirmed: isMinor ? true : null,
-      }),
-    })
-
-    const apiData = await res.json() as {
-      error?: string
-      success?: boolean
-      access_token?: string
-      refresh_token?: string
-    }
-
-    if (!res.ok || apiData.error) {
-      setError(apiData.error ?? 'Signup failed. Please try again.')
-      setLoading(false)
-      return
-    }
-
-    const supabase = createSupabaseBrowserClient()
-
-    // ── Fast path: server returned session tokens ────────────────────────────
-    // The API route signs in server-side (no race condition) and returns the
-    // tokens. We call setSession() to establish the session in the browser,
-    // then navigate directly to onboarding.
-    if (apiData.access_token && apiData.refresh_token) {
-      const { error: setErr } = await supabase.auth.setSession({
-        access_token:  apiData.access_token,
-        refresh_token: apiData.refresh_token,
+    try {
+      const now = new Date().toISOString()
+      const res = await fetch(`${BASE}/api/auth/signup`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          email,
+          password,
+          displayName,
+          birthYear,
+          isMinor,
+          termsAcceptedAt:        now,
+          termsVersion:           '1.0',
+          privacyAcceptedAt:      now,
+          privacyVersion:         '1.0',
+          minorGuardianConfirmed: isMinor ? true : null,
+        }),
       })
-      if (!setErr) {
-        window.location.href = `${BASE}/onboarding/year`
+
+      const apiData = await res.json() as { error?: string; success?: boolean }
+
+      if (!res.ok || apiData.error) {
+        setError(apiData.error ?? 'Signup failed. Please try again.')
+        setLoading(false)
         return
       }
-    }
 
-    // ── Fallback: try client-side signIn (in case server sign-in failed) ─────
-    const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({ email, password })
-    if (signInErr || !signInData.session) {
-      // Account is created; auto sign-in failed. Send to login page with a
-      // success notice so the user knows to sign in manually.
-      window.location.href = `${BASE}/auth/login?signup=success`
-      return
-    }
+      // Account created — sign in client-side so the browser has a session
+      const supabase = createSupabaseBrowserClient()
+      const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({ email, password })
 
-    window.location.href = `${BASE}/onboarding/year`
+      if (signInErr || !signInData.session) {
+        console.error('[signup] signInWithPassword failed:', signInErr?.message, signInErr?.status)
+        // Account was created; auto sign-in failed. User can sign in manually.
+        window.location.href = `${BASE}/auth/login?signup=success`
+        return
+      }
+
+      window.location.href = `${BASE}/onboarding/year`
+    } catch (err) {
+      console.error('[signup] unexpected error:', err)
+      setError('Something went wrong. Please try again.')
+      setLoading(false)
+    }
   }
 
   async function handleGoogle() {
