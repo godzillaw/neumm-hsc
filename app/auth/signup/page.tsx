@@ -107,7 +107,7 @@ export default function SignupPage() {
         }),
       })
 
-      const apiData = await res.json() as { error?: string; success?: boolean }
+      const apiData = await res.json() as { error?: string; success?: boolean; serverSignIn?: boolean }
 
       if (!res.ok || apiData.error) {
         setError(apiData.error ?? 'Signup failed. Please try again.')
@@ -115,13 +115,19 @@ export default function SignupPage() {
         return
       }
 
-      // Account created — sign in client-side so the browser has a session
+      // Server set session cookies on this response — browser stored them
+      // before this code ran. Navigate directly; middleware will see the session.
+      if (apiData.serverSignIn) {
+        window.location.href = `${BASE}/onboarding/year`
+        return
+      }
+
+      // Server sign-in failed (rare) — try client-side as fallback
       const supabase = createSupabaseBrowserClient()
       const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({ email, password })
 
       if (signInErr || !signInData.session) {
-        console.error('[signup] signInWithPassword failed:', signInErr?.message, signInErr?.status)
-        // Account was created; auto sign-in failed. User can sign in manually.
+        console.error('[signup] fallback signInWithPassword failed:', signInErr?.message, signInErr?.status)
         window.location.href = `${BASE}/auth/login?signup=success`
         return
       }

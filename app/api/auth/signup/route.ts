@@ -1,22 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient }              from '@supabase/supabase-js'
-
-// Used to sign the user in server-side immediately after creation so we can
-// return session tokens — avoids the client-side race between Admin user
-// creation and a subsequent signInWithPassword call.
-function createAnonClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } },
-  )
-}
+import { createServerClient }        from '@supabase/ssr'
 
 /**
  * POST /api/auth/signup
  *
  * Creates the user via Supabase Admin API (email pre-confirmed — no
- * verification email). Saves compliance fields to the users table.
+ * verification email). Signs in server-side and attaches session cookies
+ * directly to the 200 JSON response so the browser has a valid session
+ * before the client navigates to /onboarding/year.
+ *
+ * WHY server-side sign-in + Set-Cookie on the response body (not a redirect):
+ *   Vercel's CDN silently drops Set-Cookie headers on 302 redirect responses.
+ *   A 200 JSON response with Set-Cookie headers is processed by the browser
+ *   before any JS navigation fires, guaranteeing the middleware can read the
+ *   session on the very next request. Same pattern used in /auth/callback.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -88,28 +86,41 @@ export async function POST(request: NextRequest) {
           .eq('id', newUser.user.id)
 
         if (updateErr) {
-          // Non-fatal — log but don't fail signup
           console.warn('[POST /api/auth/signup] compliance update failed:', updateErr.message)
         }
       }
     }
 
-    // ── 4. Sign in server-side and return session tokens ────────────────────
-    // Doing this here (same request, same server process) avoids the
-    // race condition where a client-side signInWithPassword call fires
-    // before the new user row has fully propagated.
-    const anon = createAnonClient()
-    const { data: signInData } = await anon.auth.signInWithPassword({ email, password })
+    // ── 4. Sign in server-side and set session cookies on the response ────────
+    // Collect cookies written by the sign-in so we can attach them to the
+    // response. The browser will store them before any JS navigation fires.
+    const pendingCookies: { name: string; value: string; options: Record<string, unknown> }[] = []
 
-    return NextResponse.json({
-      success: true,
-      ...(signInData?.session
-        ? {
-            access_token:  signInData.session.access_token,
-            refresh_token: signInData.session.refresh_token,
-          }
-        : {}),
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll: () => request.cookies.getAll(),
+          setAll: (list) => list.forEach(c => pendingCookies.push(c)),
+        },
+      },
+    )
+
+    const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({ email, password })
+
+    if (signInErr || !signInData.session) {
+      console.warn('[POST /api/auth/signup] server signIn failed:', signInErr?.message)
+      // User was created — client will attempt sign-in as fallback
+      return NextResponse.json({ success: true, serverSignIn: false })
+    }
+
+    const response = NextResponse.json({ success: true, serverSignIn: true })
+    pendingCookies.forEach(({ name, value, options }) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      response.cookies.set(name, value, options as any)
     })
+    return response
 
   } catch (err) {
     console.error('[POST /api/auth/signup] unexpected error:', err)
