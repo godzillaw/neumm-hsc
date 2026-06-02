@@ -2884,140 +2884,211 @@ const YEAR_11_EXT1_MISSION: Mission = {
         },
       ],
     },
-    // ── Chapter 12: Combinatorics ─────────────────────────────────────────────
+    // ── Chapter 17: Combinatorics (Cambridge Extension 1 Ch 17) ──────────────
     {
       levelId: 'y11-ext1-l12', levelNum: 12, title: 'Combinatorics', emoji: '🎯', color: '#F59E0B',
       stages: [
+        // 17A ─────────────────────────────────────────────────────────────────
         {
-          stageId: 'y11-ext1-l12-s12a', code: '12A', title: 'Counting Using Multiplication and Addition',
+          stageId: 'y11-ext1-l12-s12a', code: '17A', title: 'Factorial Notation',
           outcomeIds: ['MA-PROB-03'], topicIds: ['MA-PROB-03'],
-          explanation: 'Multiplication principle: if task 1 has m ways and task 2 has n ways, together they have m×n ways. Addition principle: if events are mutually exclusive, add the counts. Use for basic counting problems.',
+          explanation: 'n! = n × (n−1) × … × 2 × 1, with 0! = 1. Factorials count all arrangements of n distinct objects. Use the multiplication principle: if task 1 has m ways and task 2 has n ways, combined they have m × n ways.',
           content: [
-            { type: 'text', body: 'Combinatorics is the mathematics of counting. Before you can count arrangements (permutations) or selections (combinations), you need two fundamental principles: multiplication (for sequential choices) and addition (for mutually exclusive alternatives).' },
+            { type: 'text', body: 'Combinatorics is the mathematics of counting arrangements and selections. The factorial function is the foundational tool: n! (read "n factorial") counts the number of ways to arrange n distinct objects in a row.' },
+            { type: 'formula', latex: 'n! = n \\times (n-1) \\times (n-2) \\times \\cdots \\times 2 \\times 1', label: 'Factorial definition' },
+            { type: 'formula', latex: '0! = 1', label: 'Special case (by convention)' },
             { type: 'rules', heading: 'Multiplication Principle', items: [
-              'If a task has two stages, with m ways to do stage 1 and n ways to do stage 2, the total number of ways to do BOTH is m × n.',
-              'This extends to any number of stages: multiply all the choices together.',
-              'Key requirement: the choices must be INDEPENDENT (choice at stage 1 does not affect stage 2 options... or if it does, account for the dependency in each stage count).',
-              'Example: 4 shirts × 3 pants = 12 outfits.',
+              'If a task is done in stages, with m ways for stage 1 and n ways for stage 2 (independently), the total number of ways to complete BOTH stages is m × n.',
+              'Extends to any number of stages: multiply all stage-counts together.',
+              '"AND" signals multiplication: choosing a shirt AND pants = (shirt choices) × (pants choices).',
+              '"OR" signals addition: travelling by bus OR train = (bus routes) + (train routes).',
             ]},
-            { type: 'rules', heading: 'Addition Principle', items: [
-              'If a task can be done in m ways OR n ways (but not both simultaneously), the total is m + n.',
-              'The events must be MUTUALLY EXCLUSIVE (cannot occur simultaneously).',
-              'Example: choosing a vowel (5 ways) OR a digit (10 ways) from {letters, digits}: 5 + 10 = 15.',
+            { type: 'table', headers: ['n', 'n!'], rows: [
+              ['1', '1'],
+              ['2', '2'],
+              ['3', '6'],
+              ['4', '24'],
+              ['5', '120'],
+              ['6', '720'],
+              ['10', '3 628 800'],
             ]},
-            { type: 'example', question: 'How many 3-digit numbers (no leading zero) are there that use only digits 1–5?', steps: [
-              'Hundreds digit: 5 choices (1–5).',
-              'Tens digit: 5 choices (repetition allowed).',
-              'Units digit: 5 choices.',
-              'Total: 5 × 5 × 5 = 125.',
+            { type: 'example', question: 'In how many ways can 5 books be arranged on a shelf?', steps: [
+              '5 choices for position 1, then 4 for position 2, then 3, 2, 1.',
+              'Total = 5! = 5 × 4 × 3 × 2 × 1 = 120.',
             ]},
-            { type: 'example', question: 'A student can travel to school by bus (3 routes), train (2 routes), or car (1 route). How many options?', steps: [
-              'The methods are mutually exclusive (you choose one method).',
-              'Total: 3 + 2 + 1 = 6 options.',
+            { type: 'example', question: 'A student travels by bus (3 routes) OR train (2 routes) to school. How many options?', steps: [
+              'The methods are mutually exclusive (choose one OR the other).',
+              'Total = 3 + 2 = 5 options.',
             ]},
-            { type: 'tip', body: '"AND" → multiply. "OR" → add. This is the most reliable memory device for the two counting principles. When in doubt, ask: "Are the choices made sequentially (AND), or are they alternatives (OR)?"' },
+            { type: 'tip', body: 'Factorials grow extremely fast: 13! > 6 billion. When simplifying expressions like 8!/6!, cancel common factors: 8!/6! = 8 × 7 = 56. Never fully expand large factorials.' },
           ],
         },
+        // 17B ─────────────────────────────────────────────────────────────────
         {
-          stageId: 'y11-ext1-l12-s12b', code: '12B', title: 'Permutations',
+          stageId: 'y11-ext1-l12-s12b', code: '17B', title: 'Ordered Selections With and Without Repetition',
           outcomeIds: ['MA-PROB-03'], topicIds: ['MA-PROB-03'],
-          explanation: 'A permutation is an ordered arrangement. ⁿPᵣ = n!/(n−r)! ways to choose r objects from n in order. Special case: n! arrangements of n distinct objects. n! = n × (n−1) × … × 2 × 1.',
+          explanation: 'Without repetition: ⁿPᵣ = n!/(n−r)! — choosing r objects from n in order, no repeats. With repetition: nʳ — each of r positions has n choices independently.',
           content: [
-            { type: 'text', body: 'A permutation is an ORDERED arrangement of objects. The order matters — so "ABC" and "BAC" are different permutations. The factorial function n! counts all orderings of n distinct objects.' },
-            { type: 'formula', latex: 'n! = n \\times (n-1) \\times (n-2) \\times \\cdots \\times 2 \\times 1, \\quad 0! = 1', label: 'Factorial' },
-            { type: 'formula', latex: '^nP_r = \\frac{n!}{(n-r)!} = n(n-1)(n-2)\\cdots(n-r+1)', label: 'Permutations: r objects from n, in order' },
-            { type: 'table', headers: ['Scenario', 'Count'], rows: [
-              ['Arrange all n distinct objects', 'n!'],
-              ['Choose r from n, order matters', 'ⁿPᵣ = n!/(n−r)!'],
-              ['Arrange n objects with p identical of one type, q of another', 'n!/(p!q!)'],
+            { type: 'text', body: 'An ordered selection (arrangement) is one where the ORDER of the chosen objects matters. "ABC" and "BAC" are different ordered selections. There are two cases: without repetition (each object used at most once) and with repetition (objects may be reused).' },
+            { type: 'formula', latex: '^nP_r = \\frac{n!}{(n-r)!} = n(n-1)(n-2)\\cdots(n-r+1)', label: 'Ordered selection WITHOUT repetition: r objects from n' },
+            { type: 'formula', latex: 'n^r', label: 'Ordered selection WITH repetition: r positions, each with n choices' },
+            { type: 'table', headers: ['Scenario', 'Formula', 'Example'], rows: [
+              ['Arrange ALL n distinct objects', 'n!', '5 people in a row: 5! = 120'],
+              ['Choose r from n, order matters, no repeat', 'ⁿPᵣ = n!/(n−r)!', '3-digit code from {A,B,C,D,E}: ⁵P₃ = 60'],
+              ['Choose r from n, order matters, repeats allowed', 'nʳ', 'PIN: 4 digits 0–9 with repeats: 10⁴ = 10 000'],
             ]},
-            { type: 'example', question: 'In how many ways can 5 people be seated in a row?', steps: [
-              'All 5 in all positions: 5! = 120.',
+            { type: 'example', question: 'How many 3-letter codes can be formed from A, B, C, D, E with no repeated letters?', steps: [
+              'Order matters (ABC ≠ BAC), no repetition.',
+              '⁵P₃ = 5!/(5−3)! = 5!/2! = (5 × 4 × 3 × 2!)/(2!) = 5 × 4 × 3 = 60.',
             ]},
-            { type: 'example', question: 'How many 3-letter codes can be formed from the letters A, B, C, D, E (no repetition)?', steps: [
-              '⁵P₃ = 5!/(5−3)! = 5!/2! = 120/2 = 60.',
-              'Equivalently: 5 choices for 1st, 4 for 2nd, 3 for 3rd = 60.',
+            { type: 'example', question: 'How many 4-digit PINs are possible if digits 0–9 may be repeated?', steps: [
+              'Each digit independently has 10 choices.',
+              'Total = 10 × 10 × 10 × 10 = 10⁴ = 10 000.',
             ]},
-            { type: 'tip', body: 'ⁿPᵣ can always be computed as n × (n−1) × (n−2) × … stopping after r factors. This is often faster than computing factorials: ⁸P₃ = 8 × 7 × 6 = 336.' },
+            { type: 'tip', body: 'Key question: "Can the same object appear more than once?" If YES → use nʳ. If NO → use ⁿPᵣ. Also check whether order matters; if not, use combinations (17E).' },
           ],
         },
+        // 17C ─────────────────────────────────────────────────────────────────
         {
-          stageId: 'y11-ext1-l12-s12c', code: '12C', title: 'Permutations with Restrictions',
+          stageId: 'y11-ext1-l12-s12c', code: '17C', title: 'Ordered Selections — Three More Principles',
           outcomeIds: ['MA-PROB-03'], topicIds: ['MA-PROB-03'],
-          explanation: 'Restrictions: (1) fix certain objects in place first, then arrange the rest; (2) treat objects that must be adjacent as a single unit; (3) subtract arrangements that violate the condition from total.',
+          explanation: 'Three strategies for restricted arrangements: (1) fix required objects first, arrange the rest; (2) treat objects that must stay together as a single block; (3) complementary counting — subtract invalid arrangements from the total.',
           content: [
-            { type: 'text', body: 'Restricted permutations require strategic thinking. Rather than inventing a new approach for each problem, learn the three standard strategies and apply the one that matches the restriction type.' },
-            { type: 'rules', heading: 'Three Strategies for Restricted Permutations', items: [
-              'Strategy 1 — Fix then arrange: Place the restricted object(s) in the specified position(s) first, then arrange the rest. Use when certain objects MUST go in specific positions.',
-              'Strategy 2 — Treat as a block: If certain objects MUST stay together, treat them as a single unit, arrange the units, then arrange within the block. Multiply the two counts.',
-              'Strategy 3 — Complementary counting: (Total without restriction) − (Arrangements that VIOLATE the restriction). Use when the restriction is "NOT adjacent" or "NOT in a certain position."',
+            { type: 'text', body: 'Most HSC combinatorics problems involve a restriction. Three standard strategies cover the vast majority of cases. Identifying which strategy applies is the key skill.' },
+            { type: 'rules', heading: 'The Three Principles', items: [
+              'Principle 1 — Fix then arrange: Place objects that must occupy specific positions first, then arrange the remaining objects in the remaining positions.',
+              'Principle 2 — Treat as a block (bundle): Objects that must be adjacent are bundled into one unit. Count arrangements of units, then multiply by the internal arrangements of the block.',
+              'Principle 3 — Complementary counting: Total (unrestricted) − Arrangements that violate the condition. Best for "must NOT be adjacent" or "must NOT be in a position" restrictions.',
             ]},
-            { type: 'example', question: 'In how many ways can 5 people (including Alice) sit in a row if Alice must be in the middle?', steps: [
-              'Strategy 1: Fix Alice in position 3 (middle). Arrange remaining 4 people in the 4 remaining positions: 4! = 24.',
+            { type: 'example', question: 'In how many ways can 5 people sit in a row if Alice must sit in the middle seat?', steps: [
+              'Principle 1: Fix Alice in seat 3. Arrange remaining 4 people in 4 seats.',
+              'Total = 4! = 24.',
             ]},
-            { type: 'example', question: 'In how many ways can 4 men and 3 women sit in a row if the 3 women must sit together?', steps: [
-              'Strategy 2: Treat the 3 women as one block. Now we have 4 men + 1 block = 5 units.',
-              'Arrange 5 units in a row: 5! = 120.',
-              'Within the block, 3 women can be arranged: 3! = 6.',
-              'Total: 120 × 6 = 720.',
+            { type: 'example', question: 'In how many ways can 4 men and 3 women sit in a row if all 3 women must sit together?', steps: [
+              'Principle 2: Bundle the 3 women into one block. Now arrange 5 units (4 men + 1 block).',
+              'Arrangements of 5 units = 5! = 120.',
+              'Women within the block = 3! = 6.',
+              'Total = 120 × 6 = 720.',
             ]},
-            { type: 'example', question: 'In how many ways can 5 people sit in a row if two specific people (A and B) must NOT sit together?', steps: [
-              'Total arrangements: 5! = 120.',
-              'Arrangements where A and B ARE together: treat AB as a block → 4! × 2! = 24 × 2 = 48.',
-              'Arrangements where A and B are NOT together: 120 − 48 = 72.',
+            { type: 'example', question: 'In how many ways can 5 people sit in a row if two particular people (A and B) must NOT sit next to each other?', steps: [
+              'Principle 3: Total arrangements = 5! = 120.',
+              'Arrangements where A and B ARE together: bundle AB as one unit → 4! arrangements × 2 internal = 48.',
+              'Answer = 120 − 48 = 72.',
             ]},
-            { type: 'tip', body: 'For "NOT adjacent" restrictions, always use complementary counting (total minus violating). It is much easier than trying to count the valid arrangements directly.' },
+            { type: 'tip', body: 'Choose Principle 3 whenever the condition is negative ("must NOT"). Direct counting of the valid cases is often complicated; subtracting the violating cases from the total is almost always simpler.' },
           ],
         },
+        // 17D ─────────────────────────────────────────────────────────────────
         {
-          stageId: 'y11-ext1-l12-s12d', code: '12D', title: 'Combinations',
+          stageId: 'y11-ext1-l12-s12d', code: '17D', title: 'Ordered Selections With Identical Elements',
           outcomeIds: ['MA-PROB-03'], topicIds: ['MA-PROB-03'],
-          explanation: "ⁿCᵣ = n!/(r!(n−r)!) counts selections of r from n when order doesn't matter. Key identity: ⁿCᵣ = ⁿC(n−r). \"Choose\" problems use combinations; \"arrange\" problems use permutations.",
+          explanation: 'When some objects are identical, divide out the factorial of each group of identical objects: arrangements = n! ÷ (p! × q! × r! × …), where p, q, r are the counts of each identical type.',
           content: [
-            { type: 'text', body: 'A combination is a SELECTION where order does not matter. Choosing team members {Alice, Bob, Carol} is the same as {Bob, Carol, Alice} — it\'s the same team. Combinations divide out the factorial of the chosen group to eliminate ordering.' },
-            { type: 'formula', latex: '^nC_r = \\binom{n}{r} = \\frac{n!}{r!\\,(n-r)!}', label: 'Combinations: choose r from n (order irrelevant)' },
-            { type: 'rules', heading: 'Key Identities', items: [
-              'ⁿCᵣ = ⁿC(n−r): choosing r to include is the same as choosing (n−r) to exclude.',
+            { type: 'text', body: 'When some of the n objects are identical, many arrangements that look different are actually the same. We correct for this by dividing out the factorials of the identical groups.' },
+            { type: 'formula', latex: '\\text{Arrangements} = \\frac{n!}{p!\\, q!\\, r! \\cdots}', label: 'n objects with p identical of type 1, q of type 2, r of type 3, …' },
+            { type: 'example', question: 'How many different arrangements are there of the letters in the word MISSISSIPPI?', steps: [
+              'Total letters n = 11.',
+              'Identical groups: M×1, I×4, S×4, P×2.',
+              'Arrangements = 11! / (1! × 4! × 4! × 2!) = 39 916 800 / (1 × 24 × 24 × 2) = 34 650.',
+            ]},
+            { type: 'example', question: 'A row of 8 flags consists of 3 red, 3 blue, and 2 white flags (identical within each colour). How many distinct arrangements?', steps: [
+              'n = 8, with 3 identical red, 3 identical blue, 2 identical white.',
+              'Arrangements = 8! / (3! × 3! × 2!) = 40 320 / (6 × 6 × 2) = 40 320 / 72 = 560.',
+            ]},
+            { type: 'example', question: 'How many distinct 7-letter strings can be formed from the letters A, A, A, B, B, C, C?', steps: [
+              'n = 7, with A×3, B×2, C×2.',
+              'Arrangements = 7! / (3! × 2! × 2!) = 5040 / (6 × 2 × 2) = 5040 / 24 = 210.',
+            ]},
+            { type: 'tip', body: 'Always start by listing n (total objects) and identifying each group of identical objects and its count. Check that the counts add to n. Then apply the formula.' },
+          ],
+        },
+        // 17E ─────────────────────────────────────────────────────────────────
+        {
+          stageId: 'y11-ext1-l12-s12e', code: '17E', title: 'Counting Unordered Selections',
+          outcomeIds: ['MA-PROB-03'], topicIds: ['MA-PROB-03'],
+          explanation: "ⁿCᵣ = n!/(r!(n−r)!) counts selections of r from n when order doesn't matter. Key identity: ⁿCᵣ = ⁿC(n−r). Use combinations for \"choose/select\" problems and permutations for \"arrange/order\" problems.",
+          content: [
+            { type: 'text', body: 'A combination (unordered selection) is a selection where the ORDER does not matter. Choosing a committee {Alice, Bob, Carol} is the same as {Bob, Carol, Alice} — it is the same committee.' },
+            { type: 'formula', latex: '^nC_r = \\binom{n}{r} = \\frac{n!}{r!\\,(n-r)!}', label: 'Choose r from n, order does NOT matter' },
+            { type: 'rules', heading: 'Key Properties', items: [
+              'ⁿCᵣ = ⁿC(n−r): choosing r to include equals choosing (n−r) to exclude. Use this to simplify large r.',
               'ⁿC₀ = ⁿCₙ = 1: only one way to choose none or all.',
-              'ⁿC₁ = n: choosing 1 from n has n ways.',
-              'ⁿCᵣ = ⁿ⁻¹C(r−1) + ⁿ⁻¹Cᵣ: Pascal\'s Identity (used in binomial theorem).',
+              'ⁿC₁ = n.',
+              'Pascal\'s Identity: ⁿCᵣ = ⁿ⁻¹C(r−1) + ⁿ⁻¹Cᵣ.',
             ]},
-            { type: 'table', headers: ['Keyword', 'Use'], rows: [
-              ['Choose, select, pick, form a group/team/committee', 'Combinations (order does NOT matter)'],
-              ['Arrange, order, sequence, rank, assign to positions', 'Permutations (order MATTERS)'],
-              ['How many ways to go from A to B', 'Usually combinations (choosing which turns to make)'],
+            { type: 'table', headers: ['Keyword in problem', 'Use'], rows: [
+              ['choose, select, pick, form a group/team/committee', 'Combinations — order does NOT matter'],
+              ['arrange, order, sequence, rank, assign to labelled positions', 'Permutations — order MATTERS'],
             ]},
             { type: 'example', question: 'A committee of 4 is chosen from 10 people. How many possible committees?', steps: [
-              '¹⁰C₄ = 10!/(4! × 6!) = (10 × 9 × 8 × 7)/(4 × 3 × 2 × 1) = 5040/24 = 210.',
+              '¹⁰C₄ = 10! / (4! × 6!) = (10 × 9 × 8 × 7) / (4 × 3 × 2 × 1) = 210.',
             ]},
-            { type: 'tip', body: 'The relationship ⁿCᵣ = ⁿC(n−r) is extremely useful for simplification: ¹⁰C₇ = ¹⁰C₃ = 120. Always replace large r values with n − r to make the calculation easier.' },
+            { type: 'example', question: 'From a group of 6 men and 5 women, choose 3 men and 2 women for a committee. How many ways?', steps: [
+              'Choose 3 men from 6: ⁶C₃ = 20.',
+              'Choose 2 women from 5: ⁵C₂ = 10.',
+              'Total = 20 × 10 = 200 (multiply — both selections must be made).',
+            ]},
+            { type: 'tip', body: 'ⁿCᵣ = ⁿC(n−r) is a powerful shortcut: ²⁰C₁₇ = ²⁰C₃ = 1140. Always swap to whichever of r or n−r is smaller before computing.' },
           ],
         },
+        // 17F ─────────────────────────────────────────────────────────────────
         {
-          stageId: 'y11-ext1-l12-s12e', code: '12E', title: 'Combinations with Restrictions and Applications',
+          stageId: 'y11-ext1-l12-s12f', code: '17F', title: 'Using Counting in Probability',
           outcomeIds: ['MA-PROB-03'], topicIds: ['MA-PROB-03'],
-          explanation: 'Include/exclude restrictions: (1) fix required objects, choose the rest; (2) subtract cases with excluded objects from total. Probability = (favourable combinations)/(total combinations).',
+          explanation: 'P(event) = (number of favourable outcomes) / (total number of equally likely outcomes). Use combinations or permutations to count both the sample space and the favourable outcomes.',
           content: [
-            { type: 'text', body: 'Real problems rarely ask for unrestricted combinations. The two most common restriction types are: (1) certain people/objects MUST be included, and (2) certain people/objects MUST be excluded. Both are straightforward once you identify the strategy.' },
-            { type: 'rules', heading: 'Restriction Strategies', items: [
-              'MUST include specific objects: Fix those objects as chosen. Choose the remaining spots from the remaining objects.',
-              'MUST exclude specific objects: Remove them from the pool. Choose all r from the reduced pool.',
-              '"At least one" of a type: Use complementary counting. Total − (none of that type).',
-              'Exactly k from a subgroup: ⁿCₖ (from the subgroup) × ᵐC(r−k) (from the rest).',
+            { type: 'text', body: 'When all outcomes in a sample space are equally likely, probability equals the ratio of favourable outcomes to total outcomes. Combinations and permutations let us count large sample spaces efficiently without listing every outcome.' },
+            { type: 'formula', latex: 'P(\\text{event}) = \\frac{\\text{number of favourable outcomes}}{\\text{total number of outcomes}}', label: 'Equally likely outcomes' },
+            { type: 'rules', heading: 'Strategy', items: [
+              'Step 1: Count the TOTAL number of outcomes using combinations or permutations (depending on whether order matters).',
+              'Step 2: Count the FAVOURABLE outcomes using the same method with any restrictions applied.',
+              'Step 3: Divide. Simplify the fraction.',
+              'For "at least" or "at most" events: use complementary probability — P(at least one) = 1 − P(none).',
             ]},
-            { type: 'example', question: 'From 6 teachers and 4 students, choose a group of 5 that must include at least 2 students.', steps: [
-              'Cases: exactly 2 students, or 3, or 4 students.',
-              '2 students: ⁴C₂ × ⁶C₃ = 6 × 20 = 120.',
-              '3 students: ⁴C₃ × ⁶C₂ = 4 × 15 = 60.',
-              '4 students: ⁴C₄ × ⁶C₁ = 1 × 6 = 6.',
-              'Total: 120 + 60 + 6 = 186.',
+            { type: 'example', question: 'A hand of 5 cards is dealt from a standard 52-card deck. What is the probability the hand contains exactly 2 aces?', steps: [
+              'Total 5-card hands: ⁵²C₅ = 2 598 960.',
+              'Favourable: choose 2 aces from 4 AND 3 non-aces from 48.',
+              'Favourable = ⁴C₂ × ⁴⁸C₃ = 6 × 17 296 = 103 776.',
+              'P(exactly 2 aces) = 103 776 / 2 598 960 ≈ 0.0399.',
             ]},
-            { type: 'example', question: 'A card is drawn from a standard 52-card deck. What is the probability it is a face card (J, Q, K)?', steps: [
-              'Total ways to choose 1 card: ⁵²C₁ = 52.',
-              'Favourable (face cards): 3 types × 4 suits = 12. ¹²C₁ = 12.',
-              'P(face card) = 12/52 = 3/13.',
+            { type: 'example', question: '4 people are chosen at random from 6 men and 4 women. What is the probability that at least one woman is chosen?', steps: [
+              'Total ways to choose 4 from 10: ¹⁰C₄ = 210.',
+              'P(no women) = ⁶C₄/¹⁰C₄ = 15/210 = 1/14.',
+              'P(at least one woman) = 1 − 1/14 = 13/14.',
             ]},
-            { type: 'tip', body: 'For "at least" problems, always consider whether complementary counting is simpler. "At least 1 student" = Total − "No students". Calculating "no students" is usually one term; "at least 1" might be many terms.' },
+            { type: 'tip', body: 'Always use the same counting method for numerator and denominator (both ordered, or both unordered). Mixing permutations in the numerator with combinations in the denominator — or vice versa — gives a wrong answer.' },
+          ],
+        },
+        // 17G ─────────────────────────────────────────────────────────────────
+        {
+          stageId: 'y11-ext1-l12-s12g', code: '17G', title: 'Arrangements in a Circle',
+          outcomeIds: ['MA-PROB-03'], topicIds: ['MA-PROB-03'],
+          explanation: 'Circular arrangements of n distinct objects: (n−1)! Fix one object to remove rotational equivalence, then arrange the remaining n−1 objects. If the circle can be flipped (necklace), divide by 2.',
+          content: [
+            { type: 'text', body: 'In a circular arrangement, there is no fixed "first" position — rotating the entire group gives the same arrangement. To count distinct circular arrangements, we fix one object to eliminate rotational equivalence, then arrange the rest.' },
+            { type: 'formula', latex: '\\text{Circular arrangements of } n \\text{ distinct objects} = (n-1)!', label: 'Fix one object; arrange n−1 in the remaining positions' },
+            { type: 'rules', heading: 'Key Points', items: [
+              'Fix one person/object in any seat. This removes rotational duplicates.',
+              'Arrange the remaining n−1 objects in the (n−1) remaining positions: (n−1)! ways.',
+              'Necklace / bracelet (can flip): divide by 2, giving (n−1)!/2.',
+              'Restrictions in circles: use the same block/complementary strategies as linear arrangements, but remember to fix one object first.',
+            ]},
+            { type: 'example', question: 'In how many ways can 6 people be seated around a circular table?', steps: [
+              'Fix one person (say, person A) in any chair.',
+              'Arrange the remaining 5 people in the 5 remaining chairs.',
+              'Total = (6−1)! = 5! = 120.',
+            ]},
+            { type: 'example', question: 'In how many ways can 6 people sit around a circular table if two particular people (X and Y) must sit next to each other?', steps: [
+              'Bundle X and Y as one block. Now arrange 5 units (4 others + 1 block) around the circle.',
+              'Circular arrangements of 5 units = (5−1)! = 4! = 24.',
+              'X and Y within the block can swap: × 2.',
+              'Total = 24 × 2 = 48.',
+            ]},
+            { type: 'example', question: 'In how many ways can 5 different beads be arranged on a bracelet (flipping allowed)?', steps: [
+              'Circular arrangements = (5−1)! = 4! = 24.',
+              'Bracelet can be flipped, so divide by 2: 24/2 = 12.',
+            ]},
+            { type: 'tip', body: 'A common mistake is using n! for circular arrangements. Always ask: "Is there a fixed start point?" If no (circle, round table, necklace), use (n−1)!. If yes (e.g., seats are labelled/fixed), use n!.' },
           ],
         },
       ],
