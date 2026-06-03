@@ -79,32 +79,32 @@ const YEAR_9_MISSION: Mission = {
       levelId: 'y9-l1', levelNum: 1, title: 'Algebra', emoji: '✏️', color: '#6366F1',
       stages: [
         {
-          stageId: 'y9-l1-s1', code: '1A', title: 'Reviewing Algebra',
+          stageId: 'y9-l1-s1', code: '2A', title: 'Reviewing Algebra',
           outcomeIds: ['MA-ALG-01'], topicIds: ['MA-ALG-01'],
           explanation: 'Review the language of algebra: terms, coefficients, like terms, and expressions. Simplify by collecting like terms and applying the four operations.',
         },
         {
-          stageId: 'y9-l1-s2', code: '1B', title: 'Expanding Expressions',
+          stageId: 'y9-l1-s2', code: '2B', title: 'Expanding Expressions',
           outcomeIds: ['MA-ALG-01'], topicIds: ['MA-ALG-01'],
           explanation: 'Expand brackets using the distributive law: a(b+c) = ab+ac. For double brackets (a+b)(c+d) use FOIL. Perfect squares and difference of squares are key special cases.',
         },
         {
-          stageId: 'y9-l1-s3', code: '1C', title: 'Factorising Using the HCF',
+          stageId: 'y9-l1-s3', code: '2C', title: 'Factorising Using the HCF',
           outcomeIds: ['MA-ALG-01'], topicIds: ['MA-ALG-01'],
           explanation: 'Factorising is the reverse of expanding. Find the highest common factor (HCF) of all terms and place it outside the brackets: 6x² + 9x = 3x(2x + 3).',
         },
         {
-          stageId: 'y9-l1-s4', code: '1D', title: 'Factorising the Difference of Two Squares',
+          stageId: 'y9-l1-s4', code: '2D', title: 'Factorising the Difference of Two Squares',
           outcomeIds: ['MA-ALG-01'], topicIds: ['MA-ALG-01'],
           explanation: 'a² − b² = (a+b)(a−b). Recognise perfect squares in both terms, then apply this identity directly. Always check for a common factor before using this formula.',
         },
         {
-          stageId: 'y9-l1-s5', code: '1E', title: 'Factorising Trinomials',
+          stageId: 'y9-l1-s5', code: '2E', title: 'Factorising Trinomials',
           outcomeIds: ['MA-ALG-01'], topicIds: ['MA-ALG-01'],
           explanation: 'To factorise x² + bx + c, find two numbers that multiply to c and add to b: x² + 5x + 6 = (x+2)(x+3). For ax² + bx + c, use the splitting method.',
         },
         {
-          stageId: 'y9-l1-s6', code: '1F', title: 'Algebraic Fractions',
+          stageId: 'y9-l1-s6', code: '2F', title: 'Algebraic Fractions',
           outcomeIds: ['MA-ALG-01'], topicIds: ['MA-ALG-01'],
           explanation: 'Simplify algebraic fractions by factorising numerator and denominator and cancelling common factors. Add and subtract by finding the LCD first.',
         },
@@ -115,27 +115,27 @@ const YEAR_9_MISSION: Mission = {
       levelId: 'y9-l2', levelNum: 2, title: 'Equations & Inequalities', emoji: '⚖️', color: '#8B5CF6',
       stages: [
         {
-          stageId: 'y9-l2-s1', code: '2A', title: 'Solving Linear Equations',
+          stageId: 'y9-l2-s1', code: '2G', title: 'Solving Linear Equations',
           outcomeIds: ['MA-ALG-03'], topicIds: ['MA-ALG-03'],
           explanation: 'Isolate the variable by performing inverse operations on both sides. Expand brackets and collect like terms first. Always check your answer by substituting back.',
         },
         {
-          stageId: 'y9-l2-s2', code: '2B', title: 'Solving Quadratic Equations',
+          stageId: 'y9-l2-s2', code: '2H', title: 'Solving Quadratic Equations',
           outcomeIds: ['MA-ALG-01'], topicIds: ['MA-ALG-01'],
           explanation: 'Rearrange to ax² + bx + c = 0, then factorise and set each factor to zero, or use the quadratic formula x = (−b ± √(b²−4ac))/2a.',
         },
         {
-          stageId: 'y9-l2-s3', code: '2C', title: 'Solving Simultaneous Equations',
+          stageId: 'y9-l2-s3', code: '2I', title: 'Solving Simultaneous Equations',
           outcomeIds: ['MA-ALG-03'], topicIds: ['MA-ALG-03'],
           explanation: 'Use substitution (rearrange one equation, substitute into the other) or elimination (multiply equations to match a coefficient, then add or subtract).',
         },
         {
-          stageId: 'y9-l2-s4', code: '2D', title: 'Using Graphs to Solve Equations',
+          stageId: 'y9-l2-s4', code: '2J', title: 'Using Graphs to Solve Equations',
           outcomeIds: ['MA-ALG-03'], topicIds: ['MA-ALG-03'],
           explanation: 'Graph each equation; the intersection point gives the solution. This method works for any pair of equations, including non-linear ones.',
         },
         {
-          stageId: 'y9-l2-s5', code: '2E', title: 'Linear Inequalities',
+          stageId: 'y9-l2-s5', code: '2K', title: 'Linear Inequalities',
           outcomeIds: ['MA-ALG-05'], topicIds: ['MA-ALG-05'],
           explanation: 'Solve inequalities like equations, but reverse the inequality sign when multiplying or dividing by a negative number. Graph solutions on a number line.',
         },
@@ -172,27 +172,27 @@ const YEAR_9_MISSION: Mission = {
       levelId: 'y9-l4', levelNum: 4, title: 'Trigonometry', emoji: '📐', color: '#14B8A6',
       stages: [
         {
-          stageId: 'y9-l4-s1', code: '4A', title: 'Trigonometric Ratios (SOH CAH TOA)',
+          stageId: 'y9-l4-s1', code: '3E', title: 'Trigonometric Ratios (SOH CAH TOA)',
           outcomeIds: ['MA-TRIG-07'], topicIds: ['MA-TRIG-07'],
           explanation: 'sin θ = O/H, cos θ = A/H, tan θ = O/A. Label sides as Opposite, Adjacent, Hypotenuse relative to the angle. Use your calculator for non-special angles.',
         },
         {
-          stageId: 'y9-l4-s2', code: '4B', title: 'Finding an Unknown Side',
+          stageId: 'y9-l4-s2', code: '3F', title: 'Finding an Unknown Side',
           outcomeIds: ['MA-TRIG-07'], topicIds: ['MA-TRIG-07'],
           explanation: 'Choose the ratio that links the unknown side to the known side and angle. Multiply or divide to isolate the unknown. Always round at the final step only.',
         },
         {
-          stageId: 'y9-l4-s3', code: '4C', title: 'Finding an Unknown Angle',
+          stageId: 'y9-l4-s3', code: '3G', title: 'Finding an Unknown Angle',
           outcomeIds: ['MA-TRIG-07'], topicIds: ['MA-TRIG-07'],
           explanation: 'Use the inverse trig functions: θ = sin⁻¹(O/H), θ = cos⁻¹(A/H), θ = tan⁻¹(O/A). Your calculator gives the principal angle; check the context for obtuse solutions.',
         },
         {
-          stageId: 'y9-l4-s4', code: '4D', title: 'Angles of Elevation and Depression',
+          stageId: 'y9-l4-s4', code: '3H', title: 'Angles of Elevation and Depression',
           outcomeIds: ['MA-TRIG-08'], topicIds: ['MA-TRIG-08'],
           explanation: 'Elevation is measured up from horizontal; depression is measured down. Draw and label the right triangle, identify the angle, then apply the appropriate trig ratio.',
         },
         {
-          stageId: 'y9-l4-s5', code: '4E', title: 'Bearings',
+          stageId: 'y9-l4-s5', code: '3I', title: 'Bearings',
           outcomeIds: ['MA-TRIG-08'], topicIds: ['MA-TRIG-08'],
           explanation: 'Bearings are measured clockwise from North (000° to 360°). Convert bearing problems into right triangles using north-south and east-west components.',
         },
@@ -203,22 +203,22 @@ const YEAR_9_MISSION: Mission = {
       levelId: 'y9-l5', levelNum: 5, title: 'Coordinate Geometry', emoji: '📉', color: '#EC4899',
       stages: [
         {
-          stageId: 'y9-l5-s1', code: '5A', title: 'Graphing Linear Relationships',
+          stageId: 'y9-l5-s1', code: '4A', title: 'Graphing Linear Relationships',
           outcomeIds: ['MA-COORD-02'], topicIds: ['MA-COORD-02'],
           explanation: 'Plot y = mx + b using the y-intercept b and gradient m = rise/run. Alternatively, find two intercepts (set x=0 for y-intercept, set y=0 for x-intercept) and draw the line through them.',
         },
         {
-          stageId: 'y9-l5-s2', code: '5B', title: 'Finding the Equation of a Line',
+          stageId: 'y9-l5-s2', code: '4B', title: 'Finding the Equation of a Line',
           outcomeIds: ['MA-COORD-02'], topicIds: ['MA-COORD-02'],
           explanation: 'Given gradient m and y-intercept b: y = mx + b. Given two points: find m first, then substitute one point to find b. Given gradient and one point: use y − y₁ = m(x − x₁).',
         },
         {
-          stageId: 'y9-l5-s3', code: '5C', title: 'Parallel and Perpendicular Lines',
+          stageId: 'y9-l5-s3', code: '4C', title: 'Parallel and Perpendicular Lines',
           outcomeIds: ['MA-COORD-02'], topicIds: ['MA-COORD-02'],
           explanation: 'Parallel lines have equal gradients. Perpendicular lines have gradients whose product is −1: m₂ = −1/m₁. Use these to find equations of lines through given points.',
         },
         {
-          stageId: 'y9-l5-s4', code: '5D', title: 'Length and Midpoint',
+          stageId: 'y9-l5-s4', code: '4D', title: 'Length and Midpoint',
           outcomeIds: ['MA-COORD-02'], topicIds: ['MA-COORD-02'],
           explanation: 'Distance: d = √((x₂−x₁)² + (y₂−y₁)²) from Pythagoras. Midpoint: M = ((x₁+x₂)/2, (y₁+y₂)/2). These formulas apply to any two points on the number plane.',
         },
@@ -858,22 +858,22 @@ const YEAR_11_ADVANCED_MISSION: Mission = {
       levelId: 'y11-adv-l5', levelNum: 5, title: 'Further Graphs', emoji: '📐', color: '#14B8A6',
       stages: [
         {
-          stageId: 'y11-adv-l5-s5a', code: '5A', title: 'Circles and Semi-Circles',
+          stageId: 'y11-adv-l5-s5a', code: '6A', title: 'Circles and Semi-Circles',
           outcomeIds: ['MA-FUNC-07'], topicIds: ['MA-FUNC-07'],
           explanation: '(x−h)² + (y−k)² = r² is a circle with centre (h,k) and radius r. Complete the square on both x and y terms to convert general form. y = √(r²−x²) is the upper semi-circle (a function).',
         },
         {
-          stageId: 'y11-adv-l5-s5b', code: '5B', title: 'The Hyperbola y = k/(x−a) + b',
+          stageId: 'y11-adv-l5-s5b', code: '6B', title: 'The Hyperbola y = k/(x−a) + b',
           outcomeIds: ['MA-FUNC-07'], topicIds: ['MA-FUNC-07'],
           explanation: 'Standard hyperbola y = 1/x has asymptotes x = 0, y = 0. Shift by (a, b): y = k/(x−a) + b has asymptotes x = a, y = b. Sketch by locating the asymptotes, then the two branches.',
         },
         {
-          stageId: 'y11-adv-l5-s5c', code: '5C', title: 'Absolute Value Functions',
+          stageId: 'y11-adv-l5-s5c', code: '6C', title: 'Absolute Value Functions',
           outcomeIds: ['MA-FUNC-06'], topicIds: ['MA-FUNC-06'],
           explanation: '|x| = x if x ≥ 0, −x if x < 0. Graph y = |f(x)| by reflecting negative portions above the x-axis. Solve |ax + b| = c by considering both cases: ax + b = c and ax + b = −c.',
         },
         {
-          stageId: 'y11-adv-l5-s5d', code: '5D', title: 'Graphing Using Technology',
+          stageId: 'y11-adv-l5-s5d', code: '6D', title: 'Graphing Using Technology',
           outcomeIds: ['MA-FUNC-07'], topicIds: ['MA-FUNC-07'],
           explanation: 'Use graphing calculators or Desmos to verify hand-drawn sketches. Identify key features: intercepts, turning points, asymptotes. Technology confirms, but you must understand the theory.',
         },
@@ -1052,27 +1052,27 @@ const YEAR_11_ADVANCED_MISSION: Mission = {
       levelId: 'y11-adv-l9', levelNum: 9, title: 'Geometry of the Derivative', emoji: '📐', color: '#F97316',
       stages: [
         {
-          stageId: 'y11-adv-l9-s9a', code: '3A', title: 'Increasing, Decreasing and Stationary at a Point',
+          stageId: 'y11-adv-l9-s9a', code: '9A', title: 'Increasing, Decreasing and Stationary at a Point',
           outcomeIds: ['MA-CALC-D07'], topicIds: ['MA-CALC-D07'],
           explanation: 'f\'(x) > 0: increasing. f\'(x) < 0: decreasing. f\'(x) = 0: stationary point. Classify stationary points using a sign diagram (changes in sign of f\') or the second derivative test.',
         },
         {
-          stageId: 'y11-adv-l9-s9b', code: '3B', title: 'Stationary Points and Turning Points',
+          stageId: 'y11-adv-l9-s9b', code: '9B', title: 'Stationary Points and Turning Points',
           outcomeIds: ['MA-CALC-D08'], topicIds: ['MA-CALC-D08'],
           explanation: 'A turning point is a stationary point where f\' changes sign. f\'\'(x) > 0 at stationary point → local minimum. f\'\'(x) < 0 → local maximum. f\'\'(x) = 0 → use sign diagram of f\'.',
         },
         {
-          stageId: 'y11-adv-l9-s9c', code: '3C', title: 'Second Derivative and Points of Inflection',
+          stageId: 'y11-adv-l9-s9c', code: '9C', title: 'Second Derivative and Points of Inflection',
           outcomeIds: ['MA-CALC-D08'], topicIds: ['MA-CALC-D08'],
           explanation: 'f\'\'(x) > 0: concave up. f\'\'(x) < 0: concave down. Points of inflection are where concavity changes; f\'\'(x) = 0 is necessary but not sufficient — check that concavity actually changes.',
         },
         {
-          stageId: 'y11-adv-l9-s9d', code: '3D', title: 'Curve Sketching',
+          stageId: 'y11-adv-l9-s9d', code: '9D', title: 'Curve Sketching',
           outcomeIds: ['MA-CALC-D08'], topicIds: ['MA-CALC-D08'],
           explanation: 'Full curve sketch: (1) domain, (2) intercepts, (3) stationary points, (4) nature of stationary points, (5) inflection points, (6) asymptotes, (7) behaviour as x → ±∞. Connect these features.',
         },
         {
-          stageId: 'y11-adv-l9-s9e', code: '3E', title: 'Optimisation Problems',
+          stageId: 'y11-adv-l9-s9e', code: '9E', title: 'Optimisation Problems',
           outcomeIds: ['MA-CALC-D09'], topicIds: ['MA-CALC-D09'],
           explanation: 'Define a variable, write an expression for the quantity to optimise, differentiate, set equal to zero, and test whether it is a max or min. Always check endpoints if the domain is restricted.',
         },
@@ -1083,22 +1083,22 @@ const YEAR_11_ADVANCED_MISSION: Mission = {
       levelId: 'y11-adv-l10', levelNum: 10, title: 'Integration', emoji: '∫', color: '#6366F1',
       stages: [
         {
-          stageId: 'y11-adv-l10-s10a', code: '4A', title: 'Areas and the Definite Integral',
+          stageId: 'y11-adv-l10-s10a', code: '10A', title: 'Areas and the Definite Integral',
           outcomeIds: ['MA-CALC-I02'], topicIds: ['MA-CALC-I02'],
           explanation: 'The definite integral ∫[a,b] f(x) dx gives the signed area between y = f(x) and the x-axis. Area under the x-axis counts negatively. Split the integral at x-intercepts if needed.',
         },
         {
-          stageId: 'y11-adv-l10-s10b', code: '4B', title: 'The Fundamental Theorem of Calculus',
+          stageId: 'y11-adv-l10-s10b', code: '10B', title: 'The Fundamental Theorem of Calculus',
           outcomeIds: ['MA-CALC-I02'], topicIds: ['MA-CALC-I02'],
           explanation: '∫[a,b] f(x) dx = F(b) − F(a) where F is any antiderivative. Power rule: ∫xⁿ dx = xⁿ⁺¹/(n+1) + C (n ≠ −1). The constant C is the constant of integration.',
         },
         {
-          stageId: 'y11-adv-l10-s10c', code: '4C', title: 'The Indefinite Integral',
+          stageId: 'y11-adv-l10-s10c', code: '10C', title: 'The Indefinite Integral',
           outcomeIds: ['MA-CALC-I01'], topicIds: ['MA-CALC-I01'],
           explanation: '∫f\'(x) dx = f(x) + C. Power rule: ∫xⁿ dx = xⁿ⁺¹/(n+1) + C. Find C using an initial condition. Definite integrals give numbers; indefinite integrals give families of functions.',
         },
         {
-          stageId: 'y11-adv-l10-s10d', code: '4D', title: 'Areas of Compound Regions',
+          stageId: 'y11-adv-l10-s10d', code: '10D', title: 'Areas of Compound Regions',
           outcomeIds: ['MA-CALC-I07'], topicIds: ['MA-CALC-I07'],
           explanation: 'For area below the x-axis, take the absolute value. For area between f and g: A = ∫[a,b] |f(x) − g(x)| dx. Find intersection points first to determine limits. Split at every crossing point.',
         },
@@ -1109,37 +1109,37 @@ const YEAR_11_ADVANCED_MISSION: Mission = {
       levelId: 'y11-adv-l11', levelNum: 11, title: 'Probability', emoji: '🎲', color: '#F59E0B',
       stages: [
         {
-          stageId: 'y11-adv-l11-s11a', code: '10A', title: 'Probability and Sample Spaces',
+          stageId: 'y11-adv-l11-s11a', code: '11A', title: 'Probability and Sample Spaces',
           outcomeIds: ['MA-PROB-01'], topicIds: ['MA-PROB-01'],
           explanation: 'P(event) = favourable outcomes / total equally likely outcomes. Ranges from 0 to 1. List sample spaces using tables or systematic listing. Complementary events: P(not A) = 1 − P(A).',
         },
         {
-          stageId: 'y11-adv-l11-s11b', code: '10B', title: 'Sample Space Graphs and Tree Diagrams',
+          stageId: 'y11-adv-l11-s11b', code: '11B', title: 'Sample Space Graphs and Tree Diagrams',
           outcomeIds: ['MA-PROB-01'], topicIds: ['MA-PROB-01'],
           explanation: 'Use grids (sample space diagrams) for two-stage experiments. Tree diagrams list all outcomes as branches. Multiply along branches for probability of an outcome, add across branches.',
         },
         {
-          stageId: 'y11-adv-l11-s11c', code: '10C', title: 'Sets and Venn Diagrams',
+          stageId: 'y11-adv-l11-s11c', code: '11C', title: 'Sets and Venn Diagrams',
           outcomeIds: ['MA-PROB-01'], topicIds: ['MA-PROB-01'],
           explanation: 'Use set notation: A ∪ B (union), A ∩ B (intersection), A\' (complement). Venn diagrams show how sets overlap. Fill in regions using given information — work from the intersection outward.',
         },
         {
-          stageId: 'y11-adv-l11-s11d', code: '10D', title: 'Venn Diagrams and the Addition Theorem',
+          stageId: 'y11-adv-l11-s11d', code: '11D', title: 'Venn Diagrams and the Addition Theorem',
           outcomeIds: ['MA-PROB-01'], topicIds: ['MA-PROB-01'],
           explanation: 'P(A ∪ B) = P(A) + P(B) − P(A ∩ B). Mutually exclusive: P(A ∩ B) = 0. Use the addition theorem to move between the algebraic and Venn diagram representations.',
         },
         {
-          stageId: 'y11-adv-l11-s11e', code: '10E', title: 'Multi-Stage Experiments and the Product Rule',
+          stageId: 'y11-adv-l11-s11e', code: '11E', title: 'Multi-Stage Experiments and the Product Rule',
           outcomeIds: ['MA-PROB-02'], topicIds: ['MA-PROB-02'],
           explanation: 'For independent events: P(A and B) = P(A) × P(B). For dependent events, multiply by conditional probability. Use tree diagrams to organise multi-stage experiments systematically.',
         },
         {
-          stageId: 'y11-adv-l11-s11f', code: '10F', title: 'Probability Tree Diagrams',
+          stageId: 'y11-adv-l11-s11f', code: '11F', title: 'Probability Tree Diagrams',
           outcomeIds: ['MA-PROB-02'], topicIds: ['MA-PROB-02'],
           explanation: 'Tree diagrams display all outcomes of a multi-stage experiment. Multiply probabilities along each branch for the joint probability. Add branch probabilities for "or" (union) probabilities.',
         },
         {
-          stageId: 'y11-adv-l11-s11g', code: '10G', title: 'Conditional Probability',
+          stageId: 'y11-adv-l11-s11g', code: '11G', title: 'Conditional Probability',
           outcomeIds: ['MA-PROB-02'], topicIds: ['MA-PROB-02'],
           explanation: 'P(A|B) = P(A ∩ B)/P(B). A and B are independent if P(A|B) = P(A). Use two-way tables for conditional probability questions: read the restricted sample space from the relevant row or column.',
         },
@@ -1150,22 +1150,22 @@ const YEAR_11_ADVANCED_MISSION: Mission = {
       levelId: 'y11-adv-l12', levelNum: 12, title: 'Probability Distributions', emoji: '📊', color: '#10B981',
       stages: [
         {
-          stageId: 'y11-adv-l12-s12a', code: '11A', title: 'The Language of Probability Distributions',
+          stageId: 'y11-adv-l12-s12a', code: '12A', title: 'The Language of Probability Distributions',
           outcomeIds: ['MA-STAT-06'], topicIds: ['MA-STAT-06'],
           explanation: 'A probability distribution assigns P(X = x) to each value x. Requirements: all probabilities are non-negative and sum to 1. Display as a table or histogram.',
         },
         {
-          stageId: 'y11-adv-l12-s12b', code: '11B', title: 'Expected Value',
+          stageId: 'y11-adv-l12-s12b', code: '12B', title: 'Expected Value',
           outcomeIds: ['MA-STAT-06'], topicIds: ['MA-STAT-06'],
           explanation: 'E(X) = μ = Σ x·P(X = x) is the expected value (long-run average). It need not be a value X can actually take. E(aX + b) = aE(X) + b for linear transformations.',
         },
         {
-          stageId: 'y11-adv-l12-s12c', code: '11C', title: 'Variance and Standard Deviation',
+          stageId: 'y11-adv-l12-s12c', code: '12C', title: 'Variance and Standard Deviation',
           outcomeIds: ['MA-STAT-06'], topicIds: ['MA-STAT-06'],
           explanation: 'Var(X) = E(X²) − [E(X)]² = Σ x²P(x) − μ². Standard deviation σ = √Var(X). Var(aX + b) = a²Var(X). These measure the spread of the distribution around the mean.',
         },
         {
-          stageId: 'y11-adv-l12-s12d', code: '11D', title: 'Sampling',
+          stageId: 'y11-adv-l12-s12d', code: '12D', title: 'Sampling',
           outcomeIds: ['MA-STAT-06'], topicIds: ['MA-STAT-06'],
           explanation: 'A sample is a subset of a population. Random sampling gives every member an equal chance of selection. The sample mean x̄ is an estimate of the population mean μ. Larger samples give more reliable estimates.',
         },
@@ -3531,100 +3531,100 @@ const YEAR_12_ADVANCED_MISSION: Mission = {
         },
       ],
     },
-    // ── Chapter 3: Trigonometric Functions ────────────────────────────────────
+    // ── Chapter 3: Curve Sketching Using the Derivative ──────────────────────
     {
       levelId: 'y12-adv-l3', levelNum: 3, title: 'Trigonometric Functions', emoji: '〜', color: '#0EA5E9',
       stages: [
         {
-          stageId: 'y12-adv-l3-s3a', code: '3A', title: 'Pythagorean and Compound Angle Identities',
+          stageId: 'y12-adv-l3-s3a', code: '6A', title: 'Differentiation of Trigonometric Functions',
           outcomeIds: ['MA-TRIG-03'], topicIds: ['MA-TRIG-03'],
           explanation: 'Pythagorean: sin²x+cos²x=1; 1+tan²x=sec²x; 1+cot²x=cosec²x. Compound: sin(A±B)=sinA cosB±cosA sinB; cos(A±B)=cosA cosB∓sinA sinB. Use to simplify and prove identities.',
         },
         {
-          stageId: 'y12-adv-l3-s3b', code: '3B', title: 'Double Angle Formulae',
+          stageId: 'y12-adv-l3-s3b', code: '6B', title: 'Applications of Differentiation of Trigonometric Functions',
           outcomeIds: ['MA-TRIG-03'], topicIds: ['MA-TRIG-03'],
           explanation: 'sin 2A = 2 sinA cosA. cos 2A = cos²A−sin²A = 2cos²A−1 = 1−2sin²A. tan 2A = 2tanA/(1−tan²A). Use double angle results to integrate trig squares: ∫sin²x dx using cos2x identity.',
         },
         {
-          stageId: 'y12-adv-l3-s3c', code: '3C', title: 'Solving Trigonometric Equations',
+          stageId: 'y12-adv-l3-s3c', code: '6C', title: 'Integration of Trigonometric Functions',
           outcomeIds: ['MA-TRIG-04'], topicIds: ['MA-TRIG-04'],
           explanation: 'Use identities to reduce all trig in an equation to one function. Find the principal value using inverse trig. Apply symmetry of unit circle (ASTC) to find all solutions in the domain. Always work in radians.',
         },
         {
-          stageId: 'y12-adv-l3-s3d', code: '3D', title: 'Auxiliary Angle Method',
+          stageId: 'y12-adv-l3-s3d', code: '6D', title: 'Applications of Integration of Trigonometric Functions',
           outcomeIds: ['MA-TRIG-04'], topicIds: ['MA-TRIG-04'],
           explanation: 'a sinx + b cosx = R sin(x+α) where R=√(a²+b²) and tanα=b/a. This converts a sum of trig functions to a single sinusoidal — useful for finding maximum values and solving equations.',
         },
       ],
     },
-    // ── Chapter 4: Differentiation ────────────────────────────────────────────
+    // ── Chapter 4: Integration ────────────────────────────────────────────────
     {
       levelId: 'y12-adv-l4', levelNum: 4, title: 'Differentiation', emoji: '∂', color: '#EC4899',
       stages: [
         {
-          stageId: 'y12-adv-l4-s4a', code: '4A', title: 'Differentiating Trig, Exp, and Log Functions',
+          stageId: 'y12-adv-l4-s4a', code: '3A', title: 'Increasing, Decreasing and Stationary at a Point',
           outcomeIds: ['MA-CALC-D04', 'MA-CALC-D05', 'MA-CALC-D06'], topicIds: ['MA-CALC-D04', 'MA-CALC-D05', 'MA-CALC-D06'],
           explanation: 'd/dx(sinx)=cosx; d/dx(cosx)=−sinx; d/dx(tanx)=sec²x; d/dx(eˣ)=eˣ; d/dx(ln x)=1/x. With chain rule: d/dx(sin(f(x)))=cos(f(x))·f\'(x). These are the most tested derivatives in HSC.',
         },
         {
-          stageId: 'y12-adv-l4-s4b', code: '4B', title: 'Curve Sketching Using Calculus',
+          stageId: 'y12-adv-l4-s4b', code: '3B', title: 'Stationary Points and Turning Points',
           outcomeIds: ['MA-CALC-D08'], topicIds: ['MA-CALC-D08'],
           explanation: 'Systematic sketch: domain, intercepts, asymptotes, stationary points (f\'=0, sign diagram), inflections (f\'\'=0, sign change in f\'\'). Combine all features. The sketch should be consistent with all information found.',
         },
         {
-          stageId: 'y12-adv-l4-s4c', code: '4C', title: 'Optimisation Problems',
+          stageId: 'y12-adv-l4-s4c', code: '3C', title: 'Global Maximum and Minimum',
           outcomeIds: ['MA-CALC-D09'], topicIds: ['MA-CALC-D09'],
           explanation: 'Model → differentiate → solve f\'=0 → test (second derivative or sign diagram) → check endpoints. Write a sentence answering the question in context. Draw a diagram if geometry is involved.',
         },
         {
-          stageId: 'y12-adv-l4-s4d', code: '4D', title: 'Rates of Change and Related Rates',
+          stageId: 'y12-adv-l4-s4d', code: '3D', title: 'Primitive Functions',
           outcomeIds: ['MA-CALC-D07'], topicIds: ['MA-CALC-D07'],
           explanation: 'dy/dt = (dy/dx)·(dx/dt) — chain rule for related rates. Label every variable and rate with units. Kinematics: position x, velocity v=dx/dt, acceleration a=dv/dt=v(dv/dx).',
         },
       ],
     },
-    // ── Chapter 5: Integration ────────────────────────────────────────────────
+    // ── Chapter 5: The Exponential and Logarithmic Functions ──────────────────
     {
       levelId: 'y12-adv-l5', levelNum: 5, title: 'Integration', emoji: '∫', color: '#10B981',
       stages: [
         {
-          stageId: 'y12-adv-l5-s5a', code: '5A', title: 'Integrating Trig, Exponential, and Log Functions',
+          stageId: 'y12-adv-l5-s5a', code: '4A', title: 'Areas and the Definite Integral',
           outcomeIds: ['MA-CALC-I03', 'MA-CALC-I04'], topicIds: ['MA-CALC-I03', 'MA-CALC-I04'],
           explanation: '∫sinx dx=−cosx+C; ∫cosx dx=sinx+C; ∫sec²x dx=tanx+C; ∫eˣ dx=eˣ+C; ∫(1/x)dx=ln|x|+C. For ∫f\'(x)/f(x) dx=ln|f(x)|+C. Use double-angle formulas to integrate sin²x and cos²x.',
         },
         {
-          stageId: 'y12-adv-l5-s5b', code: '5B', title: 'Integration by Substitution',
+          stageId: 'y12-adv-l5-s5b', code: '4B', title: 'The Fundamental Theorem of Calculus',
           outcomeIds: ['MA-CALC-I05'], topicIds: ['MA-CALC-I05'],
           explanation: 'Let u=g(x), du=g\'(x)dx. Rewrite the integral in terms of u alone, integrate, then back-substitute. For definite integrals, convert limits using u=g(a) and u=g(b).',
         },
         {
-          stageId: 'y12-adv-l5-s5c', code: '5C', title: 'Area Under and Between Curves',
+          stageId: 'y12-adv-l5-s5c', code: '4C', title: 'Finding Areas by Integration',
           outcomeIds: ['MA-CALC-I07'], topicIds: ['MA-CALC-I07'],
           explanation: 'Signed area: ∫[a,b] f(x) dx. Total area: integrate |f(x)|, splitting at x-intercepts. Area between curves: ∫[a,b] (f(x)−g(x)) dx, where a and b are intersection points.',
         },
         {
-          stageId: 'y12-adv-l5-s5d', code: '5D', title: 'Volumes of Solids of Revolution',
+          stageId: 'y12-adv-l5-s5d', code: '4D', title: 'The Reverse Chain Rule',
           outcomeIds: ['MA-CALC-I08'], topicIds: ['MA-CALC-I08'],
           explanation: 'Volume rotating y=f(x) about x-axis: V = π∫[a,b] [f(x)]² dx. About y-axis: V = π∫[c,d] [g(y)]² dy (rewrite x as a function of y). Find the integration limits from the geometry.',
         },
       ],
     },
-    // ── Chapter 6: The Exponential Function ───────────────────────────────────
+    // ── Chapter 6: Trigonometric Functions ───────────────────────────────────
     {
       levelId: 'y12-adv-l6', levelNum: 6, title: 'Exponential and Log Functions', emoji: '📈', color: '#F59E0B',
       stages: [
         {
-          stageId: 'y12-adv-l6-s6a', code: '6A', title: 'The Exponential Function y = eˣ',
+          stageId: 'y12-adv-l6-s6a', code: '5A', title: 'Review of Exponential Functions Base e',
           outcomeIds: ['MA-EXP-01', 'MA-EXP-02'], topicIds: ['MA-EXP-01', 'MA-EXP-02'],
           explanation: 'y=eˣ is the unique function equal to its own derivative. Sketch and apply transformations. Exponential growth: y=Aeᵏᵗ (k>0); decay: y=Ae⁻ᵏᵗ (k>0). The rate of change is proportional to the current value.',
         },
         {
-          stageId: 'y12-adv-l6-s6b', code: '6B', title: 'The Logarithmic Function y = ln x',
+          stageId: 'y12-adv-l6-s6b', code: '5B', title: 'Differentiation of Exponential Functions',
           outcomeIds: ['MA-EXP-03', 'MA-EXP-04'], topicIds: ['MA-EXP-03', 'MA-EXP-04'],
           explanation: 'y=ln x: domain x>0, range ℝ, x-intercept at x=1, vertical asymptote x=0. Laws: ln(AB)=lnA+lnB; ln(A/B)=lnA−lnB; ln(Aⁿ)=n lnA. Differentiate and integrate using chain rule.',
         },
         {
-          stageId: 'y12-adv-l6-s6c', code: '6C', title: 'Applications of Exponential Growth and Decay',
+          stageId: 'y12-adv-l6-s6c', code: '5C', title: 'Review of Logarithmic Functions',
           outcomeIds: ['MA-EXP-02'], topicIds: ['MA-EXP-02'],
           explanation: 'dN/dt = kN has solution N = N₀eᵏᵗ. Given two conditions (e.g. initial amount and amount at time t), find k. Apply to population growth, radioactive decay, Newton\'s law of cooling.',
         },
