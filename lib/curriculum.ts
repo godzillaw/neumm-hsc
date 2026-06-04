@@ -3016,7 +3016,7 @@ const YEAR_11_EXT1_MISSION: Mission = {
         // 17A ─────────────────────────────────────────────────────────────────
         {
           stageId: 'y11-ext1-l12-s12a', code: '17A', title: 'Factorial Notation',
-          outcomeIds: ['MA-PROB-03'], topicIds: ['MA-PROB-03'],
+          outcomeIds: ['MA-PROB-05'], topicIds: ['MA-PROB-05'],
           explanation: 'n! = n × (n−1) × … × 2 × 1, with 0! = 1. Factorials count all arrangements of n distinct objects. Use the multiplication principle: if task 1 has m ways and task 2 has n ways, combined they have m × n ways.',
           content: [
             { type: 'text', body: 'Combinatorics is the mathematics of counting arrangements and selections. The factorial function is the foundational tool: n! (read "n factorial") counts the number of ways to arrange n distinct objects in a row.' },
@@ -3051,7 +3051,7 @@ const YEAR_11_EXT1_MISSION: Mission = {
         // 17B ─────────────────────────────────────────────────────────────────
         {
           stageId: 'y11-ext1-l12-s12b', code: '17B', title: 'Ordered Selections With and Without Repetition',
-          outcomeIds: ['MA-PROB-03'], topicIds: ['MA-PROB-03'],
+          outcomeIds: ['MA-PROB-05'], topicIds: ['MA-PROB-05'],
           explanation: 'Without repetition: ⁿPᵣ = n!/(n−r)! — choosing r objects from n in order, no repeats. With repetition: nʳ — each of r positions has n choices independently.',
           content: [
             { type: 'text', body: 'An ordered selection (arrangement) is one where the ORDER of the chosen objects matters. "ABC" and "BAC" are different ordered selections. There are two cases: without repetition (each object used at most once) and with repetition (objects may be reused).' },
@@ -3076,7 +3076,7 @@ const YEAR_11_EXT1_MISSION: Mission = {
         // 17C ─────────────────────────────────────────────────────────────────
         {
           stageId: 'y11-ext1-l12-s12c', code: '17C', title: 'Ordered Selections — Three More Principles',
-          outcomeIds: ['MA-PROB-03'], topicIds: ['MA-PROB-03'],
+          outcomeIds: ['MA-PROB-05'], topicIds: ['MA-PROB-05'],
           explanation: 'Three strategies for restricted arrangements: (1) fix required objects first, arrange the rest; (2) treat objects that must stay together as a single block; (3) complementary counting — subtract invalid arrangements from the total.',
           content: [
             { type: 'text', body: 'Most HSC combinatorics problems involve a restriction. Three standard strategies cover the vast majority of cases. Identifying which strategy applies is the key skill.' },
@@ -3106,7 +3106,7 @@ const YEAR_11_EXT1_MISSION: Mission = {
         // 17D ─────────────────────────────────────────────────────────────────
         {
           stageId: 'y11-ext1-l12-s12d', code: '17D', title: 'Ordered Selections With Identical Elements',
-          outcomeIds: ['MA-PROB-03'], topicIds: ['MA-PROB-03'],
+          outcomeIds: ['MA-PROB-05'], topicIds: ['MA-PROB-05'],
           explanation: 'When some objects are identical, divide out the factorial of each group of identical objects: arrangements = n! ÷ (p! × q! × r! × …), where p, q, r are the counts of each identical type.',
           content: [
             { type: 'text', body: 'When some of the n objects are identical, many arrangements that look different are actually the same. We correct for this by dividing out the factorials of the identical groups.' },
@@ -3130,7 +3130,7 @@ const YEAR_11_EXT1_MISSION: Mission = {
         // 17E ─────────────────────────────────────────────────────────────────
         {
           stageId: 'y11-ext1-l12-s12e', code: '17E', title: 'Counting Unordered Selections',
-          outcomeIds: ['MA-PROB-03'], topicIds: ['MA-PROB-03'],
+          outcomeIds: ['MA-PROB-05'], topicIds: ['MA-PROB-05'],
           explanation: "ⁿCᵣ = n!/(r!(n−r)!) counts selections of r from n when order doesn't matter. Key identity: ⁿCᵣ = ⁿC(n−r). Use combinations for \"choose/select\" problems and permutations for \"arrange/order\" problems.",
           content: [
             { type: 'text', body: 'A combination (unordered selection) is a selection where the ORDER does not matter. Choosing a committee {Alice, Bob, Carol} is the same as {Bob, Carol, Alice} — it is the same committee.' },
@@ -3159,7 +3159,7 @@ const YEAR_11_EXT1_MISSION: Mission = {
         // 17F ─────────────────────────────────────────────────────────────────
         {
           stageId: 'y11-ext1-l12-s12f', code: '17F', title: 'Using Counting in Probability',
-          outcomeIds: ['MA-PROB-03'], topicIds: ['MA-PROB-03'],
+          outcomeIds: ['MA-PROB-05'], topicIds: ['MA-PROB-05'],
           explanation: 'P(event) = (number of favourable outcomes) / (total number of equally likely outcomes). Use combinations or permutations to count both the sample space and the favourable outcomes.',
           content: [
             { type: 'text', body: 'When all outcomes in a sample space are equally likely, probability equals the ratio of favourable outcomes to total outcomes. Combinations and permutations let us count large sample spaces efficiently without listing every outcome.' },
@@ -3187,7 +3187,7 @@ const YEAR_11_EXT1_MISSION: Mission = {
         // 17G ─────────────────────────────────────────────────────────────────
         {
           stageId: 'y11-ext1-l12-s12g', code: '17G', title: 'Arrangements in a Circle',
-          outcomeIds: ['MA-PROB-03'], topicIds: ['MA-PROB-03'],
+          outcomeIds: ['MA-PROB-05'], topicIds: ['MA-PROB-05'],
           explanation: 'Circular arrangements of n distinct objects: (n−1)! Fix one object to remove rotational equivalence, then arrange the remaining n−1 objects. If the circle can be flipped (necklace), divide by 2.',
           content: [
             { type: 'text', body: 'In a circular arrangement, there is no fixed "first" position — rotating the entire group gives the same arrangement. To count distinct circular arrangements, we fix one object to eliminate rotational equivalence, then arrange the rest.' },
@@ -3436,12 +3436,12 @@ const YEAR_11_EXT2_MISSION: Mission = {
       stages: [
         {
           stageId: 'y11-ext2-l10-s10a', code: '10A', title: 'Permutations and Combinations',
-          outcomeIds: ['MA-PROB-03'], topicIds: ['MA-PROB-03'],
+          outcomeIds: ['MA-PROB-05'], topicIds: ['MA-PROB-05'],
           explanation: 'Permutations ⁿPᵣ = n!/(n−r)! (ordered). Combinations ⁿCᵣ = n!/(r!(n−r)!) (unordered). Restrictions: fix required objects, treat adjacent objects as units, subtract invalid arrangements.',
         },
         {
           stageId: 'y11-ext2-l10-s10b', code: '10B', title: 'Combinatorial Proofs and the Binomial Theorem (Preview)',
-          outcomeIds: ['MA-PROB-03'], topicIds: ['MA-PROB-03'],
+          outcomeIds: ['MA-PROB-05'], topicIds: ['MA-PROB-05'],
           explanation: 'ⁿCᵣ + ⁿC(r+1) = ⁽ⁿ⁺¹⁾C(r+1) (Pascal\'s rule). (a+b)ⁿ = Σ ⁿCᵣ aⁿ⁻ʳbʳ. General term Tᵣ₊₁ = ⁿCᵣ aⁿ⁻ʳbʳ. This is a preview of the full Binomial Theorem treated in Year 12 Extension 1.',
         },
       ],
@@ -3495,17 +3495,17 @@ const YEAR_12_ADVANCED_MISSION: Mission = {
       stages: [
         {
           stageId: 'y12-adv-l1-s1a', code: '1A', title: 'Arithmetic Sequences and Series',
-          outcomeIds: ['MA-SEQ-01'], topicIds: ['MA-SEQ-01'],
+          outcomeIds: ['MA-ALG-06'], topicIds: ['MA-ALG-06'],
           explanation: 'AP: aₙ = a + (n−1)d. Sum: Sₙ = n/2(2a + (n−1)d) = n/2(a + l). Given any three of a, d, n, aₙ, you can find the others. Arithmetic series appear in financial contexts (constant repayments).',
         },
         {
           stageId: 'y12-adv-l1-s1b', code: '1B', title: 'Geometric Sequences and Series',
-          outcomeIds: ['MA-SEQ-02'], topicIds: ['MA-SEQ-02'],
+          outcomeIds: ['MA-ALG-07'], topicIds: ['MA-ALG-07'],
           explanation: 'GP: aₙ = arⁿ⁻¹. Sum: Sₙ = a(rⁿ−1)/(r−1). Sum to infinity: S∞ = a/(1−r) if |r| < 1. GPs model exponential growth/decay, compound interest, and depreciation.',
         },
         {
           stageId: 'y12-adv-l1-s1c', code: '1C', title: 'Limiting Sum and Applications',
-          outcomeIds: ['MA-SEQ-02'], topicIds: ['MA-SEQ-02'],
+          outcomeIds: ['MA-ALG-07'], topicIds: ['MA-ALG-07'],
           explanation: 'A GP converges (has a limiting sum) only when |r| < 1. S∞ = a/(1−r). Convert recurring decimals to fractions using S∞. Solve problems involving infinitely repeated processes.',
         },
       ],
@@ -3662,7 +3662,7 @@ const YEAR_12_ADVANCED_MISSION: Mission = {
         },
         {
           stageId: 'y12-adv-l8-s8c', code: '8C', title: 'Binomial Distribution',
-          outcomeIds: ['MA-STAT-07'], topicIds: ['MA-STAT-07'],
+          outcomeIds: ['MA-PROB-04'], topicIds: ['MA-PROB-04'],
           explanation: 'B(n,p): n independent trials, each with probability p of success. P(X=r) = ⁿCᵣ pʳ (1−p)ⁿ⁻ʳ. E(X)=np; Var(X)=np(1−p). Use for repeated trials with two outcomes (success/failure).',
         },
       ],
@@ -3862,17 +3862,17 @@ const YEAR_12_EXT1_MISSION: Mission = {
       stages: [
         {
           stageId: 'y12-ext1-l8-s8a', code: '8A', title: 'The Binomial Distribution',
-          outcomeIds: ['MA-STAT-07'], topicIds: ['MA-STAT-07'],
+          outcomeIds: ['MA-PROB-04'], topicIds: ['MA-PROB-04'],
           explanation: 'X ~ B(n,p): n independent trials, probability p of success. P(X=r) = ⁿCᵣ pʳ(1−p)ⁿ⁻ʳ. E(X) = np; Var(X) = np(1−p); SD = √(np(1−p)). Use for repeated identical experiments with two outcomes.',
         },
         {
           stageId: 'y12-ext1-l8-s8b', code: '8B', title: 'Normal Approximation to the Binomial',
-          outcomeIds: ['MA-STAT-07'], topicIds: ['MA-STAT-07'],
+          outcomeIds: ['MA-STAT-05'], topicIds: ['MA-STAT-05'],
           explanation: 'For large n, B(n,p) ≈ N(np, np(1−p)). Use this approximation when np ≥ 5 and n(1−p) ≥ 5. Standardise: Z = (X−np)/√(np(1−p)). Apply continuity correction for better accuracy.',
         },
         {
           stageId: 'y12-ext1-l8-s8c', code: '8C', title: 'Sample Proportions and Confidence Intervals',
-          outcomeIds: ['MA-STAT-07'], topicIds: ['MA-STAT-07'],
+          outcomeIds: ['MA-STAT-06'], topicIds: ['MA-STAT-06'],
           explanation: 'Sample proportion p̂ = X/n estimates population proportion p. For large n: p̂ ~ N(p, p(1−p)/n). 95% CI for p: p̂ ± 1.96√(p̂(1−p̂)/n). The interval captures the true p in 95% of all samples.',
         },
       ],

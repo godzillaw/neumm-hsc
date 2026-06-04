@@ -102,6 +102,7 @@ const TOPICS: Record<string, { name: string; nesa: string }> = {
   'MA-EXT-06':   { name: 'Vectors — operations dot product projections',                       nesa: 'MA-V1' },
   'MA-EXT-07':   { name: 'Complex numbers — operations modulus argument polar form',            nesa: 'MA-N1' },
   'MA-EXT-08':   { name: 'Further trigonometry — t-formula and auxiliary angle method',        nesa: 'MA-T4' },
+  'MA-EXT-09':   { name: 'Advanced integration techniques — partial fractions, trigonometric substitution, extended integration by parts and t-substitution', nesa: 'MA-C5' },
   // ── First principles (Year 11 MA-C1) ─────────────────────────────────────
   'MA-CALC-D00': { name: 'First principles — limit definition of the derivative',              nesa: 'MA-C1' },
   // ── Year 9 — NSW Stage 5 ─────────────────────────────────────────────────

@@ -139,6 +139,7 @@ const TOPIC_NAMES: Record<string, string> = {
   'MA-EXT-06':   'Vectors',
   'MA-EXT-07':   'Complex numbers',
   'MA-EXT-08':   'Further trigonometry',
+  'MA-EXT-09':   'Advanced integration techniques',
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
