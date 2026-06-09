@@ -108,7 +108,7 @@ export default function SignupPage() {
       })
 
       // ── Parse JSON response ───────────────────────────────────────────────────
-      const apiData = await res.json() as { error?: string; success?: boolean }
+      const apiData = await res.json() as { error?: string; success?: boolean; existingAccount?: boolean }
 
       if (!res.ok || apiData.error) {
         setError(apiData.error ?? 'Signup failed. Please try again.')
@@ -117,15 +117,36 @@ export default function SignupPage() {
       }
 
       // ── Browser sign-in — most reliable way to set session cookies ────────────
-      // createBrowserClient writes to document.cookie synchronously, so the
-      // cookies are present in every subsequent request (including middleware).
+      // Works for both fresh signups and accounts that already existed from a
+      // partial prior attempt (existingAccount: true).  createBrowserClient writes
+      // to document.cookie synchronously so the cookies are present before
+      // window.location.href fires.
       const supabase = createSupabaseBrowserClient()
       const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({ email, password })
 
       if (signInErr || !signInData.session) {
-        console.error('[signup] signInWithPassword failed:', signInErr?.message, signInErr?.status)
-        // Account was created — send to login so they can sign in manually
-        window.location.href = `${BASE}/auth/login?signup=success`
+        if (apiData.existingAccount) {
+          // Account exists but sign-in failed (wrong password or different account).
+          // Send to login with a helpful message rather than a confusing error.
+          window.location.href = `${BASE}/auth/login?error=${encodeURIComponent('An account with this email already exists. Please sign in.')}`
+        } else {
+          console.error('[signup] signInWithPassword failed:', signInErr?.message, signInErr?.status)
+          window.location.href = `${BASE}/auth/login?signup=success`
+        }
+        return
+      }
+
+      // For existing accounts that already completed onboarding → dashboard.
+      // For new accounts → onboarding.
+      if (apiData.existingAccount && signInData.user) {
+        const { data: profile } = await supabase
+          .from('student_profiles')
+          .select('year_group')
+          .eq('user_id', signInData.user.id)
+          .maybeSingle()
+        window.location.href = profile?.year_group
+          ? `${BASE}/dashboard`
+          : `${BASE}/onboarding/year`
         return
       }
 

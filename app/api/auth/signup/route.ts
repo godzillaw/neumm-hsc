@@ -66,6 +66,18 @@ export async function POST(request: NextRequest) {
     })
 
     if (createErr) {
+      // ── "User already registered" — account exists from a partial/failed ──────
+      // prior signup attempt.  Return a special code so the client can proceed
+      // with signInWithPassword rather than showing a dead-end error.  We do NOT
+      // auto-sign-in here (that would let anyone trigger a sign-in for any email);
+      // the client uses the password the user JUST typed to sign in.
+      const alreadyExists =
+        createErr.message.toLowerCase().includes('already registered') ||
+        createErr.message.toLowerCase().includes('already been registered') ||
+        createErr.message.toLowerCase().includes('email address is already')
+      if (alreadyExists) {
+        return NextResponse.json({ success: true, existingAccount: true })
+      }
       return NextResponse.json({ error: createErr.message }, { status: 400 })
     }
 
