@@ -6,21 +6,6 @@ export const dynamic = 'force-dynamic'
 
 const BASE = '/math-nsw/app'
 
-/**
- * GET /auth/callback
- *
- * Handles the PKCE code exchange for Google OAuth.
- *
- * Cookie strategy: collect every cookie Supabase wants to set via setAll,
- * then explicitly attach them to the NextResponse via response.cookies.set().
- * This is the ONLY reliable pattern in a Next.js Route Handler — cookies()
- * from next/headers does NOT auto-apply mutations to an explicit NextResponse.
- * (cookies() auto-apply only works in Server Actions, not Route Handlers.)
- *
- * The route is force-dynamic so Vercel CDN never caches it, meaning
- * Set-Cookie headers on the redirect response are always delivered to the
- * browser intact.
- */
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
   const code             = searchParams.get('code')
@@ -29,12 +14,20 @@ export async function GET(request: NextRequest) {
 
   const signupUrl = new URL(`${BASE}/auth/signup`, request.url)
 
+  // ── Log every incoming callback for debugging ──────────────────────────────
+  const allCookieNames = request.cookies.getAll().map(c => c.name)
+  console.log('[callback] hit — code:', code ? code.slice(0, 8) + '…' : 'none',
+    '| error:', error ?? 'none',
+    '| cookies:', allCookieNames.join(', ') || '(none)')
+
   if (error) {
+    console.error('[callback] OAuth error:', error, errorDescription)
     signupUrl.searchParams.set('error', encodeURIComponent(errorDescription ?? error))
     return NextResponse.redirect(signupUrl)
   }
 
   if (!code) {
+    console.error('[callback] no code in URL')
     return NextResponse.redirect(signupUrl)
   }
 
@@ -47,9 +40,7 @@ export async function GET(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        // Read from the incoming request cookies (code-verifier for PKCE)
         getAll:  () => request.cookies.getAll(),
-        // Collect — will be applied to the response below
         setAll: (list) => {
           cookiesToSet.length = 0
           list.forEach(c => cookiesToSet.push(c))
@@ -60,8 +51,13 @@ export async function GET(request: NextRequest) {
 
   const { data, error: exchangeErr } = await supabase.auth.exchangeCodeForSession(code)
 
+  console.log('[callback] exchange result — user:', data?.user?.id ?? 'none',
+    '| error:', exchangeErr?.message ?? 'none',
+    '| cookiesToSet count:', cookiesToSet.length,
+    '| cookiesToSet names:', cookiesToSet.map(c => c.name).join(', ') || '(none)')
+
   if (exchangeErr || !data.user) {
-    console.error('[/auth/callback] code exchange failed:', exchangeErr?.message)
+    console.error('[callback] code exchange FAILED:', exchangeErr?.message)
     return NextResponse.redirect(signupUrl)
   }
 
@@ -76,13 +72,32 @@ export async function GET(request: NextRequest) {
     ? new URL(`${BASE}/dashboard`,       request.url)
     : new URL(`${BASE}/onboarding/year`, request.url)
 
+  console.log('[callback] redirecting to:', dest.toString(),
+    '| profile year_group:', profile?.year_group ?? 'none',
+    '| attaching', cookiesToSet.length, 'cookies')
+
   // ── Build redirect and attach session cookies ──────────────────────────────
-  const response = NextResponse.redirect(dest)
+  // IMPORTANT: we use a 200 HTML + JS redirect rather than a 302 so that
+  // Set-Cookie headers are never stripped by CDN or proxies. The browser
+  // processes the cookies from the 200 response, then JS fires location.replace.
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>Redirecting…</title></head><body>
+<script>window.location.replace(${JSON.stringify(dest.toString())})</script>
+</body></html>`
+
+  const response = new NextResponse(html, {
+    status: 200,
+    headers: {
+      'Content-Type':  'text/html; charset=utf-8',
+      'Cache-Control': 'no-store, no-cache, must-revalidate',
+    },
+  })
 
   cookiesToSet.forEach(({ name, value, options }) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     response.cookies.set(name, value, options as any)
   })
 
+  console.log('[callback] response Set-Cookie count:', response.headers.getSetCookie?.()?.length ?? 'unknown')
   return response
 }
