@@ -107,22 +107,8 @@ export default function SignupPage() {
         }),
       })
 
-      // ── Happy path: 200 HTML with session cookies + JS redirect ──────────────
-      // The API route now returns text/html (same pattern as /auth/callback).
-      // The browser stored Set-Cookie headers when the fetch() response arrived
-      // (before this code runs). We write the HTML so the embedded
-      // <script>window.location.replace()</script> fires with cookies committed.
-      const contentType = res.headers.get('content-type') ?? ''
-      if (res.ok && contentType.includes('text/html')) {
-        const html = await res.text()
-        document.open()
-        document.write(html)
-        document.close()
-        return
-      }
-
-      // ── Error path or legacy JSON response ────────────────────────────────────
-      const apiData = await res.json() as { error?: string; success?: boolean; serverSignIn?: boolean }
+      // ── Parse JSON response ───────────────────────────────────────────────────
+      const apiData = await res.json() as { error?: string; success?: boolean }
 
       if (!res.ok || apiData.error) {
         setError(apiData.error ?? 'Signup failed. Please try again.')
@@ -130,12 +116,15 @@ export default function SignupPage() {
         return
       }
 
-      // ── Fallback: server sign-in failed — try from the browser ───────────────
+      // ── Browser sign-in — most reliable way to set session cookies ────────────
+      // createBrowserClient writes to document.cookie synchronously, so the
+      // cookies are present in every subsequent request (including middleware).
       const supabase = createSupabaseBrowserClient()
       const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({ email, password })
 
       if (signInErr || !signInData.session) {
-        console.error('[signup] fallback signInWithPassword failed:', signInErr?.message, signInErr?.status)
+        console.error('[signup] signInWithPassword failed:', signInErr?.message, signInErr?.status)
+        // Account was created — send to login so they can sign in manually
         window.location.href = `${BASE}/auth/login?signup=success`
         return
       }
