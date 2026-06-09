@@ -4,21 +4,33 @@ import { createSupabaseBrowserClient } from './supabase-browser'
 
 // ─── App base URL ─────────────────────────────────────────────────────────────
 //
-// Always derive the base URL from the *current* browser origin + the known
-// basePath.  This ensures the PKCE code verifier cookie (set on the current
-// domain) is readable when Supabase redirects back to /auth/callback on the
-// same domain — whether that's neumm-hsc.vercel.app, localhost, or the
-// custom domain.  Hardcoding NEXT_PUBLIC_APP_URL breaks PKCE when the app
-// is accessed from a different domain (e.g. vercel.app preview vs custom domain).
+// CRITICAL: the redirectTo URL passed to Supabase OAuth MUST match one of the
+// allowed redirect URLs configured in Supabase Auth settings.  If it doesn't,
+// Supabase silently falls back to its configured Site URL — which may be a
+// different domain (e.g. neumm-hsc.vercel.app instead of neumm.com.au).
+//
+// When that happens, the PKCE code verifier cookie (set on the origin where
+// signInWithOAuth was called) is NOT sent to the callback on the different
+// domain — so exchangeCodeForSession fails with "PKCE code verifier missing".
+//
+// Fix: always use NEXT_PUBLIC_APP_URL (set in Vercel env vars to
+// https://neumm.com.au/math-nsw/app) so the redirectTo is always the same
+// canonical domain that Supabase has in its allowed-redirect list.
 //
 const BASE_PATH = '/math-nsw/app'
 
 function appBaseUrl(): string {
+  // Prefer the explicit env var so the redirect URL is canonical and always
+  // matches what is registered in Supabase Auth → URL Configuration.
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL
+  }
+  // Fallback to current origin (works for localhost dev where there is no
+  // custom domain and no env var set).
   if (typeof window !== 'undefined') {
     return `${window.location.origin}${BASE_PATH}`
   }
-  // SSR fallback (should not be reached for OAuth/signup flows)
-  return process.env.NEXT_PUBLIC_APP_URL ?? `http://localhost:3000${BASE_PATH}`
+  return `http://localhost:3000${BASE_PATH}`
 }
 
 // ─── Current user (client) ────────────────────────────────────────────────────
