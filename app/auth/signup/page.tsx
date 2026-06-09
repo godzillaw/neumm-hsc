@@ -3,6 +3,7 @@
 import { useState }                   from 'react'
 import Link                            from 'next/link'
 import { signInWithGoogle }            from '@/lib/auth'
+import { signUpAction }                from '@/app/actions/auth'
 import AgeGate                         from '@/components/auth/AgeGate'
 import ConsentCheckboxes               from '@/components/auth/ConsentCheckboxes'
 import MinorConsentNotice              from '@/components/auth/MinorConsentNotice'
@@ -84,48 +85,35 @@ export default function SignupPage() {
     if (!consentChecked) { setError('Please agree to the Terms and Privacy Policy.'); return }
     setLoading(true)
 
-    const displayName = `${firstName} ${lastName}`.trim()
-    const BASE = '/math-nsw/app'
-
     try {
       const now = new Date().toISOString()
-      const res = await fetch(`${BASE}/api/auth/signup`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-          email,
-          password,
-          displayName,
-          birthYear,
-          isMinor,
-          termsAcceptedAt:        now,
-          termsVersion:           '1.0',
-          privacyAcceptedAt:      now,
-          privacyVersion:         '1.0',
-          minorGuardianConfirmed: isMinor ? true : null,
-        }),
+      // Server Action: creates user + signs in via cookies() from next/headers.
+      // This is the only pattern that guarantees session cookies are committed
+      // before window.location.href fires on Vercel.
+      const result = await signUpAction({
+        email,
+        password,
+        displayName: `${firstName} ${lastName}`.trim(),
+        birthYear,
+        isMinor,
+        termsAcceptedAt:        now,
+        termsVersion:           '1.0',
+        privacyAcceptedAt:      now,
+        privacyVersion:         '1.0',
+        minorGuardianConfirmed: isMinor ? true : null,
+        ip:                     null,
       })
 
-      // ── Parse JSON response ───────────────────────────────────────────────────
-      const apiData = await res.json() as { error?: string; success?: boolean; redirectToLogin?: boolean }
-
-      if (!res.ok || apiData.error) {
-        setError(apiData.error ?? 'Signup failed. Please try again.')
+      if (!result.ok) {
+        setError(result.error)
         setLoading(false)
         return
       }
 
-      if (apiData.redirectToLogin) {
-        // Server created the account but couldn't establish a session (rare).
-        window.location.href = `${BASE}/auth/login?signup=success`
-        return
-      }
-
-      // ── Session cookies were set server-side on this response ─────────────────
-      // The browser stores Set-Cookie headers from the fetch() response before
-      // this JS runs, so the session is already committed.  Navigate directly —
-      // middleware will find the session and allow access to /onboarding/year.
-      window.location.href = `${BASE}/onboarding/year`
+      // cookies() mutations are applied by Next.js before this line runs.
+      // window.location.href triggers a full navigation — middleware finds
+      // the session and allows access to the destination.
+      window.location.href = result.redirect
     } catch (err) {
       console.error('[signup] unexpected error:', err)
       setError('Something went wrong. Please try again.')

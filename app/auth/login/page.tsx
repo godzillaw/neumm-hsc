@@ -2,9 +2,9 @@
 
 import { useState, useEffect, Suspense }   from 'react'
 import Link                                from 'next/link'
-import { useRouter, useSearchParams }      from 'next/navigation'
-import { signInWithEmail, signInWithGoogle } from '@/lib/auth'
-import { createSupabaseBrowserClient }       from '@/lib/supabase-browser'
+import { useSearchParams }                  from 'next/navigation'
+import { signInWithGoogle }                  from '@/lib/auth'
+import { loginAction }                       from '@/app/actions/auth'
 
 // ─── Left-panel highlights ─────────────────────────────────────────────────────
 const HIGHLIGHTS = [
@@ -27,7 +27,6 @@ const HIGHLIGHTS = [
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 function LoginPageInner() {
-  const router       = useRouter()
   const searchParams = useSearchParams()
   const [email,         setEmail]         = useState('')
   const [password,      setPassword]      = useState('')
@@ -67,33 +66,27 @@ function LoginPageInner() {
     e.preventDefault()
     setError(null); setLoading(true)
 
-    const { error: err, data } = await signInWithEmail(email, password)
-    if (err) {
-      // Supabase returns "Invalid login credentials" for both wrong password
-      // and non-existent accounts — surface a clearer message
-      const msg = err.message.toLowerCase().includes('invalid login credentials')
-        ? 'Incorrect email or password. New here? Sign up for a free account.'
-        : err.message
-      setError(msg)
+    try {
+      // Server Action: signs in via cookies() from next/headers so the session
+      // is committed before window.location.href fires.
+      const result = await loginAction({ email, password })
+
+      if (!result.ok) {
+        const msg = result.error.includes('Incorrect email or password')
+          ? 'Incorrect email or password. New here? Sign up for a free account.'
+          : result.error
+        setError(msg)
+        setLoading(false)
+        return
+      }
+
+      // Full navigation — middleware finds the committed session cookie.
+      window.location.href = result.redirect
+    } catch (err) {
+      console.error('[login]', err)
+      setError('Something went wrong. Please try again.')
       setLoading(false)
-      return
     }
-
-    // Route to onboarding if the user hasn't completed it yet,
-    // otherwise go straight to the dashboard.
-    const supabase = createSupabaseBrowserClient()
-    const { data: profile } = await supabase
-      .from('student_profiles')
-      .select('year_group')
-      .eq('user_id', data.user!.id)
-      .maybeSingle()
-
-    if (profile?.year_group) {
-      router.push('/dashboard')
-    } else {
-      router.push('/onboarding/year')
-    }
-    router.refresh()
   }
 
   async function handleGoogleLogin() {
