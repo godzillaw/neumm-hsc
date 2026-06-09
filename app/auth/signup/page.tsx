@@ -1,7 +1,6 @@
 'use client'
 
 import { useState }                   from 'react'
-import Link                            from 'next/link'
 import { signInWithGoogle }            from '@/lib/auth'
 import { signUpAction }                from '@/app/actions/auth'
 import AgeGate                         from '@/components/auth/AgeGate'
@@ -242,14 +241,6 @@ export default function SignupPage() {
                 <p className="text-sm text-gray-500 mt-1">First, let&apos;s verify your age.</p>
               </div>
               <AgeGate onComplete={handleAgeComplete} onUnder13={handleUnder13} />
-              <p className="mt-6 text-center text-sm text-gray-400">
-                Already have an account?{' '}
-                <Link href="/auth/login"
-                  className="font-black transition-colors hover:opacity-80"
-                  style={{ color: '#185FA5' }}>
-                  Sign in →
-                </Link>
-              </p>
             </>
           )}
 
@@ -259,12 +250,6 @@ export default function SignupPage() {
               {/* Heading */}
               <div className="mb-7">
                 <h2 className="text-2xl font-black text-gray-900">Create your account</h2>
-                <p className="text-sm text-gray-500 mt-1">
-                  Already have an account?{' '}
-                  <Link href="/auth/login" className="font-bold" style={{ color: '#185FA5' }}>
-                    Log in here
-                  </Link>
-                </p>
               </div>
 
               {/* Minor badge */}
@@ -398,15 +383,6 @@ export default function SignupPage() {
                 </p>
               </form>
 
-              {/* Login link */}
-              <p className="mt-6 text-center text-sm text-gray-400">
-                Already have an account?{' '}
-                <Link href="/auth/login"
-                  className="font-black transition-colors hover:opacity-80"
-                  style={{ color: '#185FA5' }}>
-                  Sign in →
-                </Link>
-              </p>
             </>
           )}
         </div>
