@@ -111,11 +111,45 @@ export async function POST(request: NextRequest) {
 
     if (signInErr || !signInData.session) {
       console.warn('[POST /api/auth/signup] server signIn failed:', signInErr?.message)
-      // User was created — client will attempt sign-in as fallback
+      // User was created but server sign-in failed — return JSON so the client
+      // can attempt a fallback sign-in.
       return NextResponse.json({ success: true, serverSignIn: false })
     }
 
-    const response = NextResponse.json({ success: true, serverSignIn: true })
+    // ── 5. Return 200 HTML + Set-Cookie + JS redirect ─────────────────────────
+    //
+    // WHY HTML instead of JSON (same reason as /auth/callback):
+    //   When the browser processes a 200 HTML response, it stores ALL Set-Cookie
+    //   headers BEFORE the <script> tag executes.  With a JSON response + client
+    //   window.location.href, there is an intermittent race on Vercel where the
+    //   session cookies haven't fully committed before the next navigation fires,
+    //   causing the middleware to see no session and redirect to /auth/login.
+    //
+    //   Returning HTML and using document.write() on the client ensures the same
+    //   guaranteed ordering: cookies stored → script runs → navigation happens.
+    const dest = '/math-nsw/app/onboarding/year'
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Setting up your account…</title>
+  <style>
+    body { display:flex; align-items:center; justify-content:center;
+           min-height:100vh; font-family:'Nunito',sans-serif;
+           background:#fff; margin:0; }
+    p { color:#6B7280; font-size:15px; font-weight:600; }
+  </style>
+</head>
+<body>
+  <p>Setting up your account…</p>
+  <script>window.location.replace(${JSON.stringify(dest)})</script>
+</body>
+</html>`
+
+    const response = new NextResponse(html, {
+      status:  200,
+      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    })
     pendingCookies.forEach(({ name, value, options }) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       response.cookies.set(name, value, options as any)

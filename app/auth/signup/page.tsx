@@ -107,6 +107,21 @@ export default function SignupPage() {
         }),
       })
 
+      // ── Happy path: 200 HTML with session cookies + JS redirect ──────────────
+      // The API route now returns text/html (same pattern as /auth/callback).
+      // The browser stored Set-Cookie headers when the fetch() response arrived
+      // (before this code runs). We write the HTML so the embedded
+      // <script>window.location.replace()</script> fires with cookies committed.
+      const contentType = res.headers.get('content-type') ?? ''
+      if (res.ok && contentType.includes('text/html')) {
+        const html = await res.text()
+        document.open()
+        document.write(html)
+        document.close()
+        return
+      }
+
+      // ── Error path or legacy JSON response ────────────────────────────────────
       const apiData = await res.json() as { error?: string; success?: boolean; serverSignIn?: boolean }
 
       if (!res.ok || apiData.error) {
@@ -115,14 +130,7 @@ export default function SignupPage() {
         return
       }
 
-      // Server set session cookies on this response — browser stored them
-      // before this code ran. Navigate directly; middleware will see the session.
-      if (apiData.serverSignIn) {
-        window.location.href = `${BASE}/onboarding/year`
-        return
-      }
-
-      // Server sign-in failed (rare) — try client-side as fallback
+      // ── Fallback: server sign-in failed — try from the browser ───────────────
       const supabase = createSupabaseBrowserClient()
       const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({ email, password })
 
