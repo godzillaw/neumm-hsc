@@ -1,17 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter }            from 'next/navigation'
+import { useState, useEffect }  from 'react'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
-import ConsentCheckboxes from '@/components/auth/ConsentCheckboxes'
+import { acceptLegalVersion }    from '@/lib/actions/compliance'
+import ConsentCheckboxes         from '@/components/auth/ConsentCheckboxes'
 
 /**
  * /auth/reaccept — shown when terms/privacy versions are outdated.
  * User must re-accept before accessing the dashboard.
  */
 export default function ReacceptPage() {
-  const router = useRouter()
-  const BASE   = '/math-nsw/app'
+  const BASE = '/math-nsw/app'
 
   const [userId,         setUserId]         = useState<string | null>(null)
   const [consentChecked, setConsentChecked] = useState(false)
@@ -22,7 +21,7 @@ export default function ReacceptPage() {
     const supabase = createSupabaseBrowserClient()
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) {
-        window.location.href = `${BASE}/auth/login`
+        window.location.href = `${BASE}/auth/signup`
         return
       }
       setUserId(user.id)
@@ -35,30 +34,18 @@ export default function ReacceptPage() {
     setError(null)
 
     try {
-      const supabase = createSupabaseBrowserClient()
-      const now = new Date().toISOString()
       const termsVersion   = process.env.NEXT_PUBLIC_CURRENT_TERMS_VERSION   ?? '1.0'
       const privacyVersion = process.env.NEXT_PUBLIC_CURRENT_PRIVACY_VERSION ?? '1.0'
 
-      const { error: updateErr } = await supabase
-        .from('users')
-        .update({
-          terms_version:       termsVersion,
-          terms_accepted_at:   now,
-          privacy_version:     privacyVersion,
-          privacy_accepted_at: now,
-        })
-        .eq('id', userId)
+      // Use Server Action so the update runs with a valid server-side session
+      // and is guaranteed to persist before we navigate away.
+      await acceptLegalVersion(userId, termsVersion, privacyVersion)
 
-      if (updateErr) {
-        setError('Failed to save. Please try again.')
-        setLoading(false)
-        return
-      }
-
-      router.replace('/dashboard')
+      // Full page navigation (not router.replace) so middleware re-reads the
+      // DB with fresh data and doesn't bounce back to /auth/reaccept.
+      window.location.href = `${BASE}/dashboard`
     } catch {
-      setError('Something went wrong. Please try again.')
+      setError('Failed to save. Please try again.')
       setLoading(false)
     }
   }
