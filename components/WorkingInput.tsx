@@ -321,14 +321,12 @@ export default function WorkingInput({ onChange, disabled }: WorkingInputProps) 
       {/* ── Toolbar ─────────────────────────────────────────────────────────── */}
       {/* Horizontal scroll on narrow screens so tools never wrap to a 2nd row */}
       <div
-        className="flex items-center gap-2 px-3 py-2"
+        className="no-scrollbar flex items-center gap-2 px-3 py-2"
         style={{
           background: 'linear-gradient(135deg,#F5F3FF,#FDF2F8)',
           borderBottom: '1px solid #EDE9FE',
           overflowX: 'auto',
           WebkitOverflowScrolling: 'touch',
-          scrollbarWidth: 'none',          // Firefox
-          msOverflowStyle: 'none',         // IE
         }}>
 
         <span className="text-xs font-black shrink-0" style={{ color: '#7C3AED' }}>✏️ Working</span>

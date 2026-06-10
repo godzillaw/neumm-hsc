@@ -1278,7 +1278,8 @@ export default function PracticeSession({
 
       {/* ── Left: Question Panel ─────────────────────────────────── */}
       {/* max-w-2xl only kicks in on lg (1024px+) so iPad portrait gets full width */}
-      <div className={`flex-1 min-w-0 flex flex-col px-5 md:px-8 py-6 lg:max-w-2xl${showTrialBanner ? ' mt-10' : ''}`}>
+      {/* pb-28 on mobile leaves room above the fixed MobileBottomNav (~80px) */}
+      <div className={`flex-1 min-w-0 flex flex-col px-5 md:px-8 py-6 pb-28 md:pb-8 lg:max-w-2xl${showTrialBanner ? ' mt-10' : ''}`}>
 
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
@@ -1564,43 +1565,49 @@ export default function PracticeSession({
           />
         )}
 
-        {/* Action buttons */}
+        {/* Action buttons
+            Mobile: hint + explain on one row, submit full-width below.
+            Desktop (md+): all three in a single row. */}
         {isInteractive ? (
-          <div className="flex items-center gap-2">
-            <button onClick={handleHint}
-              className="flex items-center gap-1.5 px-3 py-3 rounded-2xl border-2 border-purple-200 bg-white text-sm font-black text-violet-700 hover:bg-purple-50 transition-all min-h-[48px] shrink-0">
-              💡 Hint
-              {hintCount > 0 && (
-                <span className="text-xs bg-violet-100 text-violet-700 rounded-full w-5 h-5 flex items-center justify-center font-black">
-                  {hintCount}
-                </span>
-              )}
-            </button>
-            <button onClick={handleExplainConcept}
-              className="flex items-center gap-1.5 px-3 py-3 rounded-2xl border-2 text-xs font-black transition-all min-h-[48px] shrink-0"
-              style={{
-                borderColor: !hasProAI ? '#E5E7EB' : showConcept ? '#6366F1' : '#C7D2FE',
-                background:  !hasProAI ? '#F9FAFB' : showConcept ? '#EEF2FF' : 'white',
-                color:       !hasProAI ? '#9CA3AF' : '#4338CA',
-              }}>
-              {conceptLoading ? (
-                <span className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded-full border-2 border-t-transparent animate-spin"
-                    style={{ borderColor: '#6366F1', borderTopColor: 'transparent' }} />
-                  Loading…
-                </span>
-              ) : !hasProAI ? '🔒 Explain concept'
-                : showConcept ? '📖 Hide' : '📖 Explain concept'}
-            </button>
+          <div className="flex flex-col gap-2">
+            {/* Row 1: Hint + Explain */}
+            <div className="flex items-center gap-2">
+              <button onClick={handleHint}
+                className="flex items-center gap-1.5 px-3 py-3 rounded-2xl border-2 border-purple-200 bg-white text-sm font-black text-violet-700 hover:bg-purple-50 transition-all min-h-[48px] flex-1">
+                💡 Hint
+                {hintCount > 0 && (
+                  <span className="text-xs bg-violet-100 text-violet-700 rounded-full w-5 h-5 flex items-center justify-center font-black">
+                    {hintCount}
+                  </span>
+                )}
+              </button>
+              <button onClick={handleExplainConcept}
+                className="flex items-center gap-1.5 px-3 py-3 rounded-2xl border-2 text-xs font-black transition-all min-h-[48px] flex-1"
+                style={{
+                  borderColor: !hasProAI ? '#E5E7EB' : showConcept ? '#6366F1' : '#C7D2FE',
+                  background:  !hasProAI ? '#F9FAFB' : showConcept ? '#EEF2FF' : 'white',
+                  color:       !hasProAI ? '#9CA3AF' : '#4338CA',
+                }}>
+                {conceptLoading ? (
+                  <span className="flex items-center gap-1">
+                    <div className="w-3 h-3 rounded-full border-2 border-t-transparent animate-spin"
+                      style={{ borderColor: '#6366F1', borderTopColor: 'transparent' }} />
+                    Loading…
+                  </span>
+                ) : !hasProAI ? '🔒 Concept'
+                  : showConcept ? '📖 Hide' : '📖 Concept'}
+              </button>
+            </div>
+            {/* Row 2: Submit — full width so there's room for the label */}
             {question.question_type === 'open' ? (
               <button onClick={handleOpenSubmit} disabled={!workingBase64}
-                className="btn-gradient flex-1 py-3 rounded-2xl text-sm font-black min-h-[48px]">
-                {workingBase64 ? '✅ Submit for Marking' : '✏️ Draw or 📷 photo your working first'}
+                className="btn-gradient w-full py-3 rounded-2xl text-sm font-black min-h-[48px]">
+                {workingBase64 ? '✅ Submit for Marking' : '✏️ Add your working above first'}
               </button>
             ) : (
               <button onClick={handleSubmit} disabled={!selectedOption}
-                className="btn-gradient flex-1 py-3 rounded-2xl text-sm font-black min-h-[48px]">
-                {selectedOption ? 'Submit Answer ✨' : 'Pick an option first…'}
+                className="btn-gradient w-full py-3 rounded-2xl text-sm font-black min-h-[48px]">
+                {selectedOption ? 'Submit Answer ✨' : 'Select an answer above first…'}
               </button>
             )}
           </div>
@@ -1815,9 +1822,9 @@ export default function PracticeSession({
         {showChatPanel && (
           <div className="fixed inset-0 md:inset-auto md:bottom-6 md:right-6 md:w-[360px] md:h-[520px] z-50 flex flex-col rounded-none md:rounded-3xl shadow-2xl overflow-hidden"
             style={{ background: 'white', border: '1px solid #EDE9FE' }}>
-            {/* Header */}
+            {/* Header — extra top padding on mobile for iPhone notch / Dynamic Island */}
             <div className="flex items-center justify-between px-5 py-4 shrink-0"
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#EC4899)' }}>
+              style={{ background: 'linear-gradient(135deg,#7C3AED,#EC4899)', paddingTop: 'max(16px, calc(env(safe-area-inset-top, 0px) + 12px))' }}>
               <div className="flex items-center gap-2">
                 <span className="text-xl">👩‍🏫</span>
                 <p className="text-sm font-black text-white">Neumm Helper</p>
