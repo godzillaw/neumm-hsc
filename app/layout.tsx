@@ -28,7 +28,11 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  // minimumScale prevents iOS Safari from zooming out accidentally
+  minimumScale: 1,
   viewportFit: 'cover',
+  // interactiveWidget keeps the viewport stable when the keyboard appears on iPad
+  interactiveWidget: 'resizes-content',
 }
 
 export default function RootLayout({

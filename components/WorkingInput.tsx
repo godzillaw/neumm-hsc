@@ -45,6 +45,11 @@ export default function WorkingInput({ onChange, disabled }: WorkingInputProps) 
   const resizeDragRef   = useRef(false)
   const resizeStartRef  = useRef({ y: 0, h: 0 })
 
+  // Track which pointer ID is currently drawing (prevents multitouch parallel strokes)
+  const activePointerIdRef  = useRef<number | null>(null)
+  // Track the pointerType of the active stroke ('pen', 'touch', 'mouse')
+  const activePointerTypeRef = useRef<string | null>(null)
+
   const [strokes,           setStrokes]           = useState<Stroke[]>([])
   const [penColor,          setPenColor]          = useState(PEN_COLORS[0].hex)
   const [penWidth,          setPenWidth]          = useState(PEN_WIDTHS[1].value)
@@ -94,7 +99,6 @@ export default function WorkingInput({ onChange, disabled }: WorkingInputProps) 
     const canvas = canvasRef.current
     if (!canvas) { onChange(null); return }
 
-    // Calculate bounding box of all stroke points
     let minY = CANVAS_H, maxY = 0, minX = CANVAS_W, maxX = 0
     for (const s of strokeList) {
       for (const p of s.points) {
@@ -105,14 +109,12 @@ export default function WorkingInput({ onChange, disabled }: WorkingInputProps) 
       }
     }
 
-    // Add generous padding so letters aren't clipped
     const PAD    = 50
     const cropX  = Math.max(0, minX - PAD)
     const cropY  = Math.max(0, minY - PAD)
     const cropW  = Math.min(CANVAS_W - cropX, Math.max(300, maxX - minX + PAD * 2))
     const cropH  = Math.min(CANVAS_H - cropY, Math.max(200, maxY - minY + PAD * 2))
 
-    // Draw cropped region onto a temporary canvas, then export as JPEG
     const tmp     = document.createElement('canvas')
     tmp.width     = cropW
     tmp.height    = cropH
@@ -121,24 +123,55 @@ export default function WorkingInput({ onChange, disabled }: WorkingInputProps) 
     tmpCtx.fillRect(0, 0, cropW, cropH)
     tmpCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH)
 
-    // JPEG at 85% — visually lossless for handwriting, ~5-10× smaller than PNG
     const dataUrl = tmp.toDataURL('image/jpeg', 0.85)
     onChange(dataUrl.split(',')[1] ?? null)
   }, [onChange, redraw])
 
-  // ── Pointer helpers for drawing ──────────────────────────────────────────────
+  // ── Canvas coordinate helper ──────────────────────────────────────────────
+  //
+  // Always use rect.width / rect.height (actual rendered size) rather than
+  // any stale React state, so coordinates are correct even after the canvas
+  // is resized or the viewport is scaled (e.g. iPad with zoom).
+
+  function canvasPoint(e: React.PointerEvent<HTMLCanvasElement>): Point {
+    const rect = (e.target as HTMLCanvasElement).getBoundingClientRect()
+    return {
+      x: ((e.clientX - rect.left)  / rect.width)  * CANVAS_W,
+      y: ((e.clientY - rect.top)   / rect.height) * CANVAS_H,
+    }
+  }
+
+  // ── Palm rejection helper ─────────────────────────────────────────────────
+  //
+  // On iPad with Apple Pencil:
+  //   - Pencil events arrive as pointerType === 'pen'
+  //   - Palm/finger events arrive as pointerType === 'touch'
+  //
+  // Rule: once a 'pen' stroke is active, ignore all 'touch' events.
+  // This prevents the palm from drawing while you write with the Pencil.
+  // Finger drawing still works normally when no Pencil stroke is in progress.
+
+  function shouldIgnorePointer(e: React.PointerEvent<HTMLCanvasElement>): boolean {
+    // If a pen is actively drawing, reject all touch events (palm rejection)
+    if (activePointerTypeRef.current === 'pen' && e.pointerType === 'touch') return true
+    // If a different pointer is already drawing, reject the new one (no multitouch draw)
+    if (activePointerIdRef.current !== null && activePointerIdRef.current !== e.pointerId) return true
+    return false
+  }
+
+  // ── Pointer handlers ─────────────────────────────────────────────────────
 
   function handlePointerDown(e: React.PointerEvent<HTMLCanvasElement>) {
     if (disabled) return
+    if (shouldIgnorePointer(e)) return
     e.preventDefault()
     ;(e.target as HTMLCanvasElement).setPointerCapture(e.pointerId)
+
+    activePointerIdRef.current   = e.pointerId
+    activePointerTypeRef.current = e.pointerType
+
     isDrawing.current = true
-    const pos: Point = {
-      x: ((e.clientX - (e.target as HTMLCanvasElement).getBoundingClientRect().left) /
-          (e.target as HTMLCanvasElement).getBoundingClientRect().width) * CANVAS_W,
-      y: ((e.clientY - (e.target as HTMLCanvasElement).getBoundingClientRect().top) /
-          canvasDisplayH) * CANVAS_H,
-    }
+    const pos = canvasPoint(e)
     const stroke: Stroke = { points: [pos], color: penColor, width: penWidth }
     liveStrokeRef.current = stroke
     const ctx = canvasRef.current?.getContext('2d')
@@ -152,12 +185,10 @@ export default function WorkingInput({ onChange, disabled }: WorkingInputProps) 
 
   function handlePointerMove(e: React.PointerEvent<HTMLCanvasElement>) {
     if (!isDrawing.current || !liveStrokeRef.current || disabled) return
+    if (e.pointerId !== activePointerIdRef.current) return
     e.preventDefault()
-    const rect = (e.target as HTMLCanvasElement).getBoundingClientRect()
-    const pos: Point = {
-      x: ((e.clientX - rect.left) / rect.width) * CANVAS_W,
-      y: ((e.clientY - rect.top)  / canvasDisplayH) * CANVAS_H,
-    }
+
+    const pos  = canvasPoint(e)
     const prev = liveStrokeRef.current.points[liveStrokeRef.current.points.length - 1]
     const ctx  = canvasRef.current?.getContext('2d')
     if (ctx && prev) {
@@ -176,9 +207,14 @@ export default function WorkingInput({ onChange, disabled }: WorkingInputProps) 
     }
   }
 
-  function handlePointerUp() {
+  function handlePointerUp(e: React.PointerEvent<HTMLCanvasElement>) {
     if (!isDrawing.current || !liveStrokeRef.current) return
-    isDrawing.current = false
+    if (e.pointerId !== activePointerIdRef.current) return
+
+    isDrawing.current            = false
+    activePointerIdRef.current   = null
+    activePointerTypeRef.current = null
+
     const finished = liveStrokeRef.current
     liveStrokeRef.current = null
     const next = [...strokes, finished]
@@ -186,19 +222,29 @@ export default function WorkingInput({ onChange, disabled }: WorkingInputProps) 
     exportCanvas(next)
   }
 
-  // ── Canvas resize drag handle ────────────────────────────────────────────────
+  function handlePointerCancel(e: React.PointerEvent<HTMLCanvasElement>) {
+    if (e.pointerId !== activePointerIdRef.current) return
+    isDrawing.current            = false
+    activePointerIdRef.current   = null
+    activePointerTypeRef.current = null
+    liveStrokeRef.current        = null
+    // Redraw without the cancelled stroke
+    redraw(strokes)
+  }
+
+  // ── Canvas resize drag handle ────────────────────────────────────────────
 
   function handleResizePointerDown(e: React.PointerEvent<HTMLDivElement>) {
     e.preventDefault()
     ;(e.target as HTMLDivElement).setPointerCapture(e.pointerId)
-    resizeDragRef.current      = true
-    resizeStartRef.current     = { y: e.clientY, h: canvasDisplayH }
+    resizeDragRef.current  = true
+    resizeStartRef.current = { y: e.clientY, h: canvasDisplayH }
   }
 
   function handleResizePointerMove(e: React.PointerEvent<HTMLDivElement>) {
     if (!resizeDragRef.current) return
-    const delta  = e.clientY - resizeStartRef.current.y
-    const newH   = Math.max(MIN_DISPLAY_H, Math.min(MAX_DISPLAY_H, resizeStartRef.current.h + delta))
+    const delta = e.clientY - resizeStartRef.current.y
+    const newH  = Math.max(MIN_DISPLAY_H, Math.min(MAX_DISPLAY_H, resizeStartRef.current.h + delta))
     setCanvasDisplayH(newH)
   }
 
@@ -206,7 +252,7 @@ export default function WorkingInput({ onChange, disabled }: WorkingInputProps) 
     resizeDragRef.current = false
   }
 
-  // ── Actions ──────────────────────────────────────────────────────────────────
+  // ── Actions ──────────────────────────────────────────────────────────────
 
   function handleUndo() {
     const next = strokes.slice(0, -1)
@@ -234,11 +280,8 @@ export default function WorkingInput({ onChange, disabled }: WorkingInputProps) 
     const reader = new FileReader()
     reader.onload = ev => {
       const originalDataUrl = ev.target?.result as string
-
-      // Show original as preview immediately so user sees feedback
       setPhotoPreview(originalDataUrl)
 
-      // Resize + JPEG-compress before passing to parent (handles iPhone 12MP+ photos)
       const img = new window.Image()
       img.onload = () => {
         const MAX = 1024
@@ -262,7 +305,7 @@ export default function WorkingInput({ onChange, disabled }: WorkingInputProps) 
       img.src = originalDataUrl
     }
     reader.readAsDataURL(file)
-    e.target.value = ''  // reset so same file can be re-selected
+    e.target.value = ''
   }
 
   function handleRemovePhoto() {
@@ -270,16 +313,25 @@ export default function WorkingInput({ onChange, disabled }: WorkingInputProps) 
     onChange(null)
   }
 
-  // ── Render ───────────────────────────────────────────────────────────────────
+  // ── Render ───────────────────────────────────────────────────────────────
 
   return (
     <div className="rounded-2xl overflow-hidden border-2" style={{ borderColor: '#DDD6FE' }}>
 
       {/* ── Toolbar ─────────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 px-3 py-2 flex-wrap"
-        style={{ background: 'linear-gradient(135deg,#F5F3FF,#FDF2F8)', borderBottom: '1px solid #EDE9FE' }}>
+      {/* Horizontal scroll on narrow screens so tools never wrap to a 2nd row */}
+      <div
+        className="flex items-center gap-2 px-3 py-2"
+        style={{
+          background: 'linear-gradient(135deg,#F5F3FF,#FDF2F8)',
+          borderBottom: '1px solid #EDE9FE',
+          overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: 'none',          // Firefox
+          msOverflowStyle: 'none',         // IE
+        }}>
 
-        <span className="text-xs font-black shrink-0" style={{ color: '#7C3AED' }}>✏️ Show your working</span>
+        <span className="text-xs font-black shrink-0" style={{ color: '#7C3AED' }}>✏️ Working</span>
 
         {/* Mode toggle */}
         <div className="flex rounded-xl overflow-hidden border border-purple-200 ml-auto shrink-0">
@@ -299,15 +351,16 @@ export default function WorkingInput({ onChange, disabled }: WorkingInputProps) 
         {/* Draw-mode controls */}
         {mode === 'draw' && (
           <>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 shrink-0">
               {PEN_COLORS.map(({ hex, label }) => (
                 <button key={hex} type="button" title={label}
                   onClick={() => setPenColor(hex)}
-                  className="w-5 h-5 rounded-full border-2 transition-all shrink-0"
+                  className="w-6 h-6 rounded-full border-2 transition-all shrink-0"
                   style={{
                     backgroundColor: hex,
                     borderColor:     penColor === hex ? '#7C3AED' : 'transparent',
                     transform:       penColor === hex ? 'scale(1.25)' : 'scale(1)',
+                    minWidth: 24, minHeight: 24,   // prevent squeeze on iPad
                   }}
                 />
               ))}
@@ -316,7 +369,7 @@ export default function WorkingInput({ onChange, disabled }: WorkingInputProps) 
             <select value={penWidth}
               onChange={e => setPenWidth(Number(e.target.value))}
               className="text-xs rounded-lg px-2 py-1 border border-purple-200 shrink-0"
-              style={{ color: '#6D28D9', background: 'white' }}>
+              style={{ color: '#6D28D9', background: 'white', minHeight: 32 }}>
               {PEN_WIDTHS.map(({ value, label }) => (
                 <option key={value} value={value}>{label}</option>
               ))}
@@ -324,12 +377,12 @@ export default function WorkingInput({ onChange, disabled }: WorkingInputProps) 
 
             <button type="button" onClick={handleUndo} disabled={strokes.length === 0 || !!disabled}
               className="px-2 py-1 text-xs font-bold rounded-lg disabled:opacity-30 transition-all active:scale-95 shrink-0"
-              style={{ background: 'white', border: '1px solid #DDD6FE', color: '#7C3AED' }}>
+              style={{ background: 'white', border: '1px solid #DDD6FE', color: '#7C3AED', minHeight: 32 }}>
               ↩ Undo
             </button>
             <button type="button" onClick={handleClear} disabled={strokes.length === 0 || !!disabled}
               className="px-2 py-1 text-xs font-bold rounded-lg disabled:opacity-30 transition-all active:scale-95 shrink-0"
-              style={{ background: 'white', border: '1px solid #FCA5A5', color: '#DC2626' }}>
+              style={{ background: 'white', border: '1px solid #FCA5A5', color: '#DC2626', minHeight: 32 }}>
               🗑 Clear
             </button>
           </>
@@ -347,14 +400,22 @@ export default function WorkingInput({ onChange, disabled }: WorkingInputProps) 
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerLeave={handlePointerUp}
+            onPointerCancel={handlePointerCancel}
             style={{
               width:       '100%',
               height:      canvasDisplayH,
               background:  '#FFFFFF',
               cursor:      disabled ? 'not-allowed' : 'crosshair',
+              // Prevent ALL default touch behaviour (scroll, zoom, long-press menu)
               touchAction: 'none',
               display:     'block',
-              userSelect:  'none',
+              // Prevent text/image selection popups on long press (iOS Safari)
+              userSelect:          'none',
+              WebkitUserSelect:    'none',
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              WebkitTouchCallout:  'none' as any,
+              // Promote to GPU layer for smoother drawing on iPad
+              willChange: 'transform',
             }}
           />
 
@@ -372,13 +433,13 @@ export default function WorkingInput({ onChange, disabled }: WorkingInputProps) 
               alignItems:     'center',
               justifyContent: 'center',
               gap:            6,
-              padding:        '4px 12px',
+              padding:        '6px 12px',   // slightly taller hit target for touch
               userSelect:     'none',
+              minHeight:      36,            // easier to grab on iPad
             }}>
             <span style={{ fontSize: 11, color: '#A78BFA', fontWeight: 700, pointerEvents: 'none' }}>
-              ⇕ Drag to expand canvas
+              ⇕ Drag to expand
             </span>
-            {/* Grip dots */}
             <div style={{ display: 'flex', gap: 3, pointerEvents: 'none' }}>
               {[0,1,2,3,4].map(i => (
                 <div key={i} style={{ width: 4, height: 4, borderRadius: '50%', background: '#C4B5FD' }} />
@@ -411,12 +472,10 @@ export default function WorkingInput({ onChange, disabled }: WorkingInputProps) 
                 Work it out on paper, then take a photo or upload
               </p>
 
-              {/* Two separate buttons for camera vs gallery */}
               <div className="flex gap-3 flex-wrap justify-center">
-                {/* Camera button — opens camera directly on supported devices */}
                 <label
                   className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-black text-white transition-all active:scale-95 cursor-pointer"
-                  style={{ background: 'linear-gradient(135deg,#7C3AED,#EC4899)' }}>
+                  style={{ background: 'linear-gradient(135deg,#7C3AED,#EC4899)', minHeight: 44 }}>
                   📷 Take Photo
                   <input
                     type="file"
@@ -427,10 +486,9 @@ export default function WorkingInput({ onChange, disabled }: WorkingInputProps) 
                   />
                 </label>
 
-                {/* Gallery / file picker — no capture attribute so the OS shows all options */}
                 <label
                   className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-black cursor-pointer transition-all active:scale-95"
-                  style={{ background: 'white', border: '2px solid #DDD6FE', color: '#7C3AED' }}>
+                  style={{ background: 'white', border: '2px solid #DDD6FE', color: '#7C3AED', minHeight: 44 }}>
                   🖼️ Upload Photo
                   <input
                     ref={galleryInputRef}
@@ -442,7 +500,6 @@ export default function WorkingInput({ onChange, disabled }: WorkingInputProps) 
                 </label>
               </div>
 
-              {/* Hidden camera ref (kept for legacy) */}
               <input ref={cameraInputRef} type="file" accept="image/*" capture="environment"
                 onChange={handlePhotoChange} className="hidden" />
             </>
@@ -455,7 +512,7 @@ export default function WorkingInput({ onChange, disabled }: WorkingInputProps) 
         style={{ background: '#F5F3FF', borderTop: '1px solid #EDE9FE' }}>
         <span className="text-[11px]" style={{ color: '#8B5CF6' }}>
           💡 {mode === 'draw'
-            ? 'Use your finger or stylus — show every step. Drag the handle below to get more space.'
+            ? 'Apple Pencil or finger — show every step. Drag handle to expand canvas.'
             : 'Write your working on paper, then take a clear photo with good lighting'}
         </span>
       </div>

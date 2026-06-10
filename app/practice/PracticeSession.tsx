@@ -1277,7 +1277,8 @@ export default function PracticeSession({
       )}
 
       {/* ── Left: Question Panel ─────────────────────────────────── */}
-      <div className={`flex-1 min-w-0 flex flex-col px-5 md:px-8 py-6 md:max-w-2xl${showTrialBanner ? ' mt-10' : ''}`}>
+      {/* max-w-2xl only kicks in on lg (1024px+) so iPad portrait gets full width */}
+      <div className={`flex-1 min-w-0 flex flex-col px-5 md:px-8 py-6 lg:max-w-2xl${showTrialBanner ? ' mt-10' : ''}`}>
 
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
