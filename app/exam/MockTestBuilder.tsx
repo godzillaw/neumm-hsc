@@ -114,7 +114,7 @@ export default function MockTestBuilder({
   const [selectedStageIds, setSelected]  = useState<Set<string>>(new Set())
   // expandedLevelIds: levels with stages shown
   const [expandedLevels,   setExpanded]  = useState<Set<string>>(new Set())
-  const [testDate,         setTestDate]  = useState('')
+
   const [qCount,           setQCount]    = useState(15)
   const [timeMins,         setTimeMins]  = useState(30)
   const [title,            setTitle]     = useState('')
@@ -200,14 +200,10 @@ export default function MockTestBuilder({
       ? getSelectedPrefixes()
       : [] // empty = full curriculum for HSC modes
 
-    const dateStr = testDate
-      ? ` — ${new Date(testDate).toLocaleDateString('en-AU',{day:'numeric',month:'short'})}`
-      : ''
-
     const autoTitle = title.trim() || (
-      mode === 'school_test'  ? `School Test${dateStr}`
+      mode === 'school_test'  ? 'School Test'
       : mode === 'hsc_trial'  ? `HSC Trial — ${COURSE_CONFIGS[course].label}`
-      : mode === 'naplan_y9'  ? `NAPLAN Year 9 Numeracy${dateStr}`
+      : mode === 'naplan_y9'  ? 'NAPLAN Year 9 Numeracy'
       : mode === 'prelim_y11' ? `Preliminary Y11 — ${PRELIM_CONFIGS[course].label}`
       : `HSC Simulation — ${COURSE_CONFIGS[course].label}`
     )
@@ -231,7 +227,7 @@ export default function MockTestBuilder({
       mode:          mode!,
       course:        needsCourse ? course : undefined,
       topicPrefixes: prefixes,
-      testDate:      testDate || undefined,
+
       questionCount: questionCountForMode,
       timeLimitMins: timeLimitForMode,
     })
@@ -458,19 +454,6 @@ export default function MockTestBuilder({
                 </div>
               </div>
 
-              {/* Test date */}
-              <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-6">
-                <label className="text-xs font-black uppercase tracking-wider block mb-2" style={{ color: '#666672' }}>
-                  Test date (optional)
-                </label>
-                <input
-                  type="date"
-                  value={testDate}
-                  onChange={e => setTestDate(e.target.value)}
-                  className="w-full text-sm font-semibold text-gray-900 bg-gray-50 rounded-xl px-3 py-2 border border-gray-200 outline-none focus:border-violet-400"
-                  style={{ fontSize: 16 }}
-                />
-              </div>
             </>
           )}
 
@@ -505,18 +488,6 @@ export default function MockTestBuilder({
                     </div>
                   ))}
                 </div>
-              </div>
-              <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-6">
-                <label className="text-xs font-black uppercase tracking-wider block mb-2" style={{ color: '#666672' }}>
-                  Test date (optional)
-                </label>
-                <input
-                  type="date"
-                  value={testDate}
-                  onChange={e => setTestDate(e.target.value)}
-                  className="w-full text-sm font-semibold text-gray-900 bg-gray-50 rounded-xl px-3 py-2 border border-gray-200 outline-none focus:border-violet-400"
-                  style={{ fontSize: 16 }}
-                />
               </div>
             </>
           )}
@@ -555,18 +526,6 @@ export default function MockTestBuilder({
                 <p className="font-black mb-1">NSW Preliminary format</p>
                 <p>Section I: 10 MCQ (15 min) · Section II: Short answer + extended response</p>
               </div>
-              <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-6">
-                <label className="text-xs font-black uppercase tracking-wider block mb-2" style={{ color: '#666672' }}>
-                  Exam date (optional)
-                </label>
-                <input
-                  type="date"
-                  value={testDate}
-                  onChange={e => setTestDate(e.target.value)}
-                  className="w-full text-sm font-semibold text-gray-900 bg-gray-50 rounded-xl px-3 py-2 border border-gray-200 outline-none focus:border-violet-400"
-                  style={{ fontSize: 16 }}
-                />
-              </div>
             </>
           )}
 
@@ -601,19 +560,6 @@ export default function MockTestBuilder({
                 ))}
               </div>
 
-              {/* Test date */}
-              <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-6">
-                <label className="text-xs font-black uppercase tracking-wider block mb-2" style={{ color: '#666672' }}>
-                  {mode === 'hsc_trial' ? 'Trial date' : 'HSC date'} (optional)
-                </label>
-                <input
-                  type="date"
-                  value={testDate}
-                  onChange={e => setTestDate(e.target.value)}
-                  className="w-full text-sm font-semibold text-gray-900 bg-gray-50 rounded-xl px-3 py-2 border border-gray-200 outline-none focus:border-violet-400"
-                  style={{ fontSize: 16 }}
-                />
-              </div>
             </>
           )}
 
