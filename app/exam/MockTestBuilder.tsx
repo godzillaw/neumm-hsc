@@ -7,7 +7,7 @@ import type { Mission }  from '@/lib/curriculum'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Mode    = 'school_test' | 'hsc_trial' | 'hsc'
+type Mode    = 'school_test' | 'hsc_trial' | 'hsc' | 'naplan_y9' | 'prelim_y11'
 type Step    = 'mode' | 'topics' | 'confirm'
 type Course  = 'standard' | 'advanced' | 'extension1' | 'extension2'
 
@@ -16,6 +16,17 @@ const COURSE_CONFIGS: Record<Course, { label: string; timeMins: number; qCount: 
   advanced:   { label: 'Advanced',     timeMins: 180, qCount: 40 },
   extension1: { label: 'Extension 1',  timeMins: 120, qCount: 30 },
   extension2: { label: 'Extension 2',  timeMins: 180, qCount: 40 },
+}
+
+// NAPLAN Y9: fixed format (ACARA 2023+ online adaptive)
+const NAPLAN_CONFIG = { timeMins: 65, qCount: 40 }
+
+// Prelim Y11: school-based, NSW syllabus
+const PRELIM_CONFIGS: Record<Course, { label: string; timeMins: number; qCount: number }> = {
+  standard:   { label: 'Standard 2',  timeMins: 90,  qCount: 35 },
+  advanced:   { label: 'Advanced',    timeMins: 120, qCount: 40 },
+  extension1: { label: 'Extension 1', timeMins: 120, qCount: 35 },
+  extension2: { label: 'Extension 2', timeMins: 120, qCount: 35 },
 }
 
 const Q_COUNTS = [10, 15, 20]
@@ -44,7 +55,9 @@ function PastTestCard({
   onRetry: (mockTestId: string) => void
 }) {
   const modeLabel = test.mode === 'school_test' ? '🏫 School Test'
-    : test.mode === 'hsc_trial' ? '📋 HSC Trial'
+    : test.mode === 'hsc_trial'  ? '📋 HSC Trial'
+    : test.mode === 'naplan_y9'  ? '📐 NAPLAN Y9'
+    : test.mode === 'prelim_y11' ? '📓 Prelim Y11'
     : '🎓 HSC'
 
   return (
@@ -169,15 +182,19 @@ export default function MockTestBuilder({
   // ── Go to topics step ──────────────────────────────────────────────────────
   function handleModeSelect(m: Mode) {
     setMode(m)
-    if (m === 'school_test') {
-      setStep('topics')
-    } else {
-      // HSC trial / HSC — go straight to confirm with course selection
+    if (m === 'naplan_y9') {
+      setQCount(NAPLAN_CONFIG.qCount)
+      setTimeMins(NAPLAN_CONFIG.timeMins)
+    } else if (m === 'prelim_y11') {
+      const cfg = PRELIM_CONFIGS[course]
+      setQCount(cfg.qCount)
+      setTimeMins(cfg.timeMins)
+    } else if (m !== 'school_test') {
       const cfg = COURSE_CONFIGS[course]
       setQCount(cfg.qCount)
       setTimeMins(cfg.timeMins)
-      setStep('topics')
     }
+    setStep('topics')
   }
 
   // ── Build → create test + navigate ────────────────────────────────────────
@@ -189,25 +206,39 @@ export default function MockTestBuilder({
       ? getSelectedPrefixes()
       : [] // empty = full curriculum for HSC modes
 
+    const dateStr = testDate
+      ? ` — ${new Date(testDate).toLocaleDateString('en-AU',{day:'numeric',month:'short'})}`
+      : ''
+
     const autoTitle = title.trim() || (
-      mode === 'school_test'
-        ? `School Test${testDate ? ` — ${new Date(testDate).toLocaleDateString('en-AU',{day:'numeric',month:'short'})}` : ''}`
-        : mode === 'hsc_trial'
-        ? `HSC Trial — ${COURSE_CONFIGS[course].label}`
-        : `HSC Simulation — ${COURSE_CONFIGS[course].label}`
+      mode === 'school_test'  ? `School Test${dateStr}`
+      : mode === 'hsc_trial'  ? `HSC Trial — ${COURSE_CONFIGS[course].label}`
+      : mode === 'naplan_y9'  ? `NAPLAN Year 9 Numeracy${dateStr}`
+      : mode === 'prelim_y11' ? `Preliminary Y11 — ${PRELIM_CONFIGS[course].label}`
+      : `HSC Simulation — ${COURSE_CONFIGS[course].label}`
     )
 
-    const timeLimitForMode = mode === 'school_test'
-      ? timeMins
+    const timeLimitForMode =
+      mode === 'school_test'  ? timeMins
+      : mode === 'naplan_y9'  ? NAPLAN_CONFIG.timeMins
+      : mode === 'prelim_y11' ? PRELIM_CONFIGS[course].timeMins
       : COURSE_CONFIGS[course].timeMins
+
+    const questionCountForMode =
+      mode === 'school_test'  ? qCount
+      : mode === 'naplan_y9'  ? NAPLAN_CONFIG.qCount
+      : mode === 'prelim_y11' ? PRELIM_CONFIGS[course].qCount
+      : COURSE_CONFIGS[course].qCount
+
+    const needsCourse = mode === 'hsc_trial' || mode === 'hsc' || mode === 'prelim_y11'
 
     const result = await createMockTest({
       title:         autoTitle,
       mode:          mode!,
-      course:        mode !== 'school_test' ? course : undefined,
+      course:        needsCourse ? course : undefined,
       topicPrefixes: prefixes,
       testDate:      testDate || undefined,
-      questionCount: mode !== 'school_test' ? COURSE_CONFIGS[course].qCount : qCount,
+      questionCount: questionCountForMode,
       timeLimitMins: timeLimitForMode,
     })
 
@@ -259,9 +290,11 @@ export default function MockTestBuilder({
           </p>
 
           {[
-            { mode: 'school_test' as Mode, icon: '🏫', label: 'School Test', desc: 'Choose specific topics for an upcoming school test' },
-            { mode: 'hsc_trial'  as Mode, icon: '📋', label: 'HSC Trial',   desc: 'Full simulation of your trial exam — all topics, real timing' },
-            { mode: 'hsc'        as Mode, icon: '🎓', label: 'HSC Exam',    desc: 'Final HSC preparation — full curriculum, exam conditions' },
+            { mode: 'school_test' as Mode, icon: '🏫', label: 'School Test',         desc: 'Choose specific topics to prepare for an upcoming school test' },
+            { mode: 'naplan_y9'  as Mode, icon: '📐', label: 'NAPLAN Year 9',        desc: 'NSW numeracy — 40 questions, 65 min, all strands (ACARA format)' },
+            { mode: 'prelim_y11' as Mode, icon: '📓', label: 'Year 11 Preliminary',  desc: 'NSW Prelim exam simulation — full Year 11 syllabus with real timing' },
+            { mode: 'hsc_trial'  as Mode, icon: '📋', label: 'HSC Trial',            desc: 'Full simulation of your trial exam — all topics, real timing' },
+            { mode: 'hsc'        as Mode, icon: '🎓', label: 'HSC Exam',             desc: 'Final HSC preparation — full curriculum, exam conditions' },
           ].map(opt => (
             <button
               key={opt.mode}
@@ -437,6 +470,102 @@ export default function MockTestBuilder({
             </>
           )}
 
+          {/* NAPLAN Y9: fixed format info */}
+          {mode === 'naplan_y9' && (
+            <>
+              <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-3xl">📐</span>
+                  <div>
+                    <p className="font-black text-gray-900">NAPLAN Year 9 Numeracy</p>
+                    <p className="text-xs text-gray-400 mt-0.5">ACARA 2023+ online adaptive format</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  {[
+                    { label: 'Questions', value: '40' },
+                    { label: 'Time', value: '65 min' },
+                    { label: 'Format', value: 'Adaptive' },
+                  ].map(item => (
+                    <div key={item.label} className="bg-gray-50 rounded-xl p-3">
+                      <p className="font-black text-lg text-gray-900">{item.value}</p>
+                      <p className="text-[11px] text-gray-400 mt-0.5">{item.label}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 space-y-1.5 text-xs text-gray-500">
+                  {['Number & Algebra', 'Measurement & Geometry', 'Statistics & Probability'].map(s => (
+                    <div key={s} className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-violet-400 shrink-0" />
+                      {s}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-6">
+                <label className="text-xs font-black uppercase tracking-wider block mb-2" style={{ color: '#666672' }}>
+                  Test date (optional)
+                </label>
+                <input
+                  type="date"
+                  value={testDate}
+                  onChange={e => setTestDate(e.target.value)}
+                  className="w-full text-sm font-semibold text-gray-900 bg-gray-50 rounded-xl px-3 py-2 border border-gray-200 outline-none focus:border-violet-400"
+                  style={{ fontSize: 16 }}
+                />
+              </div>
+            </>
+          )}
+
+          {/* Prelim Y11: course selection */}
+          {mode === 'prelim_y11' && (
+            <>
+              <p className="text-xs font-black uppercase tracking-wider mb-4" style={{ color: '#666672' }}>
+                Select your course
+              </p>
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                {(Object.entries(PRELIM_CONFIGS) as [Course, typeof PRELIM_CONFIGS[Course]][]).map(([key, cfg]) => (
+                  <button
+                    key={key}
+                    onClick={() => {
+                      setCourse(key)
+                      setQCount(cfg.qCount)
+                      setTimeMins(cfg.timeMins)
+                    }}
+                    className="p-4 rounded-2xl border-2 text-left transition-all"
+                    style={{
+                      borderColor: course === key ? '#7C3AED' : '#E5E7EB',
+                      background:  course === key ? 'rgba(124,58,237,0.07)' : 'white',
+                    }}
+                  >
+                    <p className="font-black text-sm" style={{ color: course === key ? '#7C3AED' : '#0F0F14' }}>
+                      {cfg.label}
+                    </p>
+                    <p className="text-xs mt-1 text-gray-400">
+                      {cfg.qCount} questions · {formatMins(cfg.timeMins)}
+                    </p>
+                  </button>
+                ))}
+              </div>
+              <div className="bg-blue-50 rounded-2xl p-4 mb-5 text-xs text-blue-700">
+                <p className="font-black mb-1">NSW Preliminary format</p>
+                <p>Section I: 10 MCQ (15 min) · Section II: Short answer + extended response</p>
+              </div>
+              <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-6">
+                <label className="text-xs font-black uppercase tracking-wider block mb-2" style={{ color: '#666672' }}>
+                  Exam date (optional)
+                </label>
+                <input
+                  type="date"
+                  value={testDate}
+                  onChange={e => setTestDate(e.target.value)}
+                  className="w-full text-sm font-semibold text-gray-900 bg-gray-50 rounded-xl px-3 py-2 border border-gray-200 outline-none focus:border-violet-400"
+                  style={{ fontSize: 16 }}
+                />
+              </div>
+            </>
+          )}
+
           {/* HSC Trial / HSC: course selection */}
           {(mode === 'hsc_trial' || mode === 'hsc') && (
             <>
@@ -505,7 +634,7 @@ export default function MockTestBuilder({
 
           <button
             onClick={handleGenerate}
-            disabled={loading || (mode === 'school_test' && selectedStageIds.size === 0)}
+            disabled={loading || (mode === 'school_test' && selectedStageIds.size === 0) || (mode === 'prelim_y11' && !course)}
             className="w-full py-4 rounded-2xl font-black text-base text-white transition-all active:scale-[0.98] disabled:opacity-50"
             style={{ background: 'linear-gradient(135deg,#185FA5,#2563EB)', minHeight: 56 }}
           >

@@ -8,7 +8,7 @@ import { requireAuth }                 from '@/lib/auth-server'
 export interface MockTestConfig {
   id:             string
   title:          string
-  mode:           'school_test' | 'hsc_trial' | 'hsc'
+  mode:           'school_test' | 'hsc_trial' | 'hsc' | 'naplan_y9' | 'prelim_y11'
   course:         string | null
   topicPrefixes:  string[]
   testDate:       string | null
@@ -146,7 +146,7 @@ function predictBand(scorePct: number): number {
 
 export async function createMockTest(params: {
   title:         string
-  mode:          'school_test' | 'hsc_trial' | 'hsc'
+  mode:          'school_test' | 'hsc_trial' | 'hsc' | 'naplan_y9' | 'prelim_y11'
   course?:       string
   topicPrefixes: string[]
   testDate?:     string
