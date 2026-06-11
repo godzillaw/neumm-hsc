@@ -531,3 +531,35 @@ If image is blank/unreadable set score to 0 and all stepResults passed to false.
     }
   }
 }
+
+// ─── chatWithTutorReview ───────────────────────────────────────────────────────
+// Used post-test in MockTestReview. Takes freeform context string instead of
+// a question ID — allows the tutor to discuss any question from the test results.
+
+export async function chatWithTutorReview(
+  context:  string,
+  messages: ChatMessage[],
+): Promise<string> {
+  const isPro = await hasProAIAccess()
+  if (!isPro) return '__UPGRADE_REQUIRED__'
+
+  const system = `${SYSTEM_PROMPT}
+
+Context for this post-test review session:
+${context}
+
+The student has just completed a mock test and is reviewing their results. Help them understand what went wrong and how to improve. Be warm, specific, and Socratic.`
+
+  try {
+    const response = await anthropic.messages.create({
+      model:      'claude-sonnet-4-6',
+      max_tokens: 400,
+      system,
+      messages:   messages.map(m => ({ role: m.role, content: m.content })),
+    })
+    const text = response.content[0].type === 'text' ? response.content[0].text : ''
+    return text.trim()
+  } catch {
+    return "I'm having trouble connecting right now. Try again in a moment!"
+  }
+}

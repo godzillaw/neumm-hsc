@@ -1,8 +1,8 @@
-import Link                  from 'next/link'
-import { requireAuth }        from '@/lib/auth-server'
-import { checkTierAccess }    from '@/lib/tier'
-import ExamSession            from './ExamSession'
-import { getCategoryMastery } from './actions'
+import Link                        from 'next/link'
+import { requireAuth }             from '@/lib/auth-server'
+import { checkTierAccess }         from '@/lib/tier'
+import { getMockTestsForUser }     from './mock-actions'
+import MockTestBuilder             from './MockTestBuilder'
 import AppSidebar             from '@/components/AppSidebar'
 import MobileBottomNav        from '@/components/MobileBottomNav'
 import TrialExpiredModal      from '@/components/TrialExpiredModal'
@@ -42,7 +42,7 @@ export default async function ExamPage() {
   // Trial expired / payment failed — hard block
   if (access.isBlocked) {
     return (
-      <div className="flex min-h-screen" style={{ background: '#F4F6FA' }}>
+      <div className="flex min-h-screen" style={{ background: '#F7F3FF' }}>
         <AppSidebar />
         <div className="flex-1 min-w-0 flex items-center justify-center">
           <TrialExpiredModal tier={access.tier} />
@@ -55,7 +55,7 @@ export default async function ExamPage() {
   // Basic daily limit reached — soft block (exam questions count toward the daily cap)
   if (access.dailyLimitReached) {
     return (
-      <div className="flex min-h-screen" style={{ background: '#F4F6FA' }}>
+      <div className="flex min-h-screen" style={{ background: '#F7F3FF' }}>
         <AppSidebar />
         <div className="flex-1 min-w-0 flex items-center justify-center px-6">
           <DailyLimitCard />
@@ -65,13 +65,13 @@ export default async function ExamPage() {
     )
   }
 
-  const categoryMastery = await getCategoryMastery(user.id)
+  const existingTests = await getMockTestsForUser()
 
   return (
-    <div className="flex min-h-screen" style={{ background: '#F4F6FA' }}>
+    <div className="flex min-h-screen" style={{ background: '#F7F3FF' }}>
       <AppSidebar />
       <div className="flex-1 min-w-0 pb-20 md:pb-0">
-        <ExamSession userId={user.id} categoryMastery={categoryMastery} />
+        <MockTestBuilder existingTests={existingTests} />
       </div>
       <MobileBottomNav />
     </div>
