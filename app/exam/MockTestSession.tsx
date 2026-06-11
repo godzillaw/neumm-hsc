@@ -272,6 +272,7 @@ export default function MockTestSession({
   const [selected,   setSelected]    = useState<string | null>(null)
   const [onPaper,    setOnPaper]     = useState(false)      // open-ended: "I'll work on paper"
   const [submitting, setSubmitting]  = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [showConfirm, setShowConfirm] = useState(false)
   const [showUpload, setShowUpload]   = useState(false)     // photo upload screen
 
@@ -323,19 +324,29 @@ export default function MockTestSession({
     if (submitting) return
     setSubmitting(true)
 
-    const now = Date.now()
-    answersRef.current[current].timeSecs += Math.round((now - questionStartRef.current) / 1000)
-    const timeTakenSecs = Math.round((now - startTimeRef.current) / 1000)
+    try {
+      const now = Date.now()
+      answersRef.current[current].timeSecs += Math.round((now - questionStartRef.current) / 1000)
+      const timeTakenSecs = Math.round((now - startTimeRef.current) / 1000)
 
-    const result = await finalizeMockAttempt({
-      attemptId,
-      timeTakenSecs,
-      timedOut: timedOutRef.current,
-      answers:  answersRef.current,
-    })
+      const result = await finalizeMockAttempt({
+        attemptId,
+        timeTakenSecs,
+        timedOut: timedOutRef.current,
+        answers:  answersRef.current,
+      })
 
-    if ('error' in result) { setSubmitting(false); return }
-    router.push(`/exam/${attemptId}/review`)
+      if ('error' in result) {
+        setSubmitError(result.error)
+        setSubmitting(false)
+        return
+      }
+      router.push(`/exam/${attemptId}/review`)
+    } catch (err) {
+      console.error('finalizeMockAttempt error:', err)
+      setSubmitError('Something went wrong submitting your test. Please try again.')
+      setSubmitting(false)
+    }
   }, [attemptId, current, router, submitting])
 
   // ── Navigate ───────────────────────────────────────────────────────────────
@@ -383,6 +394,25 @@ export default function MockTestSession({
         onSubmit={() => void handleFinalize()}
         submitting={submitting}
       />
+    )
+  }
+
+  if (submitError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: '#F7F3FF', fontFamily: "'Nunito',sans-serif" }}>
+        <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-md">
+          <div className="text-4xl mb-3">⚠️</div>
+          <p className="font-black text-lg text-gray-900 mb-2">Submission failed</p>
+          <p className="text-sm text-gray-500 mb-6">{submitError}</p>
+          <button
+            onClick={() => { setSubmitError(null); setShowUpload(true) }}
+            className="w-full py-3 rounded-2xl font-black text-sm text-white"
+            style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)' }}
+          >
+            Try again
+          </button>
+        </div>
+      </div>
     )
   }
 

@@ -366,6 +366,7 @@ export async function finalizeMockAttempt(params: {
     optionD:        string
   }>
 }): Promise<{ result: MockTestResult } | { error: string }> {
+  try {
   const user = await requireAuth()
   const supabase = createSupabaseServerClient()
 
@@ -380,11 +381,10 @@ export async function finalizeMockAttempt(params: {
   if (!attempt) return { error: 'Attempt not found' }
 
   // Re-fetch correct answers from DB (never trust client for correct_answer)
-  const qIds = params.answers.map(a => a.questionId)
-  const { data: rawQ } = await supabase
-    .from('questions')
-    .select('id, correct_answer, explanation')
-    .in('id', qIds)
+  const qIds = params.answers.map(a => a.questionId).filter(Boolean)
+  const { data: rawQ } = qIds.length > 0
+    ? await supabase.from('questions').select('id, correct_answer, explanation').in('id', qIds)
+    : { data: [] }
 
   const qMap = new Map<string, { correct: string; explanation: string }>()
   for (const q of (rawQ ?? [])) {
@@ -480,6 +480,10 @@ export async function finalizeMockAttempt(params: {
   }
 
   return { result }
+  } catch (err) {
+    console.error('finalizeMockAttempt error:', err)
+    return { error: err instanceof Error ? err.message : 'Unknown error during submission' }
+  }
 }
 
 // ─── getAttemptResult ─────────────────────────────────────────────────────────
