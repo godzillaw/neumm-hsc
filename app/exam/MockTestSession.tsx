@@ -444,7 +444,7 @@ export default function MockTestSession({
       </div>
 
       {/* ── Question area ────────────────────────────────────────────────── */}
-      <div className={`flex-1 pt-20 px-4 max-w-2xl mx-auto w-full ${mcq ? 'pb-36' : 'pb-28'}`}>
+      <div key={current} className={`flex-1 pt-20 px-4 max-w-2xl mx-auto w-full ${mcq ? 'pb-36' : 'pb-28'}`}>
 
         {/* Topic + band */}
         <div className="flex items-center gap-2 mb-4 mt-2">
@@ -523,6 +523,7 @@ export default function MockTestSession({
                 </div>
                 <div className="rounded-2xl overflow-hidden border border-purple-100 shadow-sm mb-3">
                   <WorkingInput
+                    key={current}
                     onChange={(b64) => {
                       if (b64) {
                         answersRef.current[current].studentAnswer = 'attempted'
