@@ -629,7 +629,7 @@ export default function MissionClient({
       <div className="mb-5">
         <h1 className="text-2xl font-black text-white">🎯 Mission</h1>
         <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
-          Complete stages and levels to earn XP and climb the leaderboard.
+          Choose your mission level. Complete every stage to master it and earn XP.
         </p>
       </div>
 
