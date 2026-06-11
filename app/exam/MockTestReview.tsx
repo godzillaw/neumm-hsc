@@ -3,9 +3,9 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter }                    from 'next/navigation'
 import MathText                         from '@/components/MathText'
-import { chatWithTutorReview }          from '@/lib/actions/tutor'
+import { chatWithTutorReview, generateTopicFeedback } from '@/lib/actions/tutor'
 import type { MockTestResult, MockAnswerResult } from './mock-actions'
-import type { ChatMessage }             from '@/lib/actions/tutor'
+import type { ChatMessage, TopicFeedback } from '@/lib/actions/tutor'
 
 // ─── Inline math + rich text helpers (mirrors PracticeSession) ───────────────
 
@@ -162,6 +162,95 @@ function scoreLabel(answer: MockAnswerResult): { text: string; color: string; bg
   if (answer.studentAnswer === 'on_paper' || answer.studentAnswer === 'attempted')
     return { text: 'Partial',       color: '#F59E0B', bg: 'rgba(245,158,11,0.1)' }
   return { text: 'Incorrect 0%',  color: '#EF4444', bg: 'rgba(239,68,68,0.1)' }
+}
+
+// ─── Topic Feedback Card ──────────────────────────────────────────────────────
+
+function TopicFeedbackCard({
+  topicName, correct, total, cfg, answers,
+}: {
+  prefix:    string
+  topicName: string
+  correct:   number
+  total:     number
+  cfg:       ReturnType<typeof readinessConfig>
+  answers:   MockAnswerResult[]
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const [feedback,  setFeedback] = useState<TopicFeedback | null>(null)
+  const [loading,   setLoading]  = useState(false)
+
+  async function handleExpand() {
+    setExpanded(e => !e)
+    if (!feedback && !loading) {
+      setLoading(true)
+      const fb = await generateTopicFeedback({
+        topicName,
+        correct,
+        total,
+        questions: answers.map(a => ({
+          text:          a.questionText,
+          isCorrect:     a.isCorrect,
+          isSkipped:     a.isSkipped,
+          band:          a.difficultyBand,
+          studentAnswer: a.studentAnswer,
+          correctAnswer: a.correctAnswer,
+        })),
+      })
+      setFeedback(fb)
+      setLoading(false)
+    }
+  }
+
+  const feedbackSections = feedback ? [
+    { icon: '✅', label: 'What you did well',     text: feedback.strengths,   color: '#10B981', bg: 'rgba(16,185,129,0.06)',  border: 'rgba(16,185,129,0.2)' },
+    { icon: '🔍', label: 'Where the gaps are',    text: feedback.gaps,        color: '#7C3AED', bg: 'rgba(124,58,237,0.05)', border: 'rgba(124,58,237,0.15)' },
+    { icon: '⚠️', label: 'What needs improvement', text: feedback.improvement, color: '#F59E0B', bg: 'rgba(245,158,11,0.06)', border: 'rgba(245,158,11,0.2)' },
+    { icon: '🎯', label: 'What to do next',        text: feedback.nextSteps,   color: '#2563EB', bg: 'rgba(37,99,235,0.05)',  border: 'rgba(37,99,235,0.15)' },
+  ] : []
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+      {/* Header row */}
+      <button
+        onClick={() => void handleExpand()}
+        className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left"
+      >
+        <div className="flex items-center gap-2.5">
+          <span className="text-base">{cfg.icon}</span>
+          <span className="text-sm font-bold text-gray-800">{topicName}</span>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-xs text-gray-400">{correct}/{total}</span>
+          <span className="text-xs font-black" style={{ color: cfg.color }}>{cfg.label}</span>
+          <span className="text-gray-400 text-xs ml-1">{expanded ? '▲' : '▼'}</span>
+        </div>
+      </button>
+
+      {/* Expanded feedback */}
+      {expanded && (
+        <div className="px-4 pb-4 border-t border-gray-50">
+          {loading ? (
+            <div className="py-6 flex flex-col items-center gap-2">
+              <div className="w-5 h-5 rounded-full border-2 border-violet-300 border-t-violet-600 animate-spin" />
+              <p className="text-xs text-gray-400 font-semibold">Analysing your performance…</p>
+            </div>
+          ) : (
+            <div className="mt-3 space-y-3">
+              {feedbackSections.map(s => (
+                <div key={s.label} className="rounded-xl p-3.5" style={{ background: s.bg, border: `1px solid ${s.border}` }}>
+                  <p className="text-[11px] font-black uppercase tracking-wider mb-1.5" style={{ color: s.color }}>
+                    {s.icon} {s.label}
+                  </p>
+                  <p className="text-sm text-gray-700 leading-relaxed">{s.text}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
 }
 
 // ─── Question row ─────────────────────────────────────────────────────────────
@@ -489,9 +578,9 @@ export default function MockTestReview({ result }: { result: MockTestResult }) {
           </div>
         </div>
 
-        {/* Per-topic readiness */}
+        {/* Per-topic readiness — expandable with AI feedback */}
         {readinessEntries.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-5">
+          <div className="mb-5">
             <p className="text-xs font-black uppercase tracking-wider mb-3" style={{ color: '#666672' }}>
               Topic readiness
             </p>
@@ -500,19 +589,17 @@ export default function MockTestReview({ result }: { result: MockTestResult }) {
                 const cfg    = readinessConfig(r)
                 const bucket = result.answers.filter(a => a.topicPrefix === prefix)
                 const c      = bucket.filter(a => a.isCorrect).length
+                const name   = bucket[0]?.topicName ?? prefix
                 return (
-                  <div key={prefix} className="flex items-center justify-between gap-3 py-2 px-3 rounded-xl" style={{ background: cfg.bg }}>
-                    <div className="flex items-center gap-2">
-                      <span>{cfg.icon}</span>
-                      <span className="text-sm font-bold text-gray-800">
-                        {bucket[0]?.topicName ?? prefix}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-xs text-gray-400">{c}/{bucket.length}</span>
-                      <span className="text-xs font-black" style={{ color: cfg.color }}>{cfg.label}</span>
-                    </div>
-                  </div>
+                  <TopicFeedbackCard
+                    key={prefix}
+                    prefix={prefix}
+                    topicName={name}
+                    correct={c}
+                    total={bucket.length}
+                    cfg={cfg}
+                    answers={bucket}
+                  />
                 )
               })}
             </div>

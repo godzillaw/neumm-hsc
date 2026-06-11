@@ -536,6 +536,62 @@ If image is blank/unreadable set score to 0 and all stepResults passed to false.
 // Used post-test in MockTestReview. Takes freeform context string instead of
 // a question ID — allows the tutor to discuss any question from the test results.
 
+// ─── generateTopicFeedback ────────────────────────────────────────────────────
+
+export interface TopicFeedback {
+  strengths:   string   // What the student did well
+  gaps:        string   // Specific concept gaps identified
+  improvement: string   // What needs improvement and why
+  nextSteps:   string   // Concrete actions to take
+}
+
+export async function generateTopicFeedback(params: {
+  topicName:    string
+  correct:      number
+  total:        number
+  questions:    { text: string; isCorrect: boolean; isSkipped: boolean; band: number; studentAnswer: string | null; correctAnswer: string }[]
+}): Promise<TopicFeedback> {
+  const { topicName, correct, total, questions } = params
+  const pct = total > 0 ? Math.round((correct / total) * 100) : 0
+
+  const qSummary = questions.map((q, i) =>
+    `Q${i+1} (Band ${q.band}): "${q.text.slice(0, 100)}…" — ${q.isSkipped ? 'Skipped' : q.isCorrect ? 'Correct' : `Wrong (chose ${q.studentAnswer?.toUpperCase() ?? '?'}, correct was ${q.correctAnswer.toUpperCase()})`}`
+  ).join('\n')
+
+  const prompt = `You are an expert NSW HSC Mathematics tutor analysing a student's mock test performance on the topic: "${topicName}".
+
+Results: ${correct}/${total} correct (${pct}%).
+
+Question breakdown:
+${qSummary}
+
+Provide specific, actionable feedback in exactly this JSON format (no markdown, raw JSON only):
+{
+  "strengths": "1-2 sentences on what the student demonstrated well. Be specific about which concepts or question types they handled correctly. If all wrong, note any partial understanding shown.",
+  "gaps": "1-2 sentences identifying the specific concept gaps — what subtopics or skills are clearly missing based on which questions they got wrong.",
+  "improvement": "2-3 sentences explaining what needs improvement, why those errors likely happened (common misconceptions for this topic), and what the pattern of mistakes suggests.",
+  "nextSteps": "2-3 concrete, specific action steps the student should take — e.g. which specific subtopics to revisit, what types of practice to do, what to focus on in Neumm."
+}`
+
+  try {
+    const response = await anthropic.messages.create({
+      model:      'claude-haiku-4-5-20251001',
+      max_tokens: 600,
+      messages:   [{ role: 'user', content: prompt }],
+    })
+    const text = response.content[0].type === 'text' ? response.content[0].text.trim() : '{}'
+    const parsed = JSON.parse(text) as TopicFeedback
+    return parsed
+  } catch {
+    return {
+      strengths:   `You answered ${correct} out of ${total} questions correctly on ${topicName}.`,
+      gaps:        correct < total ? 'Some concept gaps were identified in this topic.' : 'No major gaps detected.',
+      improvement: correct < total ? 'Review the incorrect questions and their step-by-step solutions.' : 'Keep practising to maintain this level.',
+      nextSteps:   'Revisit this topic in Neumm Practice and work through the concept intro before attempting more questions.',
+    }
+  }
+}
+
 export async function chatWithTutorReview(
   context:  string,
   messages: ChatMessage[],
