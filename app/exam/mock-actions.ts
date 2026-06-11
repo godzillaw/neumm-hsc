@@ -253,30 +253,46 @@ export async function loadAttemptConfig(attemptId: string): Promise<{
 
   // Fetch question pool
   const prefixes = config.topicPrefixes
-  const outcomeIds = prefixes.flatMap(p => [1,2,3,4,5,6].map(b => `${p}-B${b}`))
+  const SELECT = 'id, outcome_id, difficulty_band, content_json, correct_answer, explanation'
 
   type QRow = Record<string, unknown>
   let pool: QRow[]
 
-  if (outcomeIds.length > 0) {
-    const { data, error } = await supabase
+  if (prefixes.length > 0) {
+    // Try exact outcome_id match first (format: MA-ALG-01-B1 … MA-ALG-01-B6)
+    const outcomeIds = prefixes.flatMap(p => [1,2,3,4,5,6].map(b => `${p}-B${b}`))
+    const { data: exact, error: e1 } = await supabase
       .from('questions')
-      .select('id, outcome_id, difficulty_band, content_json, correct_answer, explanation')
+      .select(SELECT)
       .in('outcome_id', outcomeIds)
       .limit(3000)
-    if (error) return { error: error.message }
-    pool = (data ?? []) as QRow[]
+    if (e1) return { error: e1.message }
+    pool = (exact ?? []) as QRow[]
+
+    // Fallback: if exact match returned nothing, try prefix LIKE match per topic
+    if (pool.length === 0) {
+      const rows: QRow[] = []
+      for (const p of prefixes) {
+        const { data: fb } = await supabase
+          .from('questions')
+          .select(SELECT)
+          .like('outcome_id', `${p}%`)
+          .limit(500)
+        if (fb) rows.push(...(fb as QRow[]))
+      }
+      pool = rows
+    }
   } else {
-    // HSC mode — full curriculum
+    // HSC / NAPLAN / Prelim — full curriculum
     const { data, error } = await supabase
       .from('questions')
-      .select('id, outcome_id, difficulty_band, content_json, correct_answer, explanation')
+      .select(SELECT)
       .limit(7000)
     if (error) return { error: error.message }
     pool = (data ?? []) as QRow[]
   }
 
-  if (pool.length === 0) return { error: 'No questions found for selected topics' }
+  if (pool.length === 0) return { error: 'No questions available. Please check topic selection or try a different mode.' }
 
   // Build adaptive question set:
   // Ensure coverage across all selected topics, then fill remaining with best spread
