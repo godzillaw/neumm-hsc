@@ -536,7 +536,7 @@ export async function getAttemptResult(attemptId: string): Promise<MockTestResul
       optionC:        a.option_c as string,
       optionD:        a.option_d as string,
       studentAnswer:  a.student_answer as string | null,
-      correctAnswer:  a.correct_answer as string,
+      correctAnswer:  (a.correct_answer as string) ?? '',
       isCorrect:      a.is_correct as boolean,
       isSkipped:      a.is_skipped as boolean,
       explanation:    a.explanation as string,

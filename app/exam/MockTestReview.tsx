@@ -341,7 +341,7 @@ function QuestionRow({
                 Where you went wrong
               </p>
               <p className="text-sm text-gray-700 leading-relaxed">
-                You chose <strong>{answer.studentAnswer.toUpperCase()}</strong> but the correct answer is <strong>{answer.correctAnswer.toUpperCase()}</strong>.
+                You chose <strong>{answer.studentAnswer?.toUpperCase()}</strong> but the correct answer is <strong>{answer.correctAnswer?.toUpperCase()}</strong>.
                 {answer.explanation
                   ? ' See the step-by-step explanation below.'
                   : ' Review the working method for this type of question.'}
@@ -362,7 +362,7 @@ function QuestionRow({
               ) : (
                 <div className="rounded-xl p-4" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
                   <p className="text-sm text-gray-500">
-                    Correct answer: <strong style={{ color: '#10B981' }}>{answer.correctAnswer.toUpperCase()}</strong>. Ask the AI Tutor for a full worked solution.
+                    Correct answer: <strong style={{ color: '#10B981' }}>{answer.correctAnswer?.toUpperCase() || '—'}</strong>. Ask the AI Tutor for a full worked solution.
                   </p>
                 </div>
               )
@@ -511,7 +511,7 @@ export default function MockTestReview({ result }: { result: MockTestResult }) {
     const pos = result.answers.indexOf(answer) + 1
     const intro: ChatMessage = {
       role: 'assistant',
-      content: `Sure! Let's look at **Question ${pos}**: "${answer.questionText}"\n\nYou answered **${answer.studentAnswer?.toUpperCase() ?? 'nothing (skipped)'}** — the correct answer is **${answer.correctAnswer.toUpperCase()}**.\n\n${answer.explanation ?? 'Ask me to walk through the solution step by step.'}\n\nWhat would you like me to explain?`,
+      content: `Sure! Let's look at **Question ${pos}**: "${answer.questionText}"\n\nYou answered **${answer.studentAnswer?.toUpperCase() ?? 'nothing (skipped)'}**${answer.correctAnswer ? ` — the correct answer is **${answer.correctAnswer.toUpperCase()}**` : ''}.\n\n${answer.explanation ?? 'Ask me to walk through the solution step by step.'}\n\nWhat would you like me to explain?`,
     }
     // Append to existing conversation rather than reset
     setChatMessages(prev => prev.length > 0
