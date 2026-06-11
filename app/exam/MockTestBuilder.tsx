@@ -2,8 +2,8 @@
 
 import { useState }      from 'react'
 import { useRouter }     from 'next/navigation'
-import { EXAM_CATEGORIES } from './categories'
 import { createMockTest, retryMockTest, getMockTestsForUser } from './mock-actions'
+import type { Mission }  from '@/lib/curriculum'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -89,28 +89,69 @@ function PastTestCard({
 
 export default function MockTestBuilder({
   existingTests,
+  mission,
 }: {
   existingTests: Awaited<ReturnType<typeof getMockTestsForUser>>
+  mission:       Mission
 }) {
   const router = useRouter()
-  const [step,            setStep]            = useState<Step>('mode')
-  const [mode,            setMode]            = useState<Mode | null>(null)
-  const [course,          setCourse]          = useState<Course>('advanced')
-  const [selectedPrefixes, setSelected]       = useState<Set<string>>(new Set())
-  const [testDate,        setTestDate]        = useState('')
-  const [qCount,          setQCount]          = useState(15)
-  const [timeMins,        setTimeMins]        = useState(30)
-  const [title,           setTitle]           = useState('')
-  const [loading,         setLoading]         = useState(false)
-  const [error,           setError]           = useState('')
+  const [step,             setStep]       = useState<Step>('mode')
+  const [mode,             setMode]       = useState<Mode | null>(null)
+  const [course,           setCourse]     = useState<Course>('advanced')
+  // selectedStageIds: set of stageId strings from the curriculum
+  const [selectedStageIds, setSelected]  = useState<Set<string>>(new Set())
+  // expandedLevelIds: levels with stages shown
+  const [expandedLevels,   setExpanded]  = useState<Set<string>>(new Set())
+  const [testDate,         setTestDate]  = useState('')
+  const [qCount,           setQCount]    = useState(15)
+  const [timeMins,         setTimeMins]  = useState(30)
+  const [title,            setTitle]     = useState('')
+  const [loading,          setLoading]   = useState(false)
+  const [error,            setError]     = useState('')
 
-  // ── Toggle topic prefix selection ──────────────────────────────────────────
-  function toggleCategory(prefixes: string[]) {
-    const allSelected = prefixes.every(p => selectedPrefixes.has(p))
+  // Collect all topicId prefixes from selected stages
+  function getSelectedPrefixes(): string[] {
+    const prefixes = new Set<string>()
+    for (const level of mission.levels) {
+      for (const stage of level.stages) {
+        if (selectedStageIds.has(stage.stageId)) {
+          stage.topicIds.forEach(p => prefixes.add(p))
+        }
+      }
+    }
+    return Array.from(prefixes)
+  }
+
+  // ── Toggle a single stage ──────────────────────────────────────────────────
+  function toggleStage(stageId: string) {
     setSelected(prev => {
       const next = new Set(prev)
-      if (allSelected) prefixes.forEach(p => next.delete(p))
-      else prefixes.forEach(p => next.add(p))
+      if (next.has(stageId)) next.delete(stageId)
+      else next.add(stageId)
+      return next
+    })
+  }
+
+  // ── Toggle all stages in a level ──────────────────────────────────────────
+  function toggleLevel(levelId: string, stageIds: string[]) {
+    const allSelected = stageIds.every(id => selectedStageIds.has(id))
+    setSelected(prev => {
+      const next = new Set(prev)
+      if (allSelected) stageIds.forEach(id => next.delete(id))
+      else stageIds.forEach(id => next.add(id))
+      return next
+    })
+    // Auto-expand when selecting a level
+    if (!allSelected) {
+      setExpanded(prev => new Set(Array.from(prev).concat(levelId)))
+    }
+  }
+
+  function toggleExpand(levelId: string) {
+    setExpanded(prev => {
+      const next = new Set(prev)
+      if (next.has(levelId)) next.delete(levelId)
+      else next.add(levelId)
       return next
     })
   }
@@ -145,7 +186,7 @@ export default function MockTestBuilder({
     setError('')
 
     const prefixes = mode === 'school_test'
-      ? Array.from(selectedPrefixes)
+      ? getSelectedPrefixes()
       : [] // empty = full curriculum for HSC modes
 
     const autoTitle = title.trim() || (
@@ -260,36 +301,90 @@ export default function MockTestBuilder({
             ← Back
           </button>
 
-          {/* School test: topic picker */}
+          {/* School test: curriculum topic picker */}
           {mode === 'school_test' && (
             <>
-              <p className="text-xs font-black uppercase tracking-wider mb-4" style={{ color: '#666672' }}>
-                Select topics for your test
-              </p>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-black uppercase tracking-wider" style={{ color: '#666672' }}>
+                  {mission.title}
+                </p>
+                <span className="text-xs text-gray-400">
+                  {selectedStageIds.size} stage{selectedStageIds.size !== 1 ? 's' : ''} selected
+                </span>
+              </div>
               <div className="space-y-2 mb-6">
-                {EXAM_CATEGORIES.map(cat => {
-                  const allSelected = cat.prefixes.every(p => selectedPrefixes.has(p))
-                  const someSelected = cat.prefixes.some(p => selectedPrefixes.has(p))
+                {mission.levels.map(level => {
+                  const stageIds    = level.stages.map(s => s.stageId)
+                  const allSelected = stageIds.every(id => selectedStageIds.has(id))
+                  const someSelected = stageIds.some(id => selectedStageIds.has(id))
+                  const isExpanded  = expandedLevels.has(level.levelId)
+
                   return (
-                    <div key={cat.name} className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                      <button
-                        onClick={() => toggleCategory(cat.prefixes)}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-left"
-                      >
-                        <div
+                    <div key={level.levelId} className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                      {/* Level row */}
+                      <div className="flex items-center gap-2 px-3 py-3">
+                        {/* Level checkbox */}
+                        <button
+                          onClick={() => toggleLevel(level.levelId, stageIds)}
                           className="w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0"
                           style={{
                             borderColor: allSelected ? '#7C3AED' : someSelected ? '#A855F7' : '#D1D5DB',
-                            background: allSelected ? '#7C3AED' : someSelected ? 'rgba(124,58,237,0.15)' : 'white',
+                            background:  allSelected ? '#7C3AED' : someSelected ? 'rgba(124,58,237,0.15)' : 'white',
                           }}
                         >
-                          {allSelected && <span className="text-white text-[10px] font-black">✓</span>}
+                          {allSelected  && <span className="text-white text-[10px] font-black">✓</span>}
                           {someSelected && !allSelected && <span className="text-[10px] font-black" style={{ color: '#7C3AED' }}>–</span>}
+                        </button>
+
+                        {/* Level emoji + title (expand/collapse) */}
+                        <button
+                          onClick={() => toggleExpand(level.levelId)}
+                          className="flex-1 flex items-center gap-2 text-left"
+                        >
+                          <div
+                            className="w-8 h-8 rounded-xl flex items-center justify-center text-base shrink-0"
+                            style={{ background: `${level.color}22` }}
+                          >
+                            {level.emoji}
+                          </div>
+                          <div className="flex-1">
+                            <span className="font-black text-sm text-gray-900">{level.title}</span>
+                            <span className="text-xs text-gray-400 ml-2">{level.stages.length} stages</span>
+                          </div>
+                          <span className="text-gray-400 text-xs mr-1">{isExpanded ? '▲' : '▼'}</span>
+                        </button>
+                      </div>
+
+                      {/* Stage rows — shown when expanded */}
+                      {isExpanded && (
+                        <div className="border-t border-gray-50">
+                          {level.stages.map(stage => {
+                            const isChosen = selectedStageIds.has(stage.stageId)
+                            return (
+                              <button
+                                key={stage.stageId}
+                                onClick={() => toggleStage(stage.stageId)}
+                                className="w-full flex items-center gap-3 px-4 py-2.5 text-left border-b border-gray-50 last:border-0"
+                                style={{ background: isChosen ? 'rgba(124,58,237,0.04)' : 'white' }}
+                              >
+                                <div
+                                  className="w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 ml-7"
+                                  style={{
+                                    borderColor: isChosen ? '#7C3AED' : '#D1D5DB',
+                                    background:  isChosen ? '#7C3AED' : 'white',
+                                  }}
+                                >
+                                  {isChosen && <span className="text-white text-[9px] font-black">✓</span>}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <span className="text-xs font-black text-gray-400 mr-1.5">{stage.code}</span>
+                                  <span className="text-sm font-semibold text-gray-800">{stage.title}</span>
+                                </div>
+                              </button>
+                            )
+                          })}
                         </div>
-                        <span className="text-base">{cat.emoji}</span>
-                        <span className="font-bold text-sm text-gray-800">{cat.name}</span>
-                        <span className="ml-auto text-xs text-gray-400">{cat.prefixes.length} topics</span>
-                      </button>
+                      )}
                     </div>
                   )
                 })}
@@ -410,14 +505,14 @@ export default function MockTestBuilder({
 
           <button
             onClick={handleGenerate}
-            disabled={loading || (mode === 'school_test' && selectedPrefixes.size === 0)}
+            disabled={loading || (mode === 'school_test' && selectedStageIds.size === 0)}
             className="w-full py-4 rounded-2xl font-black text-base text-white transition-all active:scale-[0.98] disabled:opacity-50"
             style={{ background: 'linear-gradient(135deg,#185FA5,#2563EB)', minHeight: 56 }}
           >
             {loading ? 'Generating test…' : 'Generate Test →'}
           </button>
 
-          {mode === 'school_test' && selectedPrefixes.size === 0 && (
+          {mode === 'school_test' && selectedStageIds.size === 0 && (
             <p className="text-xs text-center text-gray-400 mt-2">Select at least one topic to continue</p>
           )}
         </div>

@@ -1,11 +1,13 @@
-import Link                        from 'next/link'
-import { requireAuth }             from '@/lib/auth-server'
-import { checkTierAccess }         from '@/lib/tier'
-import { getMockTestsForUser }     from './mock-actions'
-import MockTestBuilder             from './MockTestBuilder'
-import AppSidebar             from '@/components/AppSidebar'
-import MobileBottomNav        from '@/components/MobileBottomNav'
-import TrialExpiredModal      from '@/components/TrialExpiredModal'
+import Link                             from 'next/link'
+import { requireAuth }                  from '@/lib/auth-server'
+import { checkTierAccess }              from '@/lib/tier'
+import { getMockTestsForUser }          from './mock-actions'
+import MockTestBuilder                  from './MockTestBuilder'
+import AppSidebar                       from '@/components/AppSidebar'
+import MobileBottomNav                  from '@/components/MobileBottomNav'
+import TrialExpiredModal                from '@/components/TrialExpiredModal'
+import { createSupabaseServerClient }   from '@/lib/supabase-server'
+import { getMission, getAllMissions }    from '@/lib/curriculum'
 
 function DailyLimitCard() {
   return (
@@ -65,13 +67,25 @@ export default async function ExamPage() {
     )
   }
 
-  const existingTests = await getMockTestsForUser()
+  const [existingTests, profileData] = await Promise.all([
+    getMockTestsForUser(),
+    createSupabaseServerClient()
+      .from('student_profiles')
+      .select('year_group, course')
+      .eq('user_id', user.id)
+      .single(),
+  ])
+
+  const yearStr  = (profileData.data as { year_group?: string; course?: string } | null)?.year_group ?? 'year_12'
+  const course   = (profileData.data as { year_group?: string; course?: string } | null)?.course ?? 'advanced'
+  const year     = parseInt(yearStr.replace('year_', ''), 10) || 12
+  const mission  = getMission(year, course) ?? getAllMissions().find(m => m.year === 12) ?? getAllMissions()[0]
 
   return (
     <div className="flex min-h-screen" style={{ background: '#F7F3FF' }}>
       <AppSidebar />
       <div className="flex-1 min-w-0 pb-20 md:pb-0">
-        <MockTestBuilder existingTests={existingTests} />
+        <MockTestBuilder existingTests={existingTests} mission={mission} />
       </div>
       <MobileBottomNav />
     </div>
