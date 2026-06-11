@@ -29,7 +29,6 @@ const PRELIM_CONFIGS: Record<Course, { label: string; timeMins: number; qCount: 
   extension2: { label: 'Extension 2', timeMins: 120, qCount: 35 },
 }
 
-const Q_COUNTS = [10, 15, 20]
 
 function bandColor(band: number | null): string {
   if (!band) return '#9CA3AF'
@@ -172,11 +171,6 @@ export default function MockTestBuilder({
   // ── Auto time suggestion ───────────────────────────────────────────────────
   function suggestedTime(count: number) {
     return Math.max(10, Math.round(count * 2.5))
-  }
-
-  function handleQCountChange(n: number) {
-    setQCount(n)
-    setTimeMins(suggestedTime(n))
   }
 
   // ── Go to topics step ──────────────────────────────────────────────────────
@@ -428,28 +422,38 @@ export default function MockTestBuilder({
                 <p className="text-xs font-black uppercase tracking-wider mb-3" style={{ color: '#666672' }}>
                   Test settings
                 </p>
-                <div className="flex gap-2 mb-4">
-                  {Q_COUNTS.map(n => (
-                    <button
-                      key={n}
-                      onClick={() => handleQCountChange(n)}
-                      className="flex-1 py-2 rounded-xl text-sm font-black border-2 transition-all"
-                      style={{
-                        borderColor: qCount === n ? '#7C3AED' : '#E5E7EB',
-                        color: qCount === n ? '#7C3AED' : '#6B7280',
-                        background: qCount === n ? 'rgba(124,58,237,0.07)' : 'white',
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <label className="text-sm text-gray-500 shrink-0">Number of questions</label>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="number"
+                      min={1}
+                      max={50}
+                      value={qCount}
+                      onChange={e => {
+                        const v = Math.min(50, Math.max(1, parseInt(e.target.value) || 1))
+                        setQCount(v)
+                        setTimeMins(suggestedTime(v))
                       }}
-                    >
-                      {n} Qs
-                    </button>
-                  ))}
+                      className="w-16 text-center text-sm font-black text-gray-900 bg-gray-50 rounded-xl px-2 py-2 border border-gray-200 outline-none focus:border-violet-400"
+                      style={{ fontSize: 16 }}
+                    />
+                    <span className="text-xs text-gray-400 shrink-0">max 50</span>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">Time limit</span>
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => setTimeMins(m => Math.max(5, m-5))} className="w-7 h-7 rounded-lg bg-gray-100 font-black text-gray-600">−</button>
-                    <span className="font-black text-gray-900 w-14 text-center">{formatMins(timeMins)}</span>
-                    <button onClick={() => setTimeMins(m => Math.min(180, m+5))} className="w-7 h-7 rounded-lg bg-gray-100 font-black text-gray-600">+</button>
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  <label className="text-gray-500 shrink-0">Time limit (mins)</label>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="number"
+                      min={1}
+                      max={240}
+                      value={timeMins}
+                      onChange={e => setTimeMins(Math.min(240, Math.max(1, parseInt(e.target.value) || 1)))}
+                      className="w-16 text-center text-sm font-black text-gray-900 bg-gray-50 rounded-xl px-2 py-2 border border-gray-200 outline-none focus:border-violet-400"
+                      style={{ fontSize: 16 }}
+                    />
+                    <span className="text-xs text-gray-400 shrink-0">max 240</span>
                   </div>
                 </div>
               </div>
