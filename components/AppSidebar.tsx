@@ -47,7 +47,6 @@ function SidebarStats() {
 
 const NAV_ITEMS = [
   { href: '/dashboard/mission',           label: 'Mission',          icon: '🎯' },
-  { href: '/dashboard/progress',          label: 'Progress',         icon: '📊' },
   { href: '/practice',                    label: 'Practice',         icon: '⚡' },
   { href: '/exam',                        label: 'Exam',             icon: '📝' },
   { href: '/dashboard/leaderboard',       label: 'Leaderboard',      icon: '🏆' },
