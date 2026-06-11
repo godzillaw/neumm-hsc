@@ -46,8 +46,7 @@ interface AnswerRecord {
 interface UploadedPhoto {
   localUrl:     string
   file:         File
-  questionRefs: number[]
-  caption:      string
+  questionRef:  number | null   // single question tag
   uploading:    boolean
   uploaded:     boolean
   storagePath:  string
@@ -71,14 +70,13 @@ function PhotoUploadScreen({
 
   async function handleFiles(files: FileList) {
     const newPhotos: UploadedPhoto[] = Array.from(files).map(f => ({
-      localUrl:     URL.createObjectURL(f),
-      file:         f,
-      questionRefs: [],
-      caption:      '',
-      uploading:    false,
-      uploaded:     false,
-      storagePath:  '',
-      publicUrl:    '',
+      localUrl:    URL.createObjectURL(f),
+      file:        f,
+      questionRef: null,
+      uploading:   false,
+      uploaded:    false,
+      storagePath: '',
+      publicUrl:   '',
     }))
     setPhotos(prev => [...prev, ...newPhotos])
   }
@@ -87,13 +85,10 @@ function PhotoUploadScreen({
     setPhotos(prev => prev.map((p, i) => i === idx ? { ...p, ...patch } : p))
   }
 
-  function toggleQRef(idx: number, qNum: number) {
+  function selectQRef(idx: number, qNum: number) {
     setPhotos(prev => prev.map((p, i) => {
       if (i !== idx) return p
-      const refs = p.questionRefs.includes(qNum)
-        ? p.questionRefs.filter(r => r !== qNum)
-        : [...p.questionRefs, qNum].sort((a,b) => a - b)
-      return { ...p, questionRefs: refs }
+      return { ...p, questionRef: p.questionRef === qNum ? null : qNum }
     }))
   }
 
@@ -126,10 +121,10 @@ function PhotoUploadScreen({
 
       await saveTestPhoto({
         attemptId,
-        storagePath: path,
-        photoUrl:    urlData?.publicUrl ?? '',
-        questionRefs: p.questionRefs,
-        caption:      p.caption,
+        storagePath:  path,
+        photoUrl:     urlData?.publicUrl ?? '',
+        questionRefs: p.questionRef ? [p.questionRef] : [],
+        caption:      '',
       })
 
       updatePhoto(i, { uploading: false, uploaded: true, storagePath: path, publicUrl: urlData?.publicUrl ?? '' })
@@ -201,19 +196,18 @@ function PhotoUploadScreen({
               </div>
 
               <div className="p-4">
-                {/* Question tags */}
                 <p className="text-xs font-black uppercase tracking-wider mb-2" style={{ color: '#666672' }}>
-                  Which questions? (tap to tag)
+                  Which question? (tap to tag)
                 </p>
                 <div className="flex flex-wrap gap-1.5 mb-3">
                   {Array.from({ length: totalQ }, (_, i) => i + 1).map(n => (
                     <button
                       key={n}
-                      onClick={() => toggleQRef(idx, n)}
+                      onClick={() => selectQRef(idx, n)}
                       className="w-8 h-8 rounded-lg text-xs font-black transition-all"
                       style={{
-                        background: photo.questionRefs.includes(n) ? '#7C3AED' : '#F3F4F6',
-                        color:      photo.questionRefs.includes(n) ? 'white'   : '#6B7280',
+                        background: photo.questionRef === n ? '#7C3AED' : '#F3F4F6',
+                        color:      photo.questionRef === n ? 'white'   : '#6B7280',
                       }}
                     >
                       {n}
@@ -221,15 +215,16 @@ function PhotoUploadScreen({
                   ))}
                 </div>
 
-                {/* Caption */}
-                <input
-                  type="text"
-                  value={photo.caption}
-                  onChange={e => updatePhoto(idx, { caption: e.target.value })}
-                  placeholder="Add a note (optional)"
-                  className="w-full text-sm bg-gray-50 rounded-xl px-3 py-2 border border-gray-200 outline-none focus:border-violet-400"
-                  style={{ fontSize: 16 }}
-                />
+                {/* Show selected question text */}
+                {photo.questionRef !== null && (() => {
+                  const q = questions[photo.questionRef - 1]
+                  return q ? (
+                    <div className="rounded-xl p-3 text-sm" style={{ background: 'rgba(124,58,237,0.07)', color: '#5B21B6' }}>
+                      <span className="font-black text-xs mr-1.5">Q{photo.questionRef}</span>
+                      <span className="font-semibold">{q.questionText.length > 120 ? q.questionText.slice(0, 120) + '…' : q.questionText}</span>
+                    </div>
+                  ) : null
+                })()}
               </div>
             </div>
           ))}
