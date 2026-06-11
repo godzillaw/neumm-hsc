@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { useRouter }        from 'next/navigation'
-import MathText             from '@/components/MathText'
-import { chatWithTutorReview } from '@/lib/actions/tutor'
+import { useState, useRef, useEffect } from 'react'
+import { useRouter }                    from 'next/navigation'
+import MathText                         from '@/components/MathText'
+import { chatWithTutorReview }          from '@/lib/actions/tutor'
 import type { MockTestResult, MockAnswerResult } from './mock-actions'
-import type { ChatMessage } from '@/lib/actions/tutor'
+import type { ChatMessage }             from '@/lib/actions/tutor'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -32,6 +32,15 @@ function formatTime(secs: number): string {
 
 const OPTION_LABELS = ['A','B','C','D'] as const
 
+function scoreLabel(answer: MockAnswerResult): { text: string; color: string; bg: string } {
+  if (answer.isSkipped)  return { text: 'Skipped',      color: '#9CA3AF', bg: '#F3F4F6' }
+  if (answer.isCorrect)  return { text: 'Correct 100%', color: '#10B981', bg: 'rgba(16,185,129,0.1)' }
+  // open-ended "on paper" or "attempted" — can't auto-grade, treat as partial
+  if (answer.studentAnswer === 'on_paper' || answer.studentAnswer === 'attempted')
+    return { text: 'Partial',       color: '#F59E0B', bg: 'rgba(245,158,11,0.1)' }
+  return { text: 'Incorrect 0%',  color: '#EF4444', bg: 'rgba(239,68,68,0.1)' }
+}
+
 // ─── Question row ─────────────────────────────────────────────────────────────
 
 function QuestionRow({
@@ -44,7 +53,9 @@ function QuestionRow({
   onAsk:   (q: MockAnswerResult) => void
 }) {
   const [expanded, setExpanded] = useState(false)
-  const opts = [answer.optionA, answer.optionB, answer.optionC, answer.optionD]
+  const opts  = [answer.optionA, answer.optionB, answer.optionC, answer.optionD]
+  const score = scoreLabel(answer)
+  const isMCQ = opts.some(Boolean)
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
@@ -52,15 +63,14 @@ function QuestionRow({
         onClick={() => setExpanded(e => !e)}
         className="w-full flex items-center gap-3 px-4 py-3 text-left"
       >
-        <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-black shrink-0"
-          style={{
-            background: answer.isSkipped ? '#F3F4F6'
-              : answer.isCorrect ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-            color: answer.isSkipped ? '#9CA3AF'
-              : answer.isCorrect ? '#10B981' : '#EF4444',
-          }}>
-          {answer.isSkipped ? '—' : answer.isCorrect ? '✓' : '✗'}
-        </div>
+        {/* Score badge */}
+        <span
+          className="text-[11px] font-black px-2 py-0.5 rounded-lg shrink-0 whitespace-nowrap"
+          style={{ background: score.bg, color: score.color }}
+        >
+          {score.text}
+        </span>
+
         <div className="flex-1 min-w-0">
           <p className="text-xs font-bold text-gray-400 truncate">
             Q{index + 1} · {answer.topicName} · Band {answer.difficultyBand}
@@ -75,58 +85,85 @@ function QuestionRow({
       {expanded && (
         <div className="px-4 pb-4 border-t border-gray-50">
           {/* Full question */}
-          <div className="mt-3 mb-3">
+          <div className="mt-3 mb-4">
             <MathText text={answer.questionText} className="text-sm font-semibold text-gray-800 leading-relaxed" />
           </div>
 
-          {/* Options */}
-          <div className="space-y-2 mb-4">
-            {opts.map((opt, i) => {
-              if (!opt) return null
-              const label     = OPTION_LABELS[i].toLowerCase()
-              const isCorrect = label === answer.correctAnswer
-              const isStudent = label === answer.studentAnswer
-              return (
-                <div
-                  key={label}
-                  className="flex items-start gap-2 p-3 rounded-xl border"
-                  style={{
-                    borderColor: isCorrect ? '#10B981' : isStudent && !isCorrect ? '#EF4444' : '#F3F4F6',
-                    background:  isCorrect ? 'rgba(16,185,129,0.06)' : isStudent && !isCorrect ? 'rgba(239,68,68,0.04)' : '#FAFAFA',
-                  }}
-                >
-                  <span className="w-6 h-6 rounded-md flex items-center justify-center text-xs font-black shrink-0 mt-0.5"
+          {/* MCQ options */}
+          {isMCQ && (
+            <div className="space-y-2 mb-4">
+              {opts.map((opt, i) => {
+                if (!opt) return null
+                const label     = OPTION_LABELS[i].toLowerCase()
+                const isCorrect = label === answer.correctAnswer
+                const isStudent = label === answer.studentAnswer
+                return (
+                  <div
+                    key={label}
+                    className="flex items-start gap-2 p-3 rounded-xl border"
                     style={{
-                      background: isCorrect ? '#10B981' : isStudent && !isCorrect ? '#EF4444' : '#E5E7EB',
-                      color: isCorrect || (isStudent && !isCorrect) ? 'white' : '#9CA3AF',
-                    }}>
-                    {OPTION_LABELS[i]}
-                  </span>
-                  <MathText text={opt} className="flex-1 text-sm text-gray-700" />
-                  {isCorrect && <span className="text-xs font-black text-green-600 shrink-0">✓ Correct</span>}
-                  {isStudent && !isCorrect && <span className="text-xs font-black text-red-500 shrink-0">Your answer</span>}
-                </div>
-              )
-            })}
-          </div>
+                      borderColor: isCorrect ? '#10B981' : isStudent && !isCorrect ? '#EF4444' : '#F3F4F6',
+                      background:  isCorrect ? 'rgba(16,185,129,0.06)' : isStudent && !isCorrect ? 'rgba(239,68,68,0.04)' : '#FAFAFA',
+                    }}
+                  >
+                    <span className="w-6 h-6 rounded-md flex items-center justify-center text-xs font-black shrink-0 mt-0.5"
+                      style={{
+                        background: isCorrect ? '#10B981' : isStudent && !isCorrect ? '#EF4444' : '#E5E7EB',
+                        color: isCorrect || (isStudent && !isCorrect) ? 'white' : '#9CA3AF',
+                      }}>
+                      {OPTION_LABELS[i]}
+                    </span>
+                    <MathText text={opt} className="flex-1 text-sm text-gray-700" />
+                    {isCorrect  && <span className="text-xs font-black text-green-600 shrink-0">✓ Correct</span>}
+                    {isStudent && !isCorrect && <span className="text-xs font-black text-red-500 shrink-0">Your answer</span>}
+                  </div>
+                )
+              })}
+            </div>
+          )}
 
-          {/* Explanation */}
-          {answer.explanation && (
-            <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.15)' }}>
-              <p className="text-[10px] font-black uppercase tracking-wider mb-1" style={{ color: 'rgba(124,58,237,0.6)' }}>
-                Explanation
+          {/* Where you went wrong — only for incorrect MCQ */}
+          {!answer.isCorrect && !answer.isSkipped && isMCQ && answer.studentAnswer && (
+            <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.2)' }}>
+              <p className="text-[10px] font-black uppercase tracking-wider mb-1" style={{ color: '#EF4444' }}>
+                Where you went wrong
+              </p>
+              <p className="text-sm text-gray-700 leading-relaxed">
+                You chose <strong>{answer.studentAnswer.toUpperCase()}</strong> but the correct answer is <strong>{answer.correctAnswer.toUpperCase()}</strong>.
+                {answer.explanation
+                  ? ' See the step-by-step explanation below.'
+                  : ' Review the working method for this type of question.'}
+              </p>
+            </div>
+          )}
+
+          {/* Step-by-step explanation */}
+          {answer.explanation ? (
+            <div className="rounded-xl p-4 mb-4" style={{ background: 'rgba(124,58,237,0.05)', border: '1px solid rgba(124,58,237,0.15)' }}>
+              <p className="text-[10px] font-black uppercase tracking-wider mb-2" style={{ color: '#7C3AED' }}>
+                Step-by-step solution
               </p>
               <MathText text={answer.explanation} className="text-sm text-gray-700 leading-relaxed" />
+            </div>
+          ) : (
+            <div className="rounded-xl p-4 mb-4" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
+              <p className="text-[10px] font-black uppercase tracking-wider mb-1" style={{ color: '#9CA3AF' }}>
+                Solution
+              </p>
+              <p className="text-sm text-gray-500">
+                Correct answer: <strong style={{ color: '#10B981' }}>{answer.correctAnswer.toUpperCase()}</strong>.
+                Ask the AI Tutor for a full worked solution.
+              </p>
             </div>
           )}
 
           {/* Ask tutor */}
           <button
             onClick={() => onAsk(answer)}
-            className="text-xs font-black px-4 py-2 rounded-xl text-white"
+            className="w-full py-2.5 rounded-xl text-sm font-black text-white flex items-center justify-center gap-2"
             style={{ background: 'linear-gradient(135deg,#7C3AED,#EC4899)' }}
           >
-            👩‍🏫 Ask AI Tutor about this →
+            👩‍🏫 Ask AI Tutor about this question →
           </button>
         </div>
       )}
@@ -138,17 +175,27 @@ function QuestionRow({
 
 function ChatPanel({
   onClose,
-  initialMessages,
+  messages,
+  setMessages,
   context,
 }: {
-  onClose:         () => void
-  initialMessages: ChatMessage[]
-  context:         string
+  onClose:     () => void
+  messages:    ChatMessage[]
+  setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>
+  context:     string
 }) {
-  const [messages,  setMessages]  = useState<ChatMessage[]>(initialMessages)
-  const [input,     setInput]     = useState('')
-  const [sending,   setSending]   = useState(false)
+  const [input,   setInput]   = useState('')
+  const [sending, setSending] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const inputRef  = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 80)
+  }, [messages])
+
+  useEffect(() => {
+    setTimeout(() => inputRef.current?.focus(), 100)
+  }, [])
 
   async function send() {
     const text = input.trim()
@@ -156,25 +203,43 @@ function ChatPanel({
     setInput('')
     setSending(true)
     const userMsg: ChatMessage = { role: 'user', content: text }
-    const updatedMessages = [...messages, userMsg]
-    setMessages(updatedMessages)
-    const reply = await chatWithTutorReview(context, updatedMessages)
+    const updated = [...messages, userMsg]
+    setMessages(updated)
+    const reply = await chatWithTutorReview(context, updated)
     setMessages(prev => [...prev, { role: 'assistant', content: reply }])
     setSending(false)
-    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
   }
 
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col" style={{ background: '#080D16', fontFamily: "'Nunito', sans-serif" }}>
       <div className="flex items-center gap-3 px-4 py-4 border-b border-white/10">
-        <button onClick={onClose} className="text-white/60 hover:text-white text-lg">←</button>
-        <p className="font-black text-white">AI Tutor</p>
+        <button onClick={onClose} className="text-white/60 hover:text-white text-lg font-black">←</button>
+        <div className="flex-1">
+          <p className="font-black text-white">AI Tutor</p>
+          <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Ask anything — keep chatting until you fully understand</p>
+        </div>
       </div>
+
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+        {messages.length === 0 && (
+          <div className="text-center py-12">
+            <div className="text-5xl mb-3">👩‍🏫</div>
+            <p className="font-black text-white mb-1">Ask me anything</p>
+            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
+              Ask about any question from this test, a method,<br/>or why an answer is right or wrong.
+            </p>
+          </div>
+        )}
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            {m.role === 'assistant' && (
+              <div className="w-6 h-6 rounded-full flex items-center justify-center text-sm mr-2 shrink-0 mt-1"
+                style={{ background: 'linear-gradient(135deg,#7C3AED,#EC4899)' }}>
+                🏫
+              </div>
+            )}
             <div
-              className="max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed"
+              className="max-w-[82%] rounded-2xl px-4 py-3 text-sm leading-relaxed"
               style={m.role === 'user'
                 ? { background: 'linear-gradient(135deg,#7C3AED,#A855F7)', color: 'white' }
                 : { background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.9)' }}
@@ -184,31 +249,37 @@ function ChatPanel({
           </div>
         ))}
         {sending && (
-          <div className="flex justify-start">
-            <div className="rounded-2xl px-4 py-3 text-sm" style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.5)' }}>
+          <div className="flex justify-start items-center gap-2">
+            <div className="w-6 h-6 rounded-full flex items-center justify-center text-sm shrink-0"
+              style={{ background: 'linear-gradient(135deg,#7C3AED,#EC4899)' }}>
+              🏫
+            </div>
+            <div className="rounded-2xl px-4 py-3 text-sm" style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.4)' }}>
               Thinking…
             </div>
           </div>
         )}
         <div ref={bottomRef} />
       </div>
+
       <div className="px-4 py-3 border-t border-white/10 flex gap-2"
         style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
         <input
+          ref={inputRef}
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && !e.shiftKey && void send()}
-          placeholder="Ask about any question…"
+          placeholder="Type your question…"
           className="flex-1 rounded-2xl px-4 py-3 text-sm font-semibold outline-none"
           style={{ background: 'rgba(255,255,255,0.08)', color: 'white', fontSize: 16 }}
         />
         <button
           onClick={() => void send()}
           disabled={!input.trim() || sending}
-          className="w-10 h-10 rounded-2xl flex items-center justify-center disabled:opacity-40"
+          className="w-11 h-11 rounded-2xl flex items-center justify-center disabled:opacity-40 shrink-0"
           style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)' }}
         >
-          <span className="text-white text-lg">↑</span>
+          <span className="text-white font-black">↑</span>
         </button>
       </div>
     </div>
@@ -221,54 +292,48 @@ export default function MockTestReview({ result }: { result: MockTestResult }) {
   const router = useRouter()
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [showChat,     setShowChat]     = useState(false)
-  const [filter,       setFilter]       = useState<'all' | 'wrong' | 'skipped'>('all')
 
-  const chatContext = `Mock test: "${result.title}" (${result.mode}). Score: ${result.scorePct}%, Predicted Band ${result.predictedBand}. ${result.answers.length} questions total, ${result.answers.filter(a=>a.isCorrect).length} correct.`
+  const chatContext = `Mock test: "${result.title}" (${result.mode}). Score: ${result.scorePct}%, Predicted Band ${result.predictedBand}. ${result.answers.length} questions, ${result.answers.filter(a=>a.isCorrect).length} correct, ${result.answers.filter(a=>!a.isCorrect&&!a.isSkipped).length} incorrect. Questions: ${result.answers.map((a,i)=>`Q${i+1}: ${a.questionText} [Correct: ${a.correctAnswer}, Student: ${a.studentAnswer ?? 'skipped'}]`).join(' | ')}`
 
   function handleAsk(answer: MockAnswerResult) {
-    const preload: ChatMessage = {
+    const pos = result.answers.indexOf(answer) + 1
+    const intro: ChatMessage = {
       role: 'assistant',
-      content: `Let's go through Question ${answer.position}: "${answer.questionText}"\n\nYou answered **${answer.studentAnswer?.toUpperCase() ?? 'nothing'}** — the correct answer is **${answer.correctAnswer.toUpperCase()}**.\n\n${answer.explanation}\n\nWhat would you like me to explain further?`,
+      content: `Sure! Let's look at **Question ${pos}**: "${answer.questionText}"\n\nYou answered **${answer.studentAnswer?.toUpperCase() ?? 'nothing (skipped)'}** — the correct answer is **${answer.correctAnswer.toUpperCase()}**.\n\n${answer.explanation ?? 'Ask me to walk through the solution step by step.'}\n\nWhat would you like me to explain?`,
     }
-    setChatMessages([preload])
+    // Append to existing conversation rather than reset
+    setChatMessages(prev => prev.length > 0
+      ? [...prev, { role: 'user', content: `Can you explain Question ${pos}?` }, intro]
+      : [intro]
+    )
     setShowChat(true)
   }
 
-  const correct  = result.answers.filter(a => a.isCorrect).length
-  const wrong    = result.answers.filter(a => !a.isCorrect && !a.isSkipped).length
-  const skipped  = result.answers.filter(a => a.isSkipped).length
-
-  const filtered = result.answers.filter(a => {
-    if (filter === 'wrong')   return !a.isCorrect && !a.isSkipped
-    if (filter === 'skipped') return a.isSkipped
-    return true
-  })
+  const correct = result.answers.filter(a => a.isCorrect).length
+  const wrong   = result.answers.filter(a => !a.isCorrect && !a.isSkipped).length
+  const skipped = result.answers.filter(a => a.isSkipped).length
 
   const readinessEntries = Object.entries(result.readiness)
 
-  const modeLabel = result.mode === 'school_test' ? '🏫 School Test'
-    : result.mode === 'hsc_trial' ? '📋 HSC Trial' : '🎓 HSC'
+  const modeLabel = result.mode === 'school_test'  ? '🏫 School Test'
+    : result.mode === 'hsc_trial'  ? '📋 HSC Trial'
+    : result.mode === 'naplan_y9'  ? '📐 NAPLAN Y9'
+    : result.mode === 'prelim_y11' ? '📓 Prelim Y11'
+    : '🎓 HSC'
 
   return (
     <div style={{ fontFamily: "'Nunito', sans-serif", minHeight: '100vh', background: '#F7F3FF' }}>
-
-      {/* ── Report card ───────────────────────────────────────────────────── */}
       <div className="px-5 md:px-8 py-8 max-w-2xl mx-auto">
 
         {/* Header */}
         <div className="mb-6">
           <span className="text-xs font-bold text-gray-400">{modeLabel} · Attempt {result.attemptNumber}</span>
           <h1 className="text-2xl font-black text-gray-900 mt-1">{result.title}</h1>
-          <p className="text-sm text-gray-400 mt-0.5">
-            Completed in {formatTime(result.timeTakenSecs)}
-          </p>
+          <p className="text-sm text-gray-400 mt-0.5">Completed in {formatTime(result.timeTakenSecs)}</p>
         </div>
 
         {/* Score hero */}
-        <div
-          className="rounded-3xl p-6 mb-5 text-white"
-          style={{ background: 'linear-gradient(135deg,#0F0F14,#1A1A2E)' }}
-        >
+        <div className="rounded-3xl p-6 mb-5 text-white" style={{ background: 'linear-gradient(135deg,#0F0F14,#1A1A2E)' }}>
           <div className="flex items-center justify-between mb-4">
             <div>
               <p className="text-4xl font-black">{result.scorePct}%</p>
@@ -283,8 +348,6 @@ export default function MockTestReview({ result }: { result: MockTestResult }) {
               <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Predicted</p>
             </div>
           </div>
-
-          {/* Stat pills */}
           <div className="flex gap-2 flex-wrap">
             <span className="px-3 py-1 rounded-full text-xs font-black" style={{ background: 'rgba(16,185,129,0.2)', color: '#34D399' }}>
               ✓ {correct} correct
@@ -333,42 +396,20 @@ export default function MockTestReview({ result }: { result: MockTestResult }) {
           </div>
         )}
 
-        {/* Question review */}
+        {/* Question review — no filter, all shown */}
         <div className="mb-5">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-black uppercase tracking-wider" style={{ color: '#666672' }}>
-              Question review
-            </p>
-            <div className="flex gap-1">
-              {(['all', 'wrong', 'skipped'] as const).map(f => (
-                <button
-                  key={f}
-                  onClick={() => setFilter(f)}
-                  className="text-xs font-black px-2.5 py-1 rounded-lg capitalize"
-                  style={{
-                    background: filter === f ? '#7C3AED' : '#F3F4F6',
-                    color:      filter === f ? 'white'   : '#6B7280',
-                  }}
-                >
-                  {f}
-                </button>
-              ))}
-            </div>
-          </div>
+          <p className="text-xs font-black uppercase tracking-wider mb-3" style={{ color: '#666672' }}>
+            Question review
+          </p>
           <div className="space-y-2">
-            {filtered.map((a) => (
+            {result.answers.map((a, i) => (
               <QuestionRow
                 key={a.questionId}
                 answer={a}
-                index={result.answers.indexOf(a)}
+                index={i}
                 onAsk={handleAsk}
               />
             ))}
-            {filtered.length === 0 && (
-              <p className="text-sm text-gray-400 text-center py-6">
-                {filter === 'wrong' ? 'No wrong answers 🎉' : 'No skipped questions 🎉'}
-              </p>
-            )}
           </div>
         </div>
 
@@ -396,11 +437,11 @@ export default function MockTestReview({ result }: { result: MockTestResult }) {
         </div>
       </div>
 
-      {/* Chat panel */}
       {showChat && (
         <ChatPanel
           onClose={() => setShowChat(false)}
-          initialMessages={chatMessages}
+          messages={chatMessages}
+          setMessages={setChatMessages}
           context={chatContext}
         />
       )}
