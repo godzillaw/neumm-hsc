@@ -44,6 +44,7 @@ export interface MockAnswerResult {
   isCorrect:      boolean
   isSkipped:      boolean
   explanation:    string
+  stepByStep:     string[]
 }
 
 export interface MockTestResult {
@@ -458,6 +459,7 @@ export async function finalizeMockAttempt(params: {
       isCorrect:      a.is_correct,
       isSkipped:      a.is_skipped,
       explanation:    a.explanation,
+      stepByStep:     [],
     })),
   }
 
@@ -484,6 +486,16 @@ export async function getAttemptResult(attemptId: string): Promise<MockTestResul
     .select('*')
     .eq('attempt_id', attemptId)
     .order('position')
+
+  // Fetch step_by_step from questions table for rich explanations
+  const qIds = (answers ?? []).map(a => a.question_id as string).filter(Boolean)
+  const { data: qRows } = qIds.length > 0
+    ? await supabase.from('questions').select('id, step_by_step').in('id', qIds)
+    : { data: [] }
+  const stepMap = new Map<string, string[]>()
+  for (const q of (qRows ?? [])) {
+    stepMap.set(q.id as string, Array.isArray(q.step_by_step) ? (q.step_by_step as string[]) : [])
+  }
 
   const mt = attempt.mock_tests as Record<string, unknown>
   return {
@@ -512,6 +524,7 @@ export async function getAttemptResult(attemptId: string): Promise<MockTestResul
       isCorrect:      a.is_correct as boolean,
       isSkipped:      a.is_skipped as boolean,
       explanation:    a.explanation as string,
+      stepByStep:     stepMap.get(a.question_id as string) ?? [],
     })),
   }
 }

@@ -7,6 +7,129 @@ import { chatWithTutorReview }          from '@/lib/actions/tutor'
 import type { MockTestResult, MockAnswerResult } from './mock-actions'
 import type { ChatMessage }             from '@/lib/actions/tutor'
 
+// ─── Inline math + rich text helpers (mirrors PracticeSession) ───────────────
+
+function renderInline(text: string): React.ReactNode[] {
+  const parts: React.ReactNode[] = []
+  const re = /(\$[^$\n]+?\$|\*\*[^*\n]+\*\*|\*[^*\n]+\*|`[^`\n]+`)/g
+  let last = 0
+  let m = re.exec(text)
+  while (m !== null) {
+    if (m.index > last) parts.push(text.slice(last, m.index))
+    const raw = m[1]
+    if (raw.startsWith('$') && raw.endsWith('$') && raw.length > 2) {
+      parts.push(<MathText key={m.index} text={raw} />)
+    } else if (raw.startsWith('**')) {
+      parts.push(<strong key={m.index} className="font-black" style={{ color: 'rgba(255,255,255,0.95)' }}>{raw.slice(2,-2)}</strong>)
+    } else if (raw.startsWith('*')) {
+      parts.push(<em key={m.index} className="italic">{raw.slice(1,-1)}</em>)
+    } else {
+      parts.push(<code key={m.index} className="rounded px-1 py-0.5 text-[12px] font-mono" style={{ background: 'rgba(124,58,237,0.25)', color: '#C4B5FD' }}>{raw.slice(1,-1)}</code>)
+    }
+    last = m.index + raw.length
+    m = re.exec(text)
+  }
+  if (last < text.length) parts.push(text.slice(last))
+  return parts
+}
+
+function RichBody({ text }: { text: string }) {
+  const lines = text.split('\n').filter(l => l.trim())
+  return (
+    <>
+      {lines.map((line, i) => {
+        const t = line.trim()
+        if (t.startsWith('$$') && t.endsWith('$$') && t.length > 4) {
+          return <div key={i} className="flex justify-center my-3 px-2"><MathText text={t} style={{ color: 'white' }} /></div>
+        }
+        return (
+          <p key={i} className={`text-sm leading-relaxed ${i > 0 ? 'mt-1.5' : ''}`} style={{ color: 'rgba(255,255,255,0.8)' }}>
+            {renderInline(t)}
+          </p>
+        )
+      })}
+    </>
+  )
+}
+
+// ─── InlineSteps — identical renderer to PracticeSession ─────────────────────
+
+function InlineSteps({ steps }: { steps: string[] }) {
+  if (!steps || steps.length === 0) return null
+  let sectionNum = 0
+  return (
+    <div className="rounded-2xl overflow-hidden" style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.1)' }}>
+      <div className="px-5 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <p className="text-[11px] font-black uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.35)' }}>
+          Step-by-step solution
+        </p>
+      </div>
+      <div className="px-5 py-4">
+        {steps.map((step, i) => {
+          const trimmed = step.trim()
+
+          if (/^✅\s*(Final Answer|Answer):?/i.test(trimmed)) {
+            const body = trimmed.replace(/^✅\s*(Final Answer|Answer):?\s*/i, '')
+            return (
+              <div key={i} className="rounded-xl px-4 py-3.5 mt-4" style={{ background: 'rgba(16,185,129,0.12)', border: '1.5px solid rgba(16,185,129,0.3)' }}>
+                <p className="text-[11px] font-black uppercase tracking-wide mb-1.5" style={{ color: '#34D399' }}>✅ Final Answer</p>
+                <p className="text-sm font-bold" style={{ color: 'rgba(255,255,255,0.9)' }}>{renderInline(body)}</p>
+              </div>
+            )
+          }
+
+          if (/^⚠️?\s*(Common mistake|Watch out|Note):?/i.test(trimmed)) {
+            const body = trimmed.replace(/^⚠️?\s*(Common mistake|Watch out|Note):?\s*/i, '')
+            return (
+              <div key={i} className="rounded-xl px-4 py-3 mt-3" style={{ background: 'rgba(245,158,11,0.08)', border: '1.5px solid rgba(245,158,11,0.2)' }}>
+                <p className="text-[11px] font-black uppercase tracking-wide mb-1" style={{ color: '#FBBF24' }}>⚠️ Common Mistake</p>
+                <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)' }}>{renderInline(body)}</p>
+              </div>
+            )
+          }
+
+          if (/^(💡|Tip):?/i.test(trimmed)) {
+            const body = trimmed.replace(/^(💡|Tip):?\s*/i, '')
+            return (
+              <div key={i} className="rounded-xl px-4 py-3 mt-3" style={{ background: 'rgba(96,165,250,0.08)', border: '1.5px solid rgba(96,165,250,0.15)' }}>
+                <p className="text-[11px] font-black uppercase tracking-wide mb-1" style={{ color: '#60A5FA' }}>💡 Tip</p>
+                <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)' }}>{renderInline(body)}</p>
+              </div>
+            )
+          }
+
+          const sectionMatch = trimmed.match(/^\*\*(\d+)\.\s+(.+?)\*\*([\s\S]*)$/)
+          if (sectionMatch) {
+            sectionNum++
+            const title = sectionMatch[2].trim()
+            const body  = sectionMatch[3].trim()
+            return (
+              <div key={i} className={i > 0 ? 'pt-5 mt-1' : 'pt-1'} style={{ borderTop: i > 0 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
+                <p className="text-[10px] font-black uppercase tracking-widest mb-1.5" style={{ color: 'rgba(255,255,255,0.22)' }}>{sectionNum}</p>
+                <p className="text-sm font-black text-white mb-2.5">{title}</p>
+                {body && <RichBody text={body} />}
+              </div>
+            )
+          }
+
+          sectionNum++
+          return (
+            <div key={i} className="flex gap-3 py-3" style={{ borderTop: i > 0 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+              <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5"
+                style={{ background: 'linear-gradient(135deg,#6D28D9,#A855F7)', color: 'white' }}>
+                {sectionNum}
+              </div>
+              <p className="text-sm leading-relaxed flex-1" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                {renderInline(trimmed)}
+              </p>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function bandColor(band: number): string {
@@ -137,25 +260,25 @@ function QuestionRow({
             </div>
           )}
 
-          {/* Step-by-step explanation */}
-          {answer.explanation ? (
-            <div className="rounded-xl p-4 mb-4" style={{ background: 'rgba(124,58,237,0.05)', border: '1px solid rgba(124,58,237,0.15)' }}>
-              <p className="text-[10px] font-black uppercase tracking-wider mb-2" style={{ color: '#7C3AED' }}>
-                Step-by-step solution
-              </p>
-              <MathText text={answer.explanation} className="text-sm text-gray-700 leading-relaxed" />
-            </div>
-          ) : (
-            <div className="rounded-xl p-4 mb-4" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
-              <p className="text-[10px] font-black uppercase tracking-wider mb-1" style={{ color: '#9CA3AF' }}>
-                Solution
-              </p>
-              <p className="text-sm text-gray-500">
-                Correct answer: <strong style={{ color: '#10B981' }}>{answer.correctAnswer.toUpperCase()}</strong>.
-                Ask the AI Tutor for a full worked solution.
-              </p>
-            </div>
-          )}
+          {/* Step-by-step solution — rich InlineSteps if available, fallback to explanation text */}
+          <div className="mb-4">
+            {answer.stepByStep && answer.stepByStep.length > 0
+              ? <InlineSteps steps={answer.stepByStep} />
+              : answer.explanation
+              ? (
+                <div className="rounded-xl p-4" style={{ background: 'rgba(124,58,237,0.05)', border: '1px solid rgba(124,58,237,0.15)' }}>
+                  <p className="text-[10px] font-black uppercase tracking-wider mb-2" style={{ color: '#7C3AED' }}>Solution</p>
+                  <MathText text={answer.explanation} className="text-sm text-gray-700 leading-relaxed" />
+                </div>
+              ) : (
+                <div className="rounded-xl p-4" style={{ background: '#F9FAFB', border: '1px solid #E5E7EB' }}>
+                  <p className="text-sm text-gray-500">
+                    Correct answer: <strong style={{ color: '#10B981' }}>{answer.correctAnswer.toUpperCase()}</strong>. Ask the AI Tutor for a full worked solution.
+                  </p>
+                </div>
+              )
+            }
+          </div>
 
           {/* Ask tutor */}
           <button
