@@ -7,7 +7,6 @@ import { usePathname }                 from 'next/navigation'
 
 const NAV_ITEMS = [
   { href: '/dashboard/mission',           label: 'Mission',          icon: '🎯' },
-  { href: '/practice',                    label: 'Practice',         icon: '⚡' },
   { href: '/exam',                        label: 'Exam',             icon: '📝' },
   { href: '/dashboard/leaderboard',       label: 'Leaderboard',      icon: '🏆' },
   { href: '/dashboard/account',           label: 'Account',          icon: '👤' },
@@ -50,7 +49,9 @@ export default function AppSidebar() {
       {/* Nav */}
       <nav className="flex-1 px-3 space-y-0.5">
         {NAV_ITEMS.map(item => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+          const onPractice = pathname === '/practice' || pathname.startsWith('/practice/')
+          const isActive = pathname === item.href || pathname.startsWith(item.href + '/') ||
+            (onPractice && item.href === '/dashboard/mission')
           return (
             <Link
               key={item.href}
