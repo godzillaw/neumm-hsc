@@ -8,7 +8,6 @@ import { usePathname }                 from 'next/navigation'
 const NAV_ITEMS = [
   { href: '/dashboard/mission',           label: 'Mission',          icon: '🎯' },
   { href: '/exam',                        label: 'Exam',             icon: '📝' },
-  { href: '/dashboard/leaderboard',       label: 'Leaderboard',      icon: '🏆' },
   { href: '/dashboard/account',           label: 'Account',          icon: '👤' },
   { href: '/dashboard/settings/privacy',  label: 'Privacy Settings', icon: '🔒' },
 ]

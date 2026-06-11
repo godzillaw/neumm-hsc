@@ -37,8 +37,6 @@ export default async function PrivacySettingsPage() {
       </p>
 
       <PrivacyControls
-        userId={user.id}
-        leaderboardVisible={row?.leaderboard_visible ?? true}
         isMinor={row?.is_minor ?? false}
         termsVersion={row?.terms_version ?? null}
         termsAcceptedAt={row?.terms_accepted_at ?? null}

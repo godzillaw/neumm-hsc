@@ -1,11 +1,8 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { setLeaderboardVisible } from '@/lib/actions/compliance'
+import { useState } from 'react'
 
 interface Props {
-  userId: string
-  leaderboardVisible: boolean
   isMinor: boolean
   termsVersion: string | null
   termsAcceptedAt: string | null
@@ -14,32 +11,15 @@ interface Props {
 }
 
 export default function PrivacyControls({
-  userId,
-  leaderboardVisible: initialLeaderboard,
   isMinor,
   termsVersion,
   termsAcceptedAt,
   privacyVersion,
   privacyAcceptedAt,
 }: Props) {
-  const [leaderboard,    setLeaderboard]    = useState(initialLeaderboard)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteSuccess,   setDeleteSuccess]  = useState(false)
   const [error,           setError]          = useState<string | null>(null)
-  const [isPending,       startTransition]   = useTransition()
-
-  function handleLeaderboardToggle() {
-    const next = !leaderboard
-    setLeaderboard(next)
-    startTransition(async () => {
-      try {
-        await setLeaderboardVisible(userId, next)
-      } catch {
-        setLeaderboard(!next) // revert
-        setError('Failed to update leaderboard setting.')
-      }
-    })
-  }
 
   async function handleDataAccessRequest() {
     try {
@@ -105,33 +85,7 @@ export default function PrivacyControls({
         </div>
       )}
 
-      {/* 4.1 Leaderboard toggle */}
-      <Section title="Leaderboard Visibility">
-        <p style={{ color: '#6B7280', fontSize: 14, marginBottom: 14 }}>
-          Control whether your name appears on the public leaderboard.
-        </p>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}>
-          <div
-            onClick={handleLeaderboardToggle}
-            style={{
-              width: 48, height: 26, borderRadius: 13,
-              background: leaderboard ? '#006D77' : '#D1D5DB',
-              position: 'relative', transition: 'background 0.2s',
-              flexShrink: 0, cursor: 'pointer',
-            }}
-          >
-            <div style={{
-              position: 'absolute', top: 3, left: leaderboard ? 25 : 3,
-              width: 20, height: 20, borderRadius: '50%', background: 'white',
-              transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-            }} />
-          </div>
-          <span style={{ fontSize: 14, color: '#374151', fontWeight: 600 }}>
-            {leaderboard ? 'Visible on leaderboard' : 'Hidden from leaderboard'}
-          </span>
-          {isPending && <span style={{ fontSize: 12, color: '#9CA3AF' }}>Saving…</span>}
-        </label>
-      </Section>
+      {/* Leaderboard toggle hidden — out of scope for MVP */}
 
       {/* 4.2 Data access */}
       <Section title="Request a Copy of Your Data">
