@@ -2,46 +2,6 @@
 
 import Link                            from 'next/link'
 import { usePathname }                 from 'next/navigation'
-import { useState, useEffect }         from 'react'
-import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
-
-// ── Live XP + Streak from DB ───────────────────────────────────────────────────
-
-function SidebarStats() {
-  const [xp,     setXP]     = useState<number | null>(null)
-  const [streak, setStreak] = useState<number>(0)
-
-  useEffect(() => {
-    const supabase = createSupabaseBrowserClient()
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return
-      supabase.from('users').select('total_points, streak').eq('id', user.id).single()
-        .then(({ data }) => {
-          if (data) {
-            setXP((data.total_points as number) ?? 0)
-            setStreak((data.streak as number) ?? 0)
-          }
-        })
-    })
-  }, [])
-
-  return (
-    <div className="mx-4 mb-5 rounded-2xl px-4 py-3 flex items-center justify-between"
-      style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}>
-      <div className="text-center">
-        <p className="text-xs font-black text-white leading-none">
-          {xp === null ? '—' : xp >= 1000 ? `${(xp/1000).toFixed(1)}k` : xp}
-        </p>
-        <p className="text-[10px] mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>⚡ XP</p>
-      </div>
-      <div className="w-px h-7" style={{ background: 'rgba(255,255,255,0.1)' }} />
-      <div className="text-center">
-        <p className="text-xs font-black text-white leading-none">{streak}</p>
-        <p className="text-[10px] mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>🔥 streak</p>
-      </div>
-    </div>
-  )
-}
 
 // ── Nav items ──────────────────────────────────────────────────────────────────
 
@@ -86,9 +46,6 @@ export default function AppSidebar() {
           </p>
         </div>
       </div>
-
-      {/* XP + Streak stats */}
-      <SidebarStats />
 
       {/* Nav */}
       <nav className="flex-1 px-3 space-y-0.5">
