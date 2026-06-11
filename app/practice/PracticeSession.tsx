@@ -8,6 +8,7 @@ import { goToCheckout } from '@/lib/goToCheckout'
 import { logLearningEvent }                           from '@/lib/actions/events'
 import { awardQuestionPoints, checkAndAwardStageCompletion } from '@/lib/actions/gamification'
 import { findStage }                                  from '@/lib/curriculum'
+import type { ExplanationBlock }                       from '@/lib/curriculum'
 import { POINTS }                                     from '@/lib/gamification-constants'
 import AIDisclosureBanner                              from '@/components/tutor/AIDisclosureBanner'
 import WorkingInput                                   from '@/components/WorkingInput'
@@ -657,6 +658,111 @@ function InlineAsk({ onAsk }: { onAsk: (text: string) => void }) {
   )
 }
 
+// ─── Rich ExplanationBlock renderer ──────────────────────────────────────────
+
+function RenderBlock({ block }: { block: ExplanationBlock }) {
+  switch (block.type) {
+    case 'text':
+      return <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }}>{block.body}</p>
+
+    case 'formula':
+      return (
+        <div className="rounded-xl px-4 py-3 my-1" style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)' }}>
+          {block.label && (
+            <p className="text-[10px] font-black uppercase tracking-wider mb-1" style={{ color: 'rgba(167,139,250,0.7)' }}>{block.label}</p>
+          )}
+          <MathText text={`$$${block.latex}$$`} className="text-white text-center block" />
+        </div>
+      )
+
+    case 'rules':
+      return (
+        <div className="rounded-xl px-4 py-3 my-1" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          {block.heading && <p className="text-xs font-black uppercase tracking-wider mb-2" style={{ color: 'rgba(255,255,255,0.4)' }}>{block.heading}</p>}
+          <ul className="space-y-1.5">
+            {block.items.map((item, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                <span className="mt-0.5 shrink-0 text-violet-400">•</span>
+                <MathText text={item} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )
+
+    case 'steps':
+      return (
+        <div className="rounded-xl px-4 py-3 my-1" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          {block.heading && <p className="text-xs font-black uppercase tracking-wider mb-2" style={{ color: 'rgba(255,255,255,0.4)' }}>{block.heading}</p>}
+          <ol className="space-y-1.5 list-none">
+            {block.items.map((item, i) => (
+              <li key={i} className="flex items-start gap-2.5 text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                <span className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black mt-0.5"
+                  style={{ background: 'rgba(124,58,237,0.4)', color: '#C4B5FD' }}>{i + 1}</span>
+                <MathText text={item} />
+              </li>
+            ))}
+          </ol>
+        </div>
+      )
+
+    case 'example':
+      return (
+        <div className="rounded-xl px-4 py-3 my-1" style={{ background: 'rgba(56,178,172,0.1)', border: '1px solid rgba(56,178,172,0.25)' }}>
+          <p className="text-[10px] font-black uppercase tracking-wider mb-2" style={{ color: 'rgba(94,234,212,0.7)' }}>Worked Example</p>
+          <MathText text={block.question} className="text-sm font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.9)' }} />
+          <ol className="space-y-1 list-none mt-2">
+            {block.steps.map((step, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm" style={{ color: 'rgba(255,255,255,0.75)' }}>
+                <span className="shrink-0 font-black text-teal-400 mt-0.5">{i + 1}.</span>
+                <MathText text={step} />
+              </li>
+            ))}
+          </ol>
+        </div>
+      )
+
+    case 'tip':
+      return (
+        <div className="rounded-xl px-4 py-3 my-1 flex gap-3" style={{ background: 'rgba(255,218,0,0.07)', border: '1.5px solid rgba(255,218,0,0.2)' }}>
+          <span className="text-lg shrink-0">💡</span>
+          <MathText text={block.body} className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.85)' }} />
+        </div>
+      )
+
+    case 'table':
+      return (
+        <div className="rounded-xl overflow-hidden my-1" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
+          <table className="w-full text-sm">
+            <thead>
+              <tr style={{ background: 'rgba(124,58,237,0.2)' }}>
+                {block.headers.map((h, i) => (
+                  <th key={i} className="px-3 py-2 text-left text-[11px] font-black uppercase tracking-wider" style={{ color: 'rgba(196,181,253,0.8)' }}>
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {block.rows.map((row, ri) => (
+                <tr key={ri} style={{ background: ri % 2 === 0 ? 'rgba(255,255,255,0.03)' : 'transparent' }}>
+                  {row.map((cell, ci) => (
+                    <td key={ci} className="px-3 py-2" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                      <MathText text={cell} />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
+
+    default:
+      return null
+  }
+}
+
 // ─── Stage Intro Screen ─────────────────────────────────────────────────────────
 
 function StageIntroScreen({ stageId, onStart }: { stageId: string; onStart: () => void }) {
@@ -666,8 +772,8 @@ function StageIntroScreen({ stageId, onStart }: { stageId: string; onStart: () =
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-6 py-10"
-      style={{ background: '#080D16', fontFamily: "'Nunito', sans-serif" }}
+      className="min-h-screen flex flex-col items-center px-5 py-8"
+      style={{ background: '#080D16', fontFamily: "'Nunito', sans-serif", overflowY: 'auto' }}
     >
       <div className="w-full max-w-lg">
         {/* Level badge */}
@@ -688,16 +794,24 @@ function StageIntroScreen({ stageId, onStart }: { stageId: string; onStart: () =
           </div>
         </div>
 
-        {/* Explanation card */}
-        <div
-          className="rounded-2xl p-5 mb-4"
-          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
-        >
-          <p className="text-[11px] font-black uppercase tracking-wide mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>
-            What you&apos;ll learn
-          </p>
-          <p className="text-sm leading-relaxed text-white">{stage.explanation}</p>
-        </div>
+        {/* Rich content blocks — or fallback to plain explanation text */}
+        {stage.content && stage.content.length > 0 ? (
+          <div className="space-y-3 mb-4">
+            {stage.content.map((block, i) => (
+              <RenderBlock key={i} block={block} />
+            ))}
+          </div>
+        ) : (
+          <div
+            className="rounded-2xl p-5 mb-4"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            <p className="text-[11px] font-black uppercase tracking-wide mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>
+              What you&apos;ll learn
+            </p>
+            <p className="text-sm leading-relaxed text-white">{stage.explanation}</p>
+          </div>
+        )}
 
         {/* Video — only shown when videoHint is set */}
         {stage.videoHint && (
@@ -739,7 +853,7 @@ function StageIntroScreen({ stageId, onStart }: { stageId: string; onStart: () =
           className="w-full py-4 rounded-2xl font-black text-base transition-all active:scale-[0.97]"
           style={{ background: 'linear-gradient(135deg,#185FA5,#2563EB)', color: 'white', minHeight: 56 }}
         >
-          Start Stage →
+          Start Practising →
         </button>
       </div>
     </div>
@@ -824,8 +938,8 @@ export default function PracticeSession({
   const [completionData,     setCompletionData]     = useState<CompletionData | null>(null)
   const [showStageComplete,  setShowStageComplete]  = useState(false)
 
-  // Stage intro screen — disabled; go straight to first question
-  const [showStageIntro,     setShowStageIntro]     = useState(false)
+  // Stage intro screen — show when entering a stage
+  const [showStageIntro,     setShowStageIntro]     = useState(!!stageId)
 
   // Trial soft banner (shown every 5 questions during trial)
   const [showTrialBanner,      setShowTrialBanner]      = useState(false)
@@ -916,7 +1030,13 @@ export default function PracticeSession({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, topicFilter])
 
-  useEffect(() => { if (!showStageIntro) loadNext() }, [loadNext, showStageIntro])
+  const hasLoadedOnceRef = useRef(false)
+  useEffect(() => {
+    if (!showStageIntro && !hasLoadedOnceRef.current) {
+      hasLoadedOnceRef.current = true
+      loadNext()
+    }
+  }, [loadNext, showStageIntro])
 
   useEffect(() => () => {
     if (timerRef.current)      clearInterval(timerRef.current)
@@ -1114,7 +1234,11 @@ export default function PracticeSession({
     return (
       <StageIntroScreen
         stageId={stageId}
-        onStart={() => { setShowStageIntro(false); void loadNext() }}
+        onStart={() => {
+          setShowStageIntro(false)
+          // Only load first question if we haven't started yet
+          if (!question && phase !== 'loading') void loadNext()
+        }}
       />
     )
   }
@@ -1298,6 +1422,16 @@ export default function PracticeSession({
             )}
           </div>
           <div className="flex items-center gap-2">
+            {stageId && (
+              <button
+                onClick={() => setShowStageIntro(true)}
+                className="text-xs font-black px-3 py-1 rounded-full border transition-colors"
+                style={{ background: 'rgba(124,58,237,0.08)', borderColor: 'rgba(124,58,237,0.25)', color: '#7C3AED' }}
+                title="Review concept intro"
+              >
+                📖 Intro
+              </button>
+            )}
             <span className="text-xs font-mono font-semibold text-gray-400 bg-white rounded-full px-3 py-1 border border-gray-100">
               ⏱ {formatMs(elapsed * 1000)}
             </span>
