@@ -582,3 +582,46 @@ export async function getMockTestsForUser(): Promise<Array<{
     }
   })
 }
+
+// ─── saveTestPhoto ────────────────────────────────────────────────────────────
+
+export async function saveTestPhoto(params: {
+  attemptId:     string
+  storagePath:   string
+  photoUrl:      string
+  questionRefs:  number[]
+  caption:       string
+}): Promise<{ error?: string }> {
+  const user = await requireAuth()
+  const supabase = createSupabaseServerClient()
+  const { error } = await supabase.from('mock_test_photos').insert({
+    attempt_id:    params.attemptId,
+    user_id:       user.id,
+    photo_url:     params.photoUrl,
+    storage_path:  params.storagePath,
+    question_refs: params.questionRefs,
+    caption:       params.caption,
+  })
+  return error ? { error: error.message } : {}
+}
+
+// ─── getTestPhotos ────────────────────────────────────────────────────────────
+
+export async function getTestPhotos(attemptId: string): Promise<Array<{
+  id: string; photoUrl: string; questionRefs: number[]; caption: string
+}>> {
+  const user = await requireAuth()
+  const supabase = createSupabaseServerClient()
+  const { data } = await supabase
+    .from('mock_test_photos')
+    .select('id, photo_url, question_refs, caption')
+    .eq('attempt_id', attemptId)
+    .eq('user_id', user.id)
+    .order('uploaded_at')
+  return (data ?? []).map(r => ({
+    id:           r.id as string,
+    photoUrl:     r.photo_url as string,
+    questionRefs: r.question_refs as number[],
+    caption:      r.caption as string,
+  }))
+}

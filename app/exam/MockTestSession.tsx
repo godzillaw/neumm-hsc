@@ -1,20 +1,28 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useRouter }     from 'next/navigation'
-import MathText          from '@/components/MathText'
-import { finalizeMockAttempt } from './mock-actions'
-import type { MockQuestion, MockTestConfig } from './mock-actions'
+import { useRouter }       from 'next/navigation'
+import MathText            from '@/components/MathText'
+import WorkingInput        from '@/components/WorkingInput'
+import { finalizeMockAttempt, saveTestPhoto } from './mock-actions'
+import { createSupabaseBrowserClient }        from '@/lib/supabase-browser'
+import type { MockQuestion, MockTestConfig }  from './mock-actions'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatTime(secs: number): string {
-  const m = Math.floor(secs / 60)
+  const h = Math.floor(secs / 3600)
+  const m = Math.floor((secs % 3600) / 60)
   const s = secs % 60
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  if (h > 0) return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
 }
 
-const OPTION_LABELS = ['A', 'B', 'C', 'D'] as const
+const OPTION_LABELS = ['A','B','C','D'] as const
+
+function isMCQ(q: MockQuestion): boolean {
+  return !!(q.optionA || q.optionB || q.optionC || q.optionD)
+}
 
 // ─── Answer tracking ──────────────────────────────────────────────────────────
 
@@ -23,7 +31,7 @@ interface AnswerRecord {
   position:       number
   topicPrefix:    string
   difficultyBand: number
-  studentAnswer:  string | null
+  studentAnswer:  string | null   // option letter for MCQ; 'attempted' for open
   questionText:   string
   optionA:        string
   optionB:        string
@@ -33,7 +41,224 @@ interface AnswerRecord {
   timeSecs:       number
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// ─── Photo Upload Screen ──────────────────────────────────────────────────────
+
+interface UploadedPhoto {
+  localUrl:     string
+  file:         File
+  questionRefs: number[]
+  caption:      string
+  uploading:    boolean
+  uploaded:     boolean
+  storagePath:  string
+  publicUrl:    string
+}
+
+function PhotoUploadScreen({
+  attemptId,
+  questions,
+  onSubmit,
+  submitting,
+}: {
+  attemptId:  string
+  questions:  MockQuestion[]
+  onSubmit:   () => void
+  submitting: boolean
+}) {
+  const [photos,    setPhotos]    = useState<UploadedPhoto[]>([])
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  async function handleFiles(files: FileList) {
+    const newPhotos: UploadedPhoto[] = Array.from(files).map(f => ({
+      localUrl:     URL.createObjectURL(f),
+      file:         f,
+      questionRefs: [],
+      caption:      '',
+      uploading:    false,
+      uploaded:     false,
+      storagePath:  '',
+      publicUrl:    '',
+    }))
+    setPhotos(prev => [...prev, ...newPhotos])
+  }
+
+  function updatePhoto(idx: number, patch: Partial<UploadedPhoto>) {
+    setPhotos(prev => prev.map((p, i) => i === idx ? { ...p, ...patch } : p))
+  }
+
+  function toggleQRef(idx: number, qNum: number) {
+    setPhotos(prev => prev.map((p, i) => {
+      if (i !== idx) return p
+      const refs = p.questionRefs.includes(qNum)
+        ? p.questionRefs.filter(r => r !== qNum)
+        : [...p.questionRefs, qNum].sort((a,b) => a - b)
+      return { ...p, questionRefs: refs }
+    }))
+  }
+
+  function removePhoto(idx: number) {
+    setPhotos(prev => prev.filter((_, i) => i !== idx))
+  }
+
+  async function uploadAndSave() {
+    setUploading(true)
+    const supabase = createSupabaseBrowserClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setUploading(false); return }
+
+    for (let i = 0; i < photos.length; i++) {
+      const p = photos[i]
+      if (p.uploaded) continue
+      updatePhoto(i, { uploading: true })
+
+      const ext       = p.file.name.split('.').pop() ?? 'jpg'
+      const path      = `${user.id}/${attemptId}/${Date.now()}_${i}.${ext}`
+      const { error } = await supabase.storage
+        .from('mock-test-photos')
+        .upload(path, p.file, { upsert: true })
+
+      if (error) { updatePhoto(i, { uploading: false }); continue }
+
+      const { data: urlData } = supabase.storage
+        .from('mock-test-photos')
+        .getPublicUrl(path)
+
+      await saveTestPhoto({
+        attemptId,
+        storagePath: path,
+        photoUrl:    urlData?.publicUrl ?? '',
+        questionRefs: p.questionRefs,
+        caption:      p.caption,
+      })
+
+      updatePhoto(i, { uploading: false, uploaded: true, storagePath: path, publicUrl: urlData?.publicUrl ?? '' })
+    }
+
+    setUploading(false)
+    onSubmit()
+  }
+
+  const totalQ = questions.length
+
+  return (
+    <div className="min-h-screen flex flex-col" style={{ background: '#F7F3FF', fontFamily: "'Nunito', sans-serif" }}>
+      <div className="flex-1 px-4 py-6 max-w-2xl mx-auto w-full">
+
+        {/* Header */}
+        <div className="mb-6 text-center">
+          <div className="text-4xl mb-2">📸</div>
+          <h1 className="text-xl font-black text-gray-900">Upload your working</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Photo your written working and tag each photo to the right questions.
+            <br/>You can skip this and submit directly if you prefer.
+          </p>
+        </div>
+
+        {/* Upload area */}
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="w-full border-2 border-dashed border-violet-200 rounded-2xl py-6 flex flex-col items-center gap-2 mb-5 transition-colors hover:border-violet-400 hover:bg-violet-50"
+        >
+          <span className="text-3xl">+</span>
+          <p className="font-black text-violet-600 text-sm">Add photos</p>
+          <p className="text-xs text-gray-400">JPEG, PNG, HEIC up to 10 MB each</p>
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          capture="environment"
+          className="hidden"
+          onChange={e => e.target.files && void handleFiles(e.target.files)}
+        />
+
+        {/* Photo cards */}
+        <div className="space-y-4 mb-6">
+          {photos.map((photo, idx) => (
+            <div key={idx} className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+              {/* Photo preview */}
+              <div className="relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={photo.localUrl}
+                  alt={`Working photo ${idx + 1}`}
+                  className="w-full object-cover"
+                  style={{ maxHeight: 220 }}
+                />
+                <button
+                  onClick={() => removePhoto(idx)}
+                  className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 text-white text-sm flex items-center justify-center"
+                >
+                  ✕
+                </button>
+                {photo.uploaded && (
+                  <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-xs font-black text-white bg-green-500">
+                    ✓ Saved
+                  </div>
+                )}
+              </div>
+
+              <div className="p-4">
+                {/* Question tags */}
+                <p className="text-xs font-black uppercase tracking-wider mb-2" style={{ color: '#666672' }}>
+                  Which questions? (tap to tag)
+                </p>
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {Array.from({ length: totalQ }, (_, i) => i + 1).map(n => (
+                    <button
+                      key={n}
+                      onClick={() => toggleQRef(idx, n)}
+                      className="w-8 h-8 rounded-lg text-xs font-black transition-all"
+                      style={{
+                        background: photo.questionRefs.includes(n) ? '#7C3AED' : '#F3F4F6',
+                        color:      photo.questionRefs.includes(n) ? 'white'   : '#6B7280',
+                      }}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Caption */}
+                <input
+                  type="text"
+                  value={photo.caption}
+                  onChange={e => updatePhoto(idx, { caption: e.target.value })}
+                  placeholder="Add a note (optional)"
+                  className="w-full text-sm bg-gray-50 rounded-xl px-3 py-2 border border-gray-200 outline-none focus:border-violet-400"
+                  style={{ fontSize: 16 }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-3">
+          <button
+            onClick={onSubmit}
+            disabled={submitting}
+            className="flex-1 py-3 rounded-2xl font-black text-sm border-2 border-gray-200 text-gray-600 disabled:opacity-50"
+          >
+            Skip & Submit
+          </button>
+          <button
+            onClick={() => void uploadAndSave()}
+            disabled={uploading || submitting || photos.length === 0}
+            className="flex-[2] py-3 rounded-2xl font-black text-sm text-white disabled:opacity-50"
+            style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)' }}
+          >
+            {uploading ? 'Saving photos…' : `Save ${photos.length > 0 ? photos.length + ' photo' + (photos.length > 1 ? 's' : '') + ' &' : ''} Submit →`}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Main Session ─────────────────────────────────────────────────────────────
 
 export default function MockTestSession({
   attemptId,
@@ -46,15 +271,17 @@ export default function MockTestSession({
 }) {
   const router = useRouter()
 
-  const totalSecs   = config.timeLimitMins * 60
-  const [timeLeft,  setTimeLeft]  = useState(totalSecs)
-  const [current,   setCurrent]   = useState(0)
-  const [selected,  setSelected]  = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
+  const totalSecs    = config.timeLimitMins * 60
+  const [timeLeft,   setTimeLeft]    = useState(totalSecs)
+  const [current,    setCurrent]     = useState(0)
+  const [selected,   setSelected]    = useState<string | null>(null)
+  const [onPaper,    setOnPaper]     = useState(false)      // open-ended: "I'll work on paper"
+  const [submitting, setSubmitting]  = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [showUpload, setShowUpload]   = useState(false)     // photo upload screen
 
   // Track per-question answers
-  const answersRef  = useRef<AnswerRecord[]>(
+  const answersRef = useRef<AnswerRecord[]>(
     questions.map((q, i) => ({
       questionId:     q.id,
       position:       i + 1,
@@ -72,16 +299,18 @@ export default function MockTestSession({
   )
   const questionStartRef = useRef(Date.now())
   const startTimeRef     = useRef(Date.now())
+  const timedOutRef      = useRef(false)
 
   // ── Countdown timer ────────────────────────────────────────────────────────
-  const handleSubmitRef = useRef<((timedOut: boolean) => void) | null>(null)
+  const triggerUploadRef = useRef<(() => void) | null>(null)
 
   useEffect(() => {
     const interval = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(interval)
-          handleSubmitRef.current?.(true)
+          timedOutRef.current = true
+          triggerUploadRef.current?.()
           return 0
         }
         return prev - 1
@@ -90,50 +319,50 @@ export default function MockTestSession({
     return () => clearInterval(interval)
   }, [])
 
-  // ── Submit ─────────────────────────────────────────────────────────────────
-  const handleSubmit = useCallback(async (timedOut: boolean) => {
+  useEffect(() => {
+    triggerUploadRef.current = () => setShowUpload(true)
+  })
+
+  // ── Finalize ───────────────────────────────────────────────────────────────
+  const handleFinalize = useCallback(async () => {
     if (submitting) return
     setSubmitting(true)
 
-    // Record time on current question
     const now = Date.now()
-    answersRef.current[current].timeSecs = Math.round((now - questionStartRef.current) / 1000)
-
+    answersRef.current[current].timeSecs += Math.round((now - questionStartRef.current) / 1000)
     const timeTakenSecs = Math.round((now - startTimeRef.current) / 1000)
 
     const result = await finalizeMockAttempt({
       attemptId,
       timeTakenSecs,
-      timedOut,
-      answers: answersRef.current,
+      timedOut: timedOutRef.current,
+      answers:  answersRef.current,
     })
 
-    if ('error' in result) {
-      setSubmitting(false)
-      return
-    }
-
+    if ('error' in result) { setSubmitting(false); return }
     router.push(`/exam/${attemptId}/review`)
   }, [attemptId, current, router, submitting])
 
-  // Wire ref so timer can call it
-  useEffect(() => { handleSubmitRef.current = handleSubmit }, [handleSubmit])
-
-  // ── Navigate between questions ─────────────────────────────────────────────
+  // ── Navigate ───────────────────────────────────────────────────────────────
   function goTo(idx: number) {
-    // Save time on current question
     const now = Date.now()
     answersRef.current[current].timeSecs += Math.round((now - questionStartRef.current) / 1000)
     questionStartRef.current = now
-
-    // Restore selection from saved answer
-    setSelected(answersRef.current[idx].studentAnswer)
+    const rec = answersRef.current[idx]
+    setSelected(rec.studentAnswer)
+    setOnPaper(rec.studentAnswer === 'on_paper')
     setCurrent(idx)
   }
 
-  function handleSelect(option: string) {
+  function handleSelectMCQ(option: string) {
     setSelected(option)
     answersRef.current[current].studentAnswer = option
+  }
+
+  function handleMarkOnPaper() {
+    answersRef.current[current].studentAnswer = 'on_paper'
+    setSelected('on_paper')
+    setOnPaper(true)
   }
 
   function handleNext() {
@@ -146,18 +375,21 @@ export default function MockTestSession({
 
   function handleSkip() {
     answersRef.current[current].studentAnswer = null
-    if (current < questions.length - 1) {
-      goTo(current + 1)
-    } else {
-      setShowConfirm(true)
-    }
+    if (current < questions.length - 1) goTo(current + 1)
+    else setShowConfirm(true)
   }
 
-  const q         = questions[current]
-  const answered  = answersRef.current.filter(a => a.studentAnswer !== null).length
-  const progress  = ((current + 1) / questions.length) * 100
-
-  const timerColor = timeLeft <= 120 ? '#EF4444' : timeLeft <= 300 ? '#F59E0B' : '#10B981'
+  // ── Upload screen (after time or finish) ──────────────────────────────────
+  if (showUpload) {
+    return (
+      <PhotoUploadScreen
+        attemptId={attemptId}
+        questions={questions}
+        onSubmit={() => void handleFinalize()}
+        submitting={submitting}
+      />
+    )
+  }
 
   if (submitting) {
     return (
@@ -174,18 +406,25 @@ export default function MockTestSession({
     )
   }
 
+  const q         = questions[current]
+  const mcq       = isMCQ(q)
+  const answered  = answersRef.current.filter(a => a.studentAnswer !== null).length
+  const progress  = ((current + 1) / questions.length) * 100
+  const timerColor = timeLeft <= 120 ? '#EF4444' : timeLeft <= 300 ? '#F59E0B' : '#10B981'
+  const canProceed = mcq
+    ? selected !== null
+    : (selected === 'attempted' || selected === 'on_paper')
+
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F7F3FF', fontFamily: "'Nunito', sans-serif" }}>
 
-      {/* ── Fixed top bar ────────────────────────────────────────────────── */}
+      {/* ── Fixed top bar ─────────────────────────────────────────────────── */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 shadow-sm">
         <div className="flex items-center justify-between px-4 py-3 max-w-2xl mx-auto">
           <div className="flex flex-col">
             <p className="text-xs font-black text-gray-900 truncate max-w-[160px]">{config.title}</p>
             <p className="text-[10px] text-gray-400">Q {current + 1} of {questions.length}</p>
           </div>
-
-          {/* Timer */}
           <div
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full font-black text-sm"
             style={{
@@ -196,29 +435,23 @@ export default function MockTestSession({
             <span>⏱</span>
             <span>{formatTime(timeLeft)}</span>
           </div>
-
-          {/* Submit early */}
           <button
             onClick={() => setShowConfirm(true)}
             className="text-xs font-black px-3 py-1.5 rounded-xl border border-gray-200 text-gray-500"
           >
-            Submit
+            Finish
           </button>
         </div>
-
-        {/* Progress bar */}
         <div className="h-1 bg-gray-100">
-          <div
-            className="h-full transition-all duration-300"
-            style={{ width: `${progress}%`, background: 'linear-gradient(90deg,#7C3AED,#A855F7)' }}
-          />
+          <div className="h-full transition-all duration-300"
+            style={{ width: `${progress}%`, background: 'linear-gradient(90deg,#7C3AED,#A855F7)' }} />
         </div>
       </div>
 
-      {/* ── Question area ─────────────────────────────────────────────────── */}
-      <div className="flex-1 pt-20 pb-32 px-4 max-w-2xl mx-auto w-full">
+      {/* ── Question area ────────────────────────────────────────────────── */}
+      <div className={`flex-1 pt-20 px-4 max-w-2xl mx-auto w-full ${mcq ? 'pb-36' : 'pb-28'}`}>
 
-        {/* Topic pill */}
+        {/* Topic + band */}
         <div className="flex items-center gap-2 mb-4 mt-2">
           <span className="text-xs font-bold px-3 py-1 rounded-full text-white"
             style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)' }}>
@@ -227,10 +460,15 @@ export default function MockTestSession({
           <span className="text-xs font-semibold text-gray-400 bg-white border border-gray-100 px-2 py-0.5 rounded-full">
             Band {q.difficultyBand}
           </span>
+          {!mcq && (
+            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+              Show working
+            </span>
+          )}
         </div>
 
         {/* Question card */}
-        <div className="bg-white rounded-3xl shadow-sm border border-purple-50 p-5 mb-5">
+        <div className="bg-white rounded-3xl shadow-sm border border-purple-50 p-5 mb-4">
           <MathText
             text={q.questionText}
             as="p"
@@ -238,40 +476,94 @@ export default function MockTestSession({
           />
         </div>
 
-        {/* Options */}
-        <div className="space-y-3">
-          {([q.optionA, q.optionB, q.optionC, q.optionD] as string[]).map((opt, i) => {
-            if (!opt) return null
-            const label   = OPTION_LABELS[i].toLowerCase()
-            const isChosen = selected === label
-            return (
-              <button
-                key={label}
-                onClick={() => handleSelect(label)}
-                className="w-full flex items-start gap-3 p-4 rounded-2xl border-2 text-left transition-all active:scale-[0.99]"
-                style={{
-                  borderColor: isChosen ? '#7C3AED' : '#E5E7EB',
-                  background:  isChosen ? 'rgba(124,58,237,0.07)' : 'white',
-                }}
-              >
-                <span
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black shrink-0 mt-0.5"
+        {/* ── MCQ options ──────────────────────────────────────────────── */}
+        {mcq && (
+          <div className="space-y-3">
+            {([q.optionA, q.optionB, q.optionC, q.optionD] as string[]).map((opt, i) => {
+              if (!opt) return null
+              const label    = OPTION_LABELS[i].toLowerCase()
+              const isChosen = selected === label
+              return (
+                <button
+                  key={label}
+                  onClick={() => handleSelectMCQ(label)}
+                  className="w-full flex items-start gap-3 p-4 rounded-2xl border-2 text-left transition-all active:scale-[0.99]"
                   style={{
-                    background: isChosen ? '#7C3AED' : '#F3F4F6',
-                    color:      isChosen ? 'white'   : '#6B7280',
+                    borderColor: isChosen ? '#7C3AED' : '#E5E7EB',
+                    background:  isChosen ? 'rgba(124,58,237,0.07)' : 'white',
                   }}
                 >
-                  {OPTION_LABELS[i]}
-                </span>
-                <MathText text={opt} className="flex-1 text-sm font-semibold text-gray-800" />
-              </button>
-            )
-          })}
-        </div>
+                  <span
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black shrink-0 mt-0.5"
+                    style={{
+                      background: isChosen ? '#7C3AED' : '#F3F4F6',
+                      color:      isChosen ? 'white'   : '#6B7280',
+                    }}
+                  >
+                    {OPTION_LABELS[i]}
+                  </span>
+                  <MathText text={opt} className="flex-1 text-sm font-semibold text-gray-800" />
+                </button>
+              )
+            })}
+          </div>
+        )}
+
+        {/* ── Open-ended: canvas or on-paper ───────────────────────────── */}
+        {!mcq && (
+          <div>
+            {/* Toggle: canvas vs paper */}
+            {!onPaper ? (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-black uppercase tracking-wider" style={{ color: '#666672' }}>
+                    Your working
+                  </p>
+                  <button
+                    onClick={handleMarkOnPaper}
+                    className="text-xs font-bold text-violet-600 underline"
+                  >
+                    Working on paper instead →
+                  </button>
+                </div>
+                <div className="rounded-2xl overflow-hidden border border-purple-100 shadow-sm mb-3">
+                  <WorkingInput
+                    onChange={(b64) => {
+                      if (b64) {
+                        answersRef.current[current].studentAnswer = 'attempted'
+                        setSelected('attempted')
+                      }
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-gray-400 text-center">
+                  Draw your working above, or tap &quot;Working on paper instead&quot; if you&apos;re writing by hand
+                </p>
+              </div>
+            ) : (
+              <div
+                className="rounded-2xl p-5 text-center border-2 border-dashed border-violet-200"
+                style={{ background: 'rgba(124,58,237,0.04)' }}
+              >
+                <p className="text-2xl mb-2">📝</p>
+                <p className="font-black text-gray-900 text-sm">Working on paper</p>
+                <p className="text-xs text-gray-400 mt-1 mb-3">
+                  Continue on your physical paper. You&apos;ll upload photos at the end.
+                </p>
+                <button
+                  onClick={() => { setOnPaper(false); setSelected(null); answersRef.current[current].studentAnswer = null }}
+                  className="text-xs font-bold text-violet-600 underline"
+                >
+                  Use canvas instead
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* ── Fixed bottom actions ──────────────────────────────────────────── */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-4"
+      {/* ── Fixed bottom ─────────────────────────────────────────────────── */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3"
         style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
         <div className="max-w-2xl mx-auto flex gap-3">
           <button
@@ -282,16 +574,16 @@ export default function MockTestSession({
           </button>
           <button
             onClick={handleNext}
-            disabled={!selected}
+            disabled={!canProceed}
             className="flex-[2] py-3 rounded-2xl font-black text-sm text-white disabled:opacity-40 transition-all"
-            style={{ background: selected ? 'linear-gradient(135deg,#7C3AED,#A855F7)' : '#D1D5DB' }}
+            style={{ background: canProceed ? 'linear-gradient(135deg,#7C3AED,#A855F7)' : '#D1D5DB' }}
           >
             {current < questions.length - 1 ? 'Next →' : 'Finish Test →'}
           </button>
         </div>
 
-        {/* Mini question map */}
-        <div className="max-w-2xl mx-auto mt-3 flex gap-1 flex-wrap justify-center">
+        {/* Question map */}
+        <div className="max-w-2xl mx-auto mt-2 flex gap-1 flex-wrap justify-center">
           {questions.map((_, i) => {
             const ans = answersRef.current[i].studentAnswer
             return (
@@ -311,16 +603,18 @@ export default function MockTestSession({
         </div>
       </div>
 
-      {/* ── Confirm submit modal ──────────────────────────────────────────── */}
+      {/* ── Confirm finish modal ──────────────────────────────────────────── */}
       {showConfirm && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4"
           style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
           <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl">
             <div className="text-4xl text-center mb-3">📋</div>
-            <h2 className="text-lg font-black text-gray-900 text-center mb-1">Submit test?</h2>
+            <h2 className="text-lg font-black text-gray-900 text-center mb-1">Finished?</h2>
             <p className="text-sm text-gray-500 text-center mb-5">
-              {answered} of {questions.length} questions answered.{' '}
-              {questions.length - answered > 0 && `${questions.length - answered} will be marked as skipped.`}
+              {answered} of {questions.length} questions answered.
+              {questions.length - answered > 0 && ` ${questions.length - answered} will be marked skipped.`}
+              <br />
+              <span className="text-violet-600 font-semibold">You can upload photos of your paper working next.</span>
             </p>
             <div className="flex gap-3">
               <button
@@ -330,11 +624,11 @@ export default function MockTestSession({
                 Keep going
               </button>
               <button
-                onClick={() => { setShowConfirm(false); void handleSubmit(false) }}
+                onClick={() => { setShowConfirm(false); setShowUpload(true) }}
                 className="flex-1 py-3 rounded-2xl font-black text-sm text-white"
                 style={{ background: 'linear-gradient(135deg,#7C3AED,#A855F7)' }}
               >
-                Submit →
+                Continue →
               </button>
             </div>
           </div>
