@@ -206,7 +206,7 @@ export async function createPracticeSession(userId: string): Promise<string | nu
 // Excludes questions the user has already answered (error_log).
 // Falls back to any unanswered question → then any question if all answered.
 
-export async function getNextQuestion(userId: string, topicFilter?: string): Promise<PracticeQuestion | null> {
+export async function getNextQuestion(userId: string, topicFilter?: string, targetBand?: number): Promise<PracticeQuestion | null> {
   // ── Server-side tier guard (defence-in-depth) ─────────────────────────────────
   const access = await checkTierAccess(userId)
   if (!access.canAnswer) return null
@@ -381,25 +381,35 @@ export async function getNextQuestion(userId: string, topicFilter?: string): Pro
   //      not_sure / exam_prep  → lowest confidence first (weakest topics first)
   //      finding_gaps          → no confidence bias; random among unanswered
   //      getting_ahead         → highest confidence first (build on strengths)
+  //
+  //    When targetBand is set (adaptive mode), add a band-proximity penalty so
+  //    questions at the target difficulty float to the top of each intent bucket.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function scoreQuestion(r: any): number {
     const oid: string = r.outcome_id ?? ''
     const answered   = answeredSet.has(r.id) ? 1000 : 0   // push answered to end
     const confidence = masteryMap[oid] ?? 50               // 0–100
 
+    // Band proximity penalty: 0 = perfect match, up to 60 for ≥3 bands away
+    // This steers the selector toward targetBand without hard-excluding other bands
+    // (so there's always a fallback if the target band has no questions).
+    let bandPenalty = 0
+    if (targetBand !== undefined) {
+      const band = (r.difficulty_band as number) ?? 3
+      const dist = Math.abs(band - targetBand)
+      bandPenalty = dist === 0 ? 0 : dist === 1 ? 15 : dist === 2 ? 35 : 60
+    }
+
     if (intent === 'finding_gaps') {
-      // Equal weighting — all unanswered questions have same base score
-      // so the top-10 random pick gives broad topic coverage
-      return answered
+      return answered + bandPenalty
     }
 
     if (intent === 'getting_ahead') {
-      // Favour topics the student is already confident in (high confidence = low score)
-      return answered + (100 - confidence)
+      return answered + bandPenalty + (100 - confidence)
     }
 
     // 'not_sure' (default) + 'exam_prep': lowest confidence first
-    return answered + confidence
+    return answered + bandPenalty + confidence
   }
 
   // Sort and pick best candidate, with a little randomness in the top-10

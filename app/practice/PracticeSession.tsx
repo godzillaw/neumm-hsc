@@ -961,6 +961,9 @@ export default function PracticeSession({
   // Retry: when wrong, load another question from the same topic prefix
   const retryTopicRef = useRef<string | null>(null)
 
+  // Adaptive difficulty: starts at band 3 (medium), goes up on correct, down on wrong
+  const adaptiveBandRef = useRef<number>(3)
+
   const endSession = useCallback(() => {
     if (sessionEndedRef.current) return
     sessionEndedRef.current = true
@@ -997,7 +1000,9 @@ export default function PracticeSession({
     retryTopicRef.current = null
     const effectiveTopic = rawTopic ? rawTopic.replace(/-B\d+$/, '') : undefined
 
-    let q = await getNextQuestion(userId, effectiveTopic)
+    const targetBand = adaptiveBandRef.current
+
+    let q = await getNextQuestion(userId, effectiveTopic, targetBand)
 
     // No questions exist yet → call generation API, then retry
     if (!q && effectiveTopic) {
@@ -1014,7 +1019,7 @@ export default function PracticeSession({
         if (genRes.ok || genJson.status === 'already_exists') {
           // Small delay to let DB propagate, then retry
           await new Promise(r => setTimeout(r, 500))
-          q = await getNextQuestion(userId, effectiveTopic)
+          q = await getNextQuestion(userId, effectiveTopic, targetBand)
         }
       } catch (genErr) {
         console.error('[PracticeSession] Generation call failed:', genErr)
@@ -1052,6 +1057,15 @@ export default function PracticeSession({
     setSessionCount(c => c + 1)
     sessionAnswersRef.current += 1
     if (res.isCorrect) sessionCorrectRef.current += 1
+
+    // ── Adaptive difficulty adjustment ───────────────────────────────────────
+    // Correct → harder next question (band +1, max 6)
+    // Wrong   → easier next question  (band -1, min 1)
+    if (res.isCorrect) {
+      adaptiveBandRef.current = Math.min(6, adaptiveBandRef.current + 1)
+    } else {
+      adaptiveBandRef.current = Math.max(1, adaptiveBandRef.current - 1)
+    }
 
     // Trial daily-limit check (mid-session)
     if (isTrial && dailyLimit > 0) {
