@@ -11,18 +11,18 @@ import MinorConsentNotice              from '@/components/auth/MinorConsentNotic
 const FEATURES = [
   {
     emoji: '🗺️',
-    title: 'Personalised mastery map',
-    desc:  'A placement probe finds your exact gaps in 8 questions. No guessing what to study.',
+    title: 'Personalised to your level — adaptive learning',
+    desc:  'Get more advanced in the maths topics you choose with questions that adapt to your level.',
   },
   {
     emoji: '👩‍🏫',
-    title: 'AI tutor in your corner',
-    desc:  'Socratic hints, step-by-step solutions and exam simulation — available 24/7.',
+    title: '24/7 digital tutor with you',
+    desc:  'Your 24/7 AI tutor gives step-by-step solutions, clear explanations, and answers your questions instantly — so you actually understand, not just memorise.',
   },
   {
     emoji: '📈',
-    title: 'Predict your band before exam day',
-    desc:  'Real-time band prediction updates after every session so you always know your trajectory.',
+    title: 'Exam mode built for your Math success',
+    desc:  'Choose specific topics to practise or run full HSC-style mock exams. Train under real exam conditions and focus exactly where you need to improve.',
   },
 ]
 
@@ -198,12 +198,12 @@ export default function SignupPage() {
             ● Adaptive learning platform
           </p>
           <h1 className="text-4xl font-black text-white leading-tight mb-4">
-            Your HSC band<br />
-            <span style={{ color: '#7EC8F4' }}>starts here.</span>
+            Your Math<br />
+            <span style={{ color: '#7EC8F4' }}>Companion.</span>
           </h1>
           <p className="text-base font-medium mb-10"
             style={{ color: 'rgba(255,255,255,0.7)', maxWidth: 380 }}>
-            Know exactly where you stand — and the fastest path to where you want to be.
+            Helping you in your Math journey.
           </p>
 
           {/* Feature bullets */}
