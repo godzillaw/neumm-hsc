@@ -85,7 +85,7 @@ export default async function ExamPage() {
     <div className="flex min-h-screen" style={{ background: '#F7F3FF' }}>
       <AppSidebar />
       <div className="flex-1 min-w-0 pb-20 md:pb-0">
-        <MockTestBuilder existingTests={existingTests} mission={mission} />
+        <MockTestBuilder existingTests={existingTests} mission={mission} userYear={year} userCourse={course as 'standard' | 'advanced' | 'extension1' | 'extension2'} />
       </div>
       <MobileBottomNav />
     </div>

@@ -102,14 +102,18 @@ function PastTestCard({
 export default function MockTestBuilder({
   existingTests,
   mission,
+  userYear    = 12,
+  userCourse  = 'advanced',
 }: {
   existingTests: Awaited<ReturnType<typeof getMockTestsForUser>>
   mission:       Mission
+  userYear?:     number
+  userCourse?:   Course
 }) {
   const router = useRouter()
   const [step,             setStep]       = useState<Step>('mode')
   const [mode,             setMode]       = useState<Mode | null>(null)
-  const [course,           setCourse]     = useState<Course>('advanced')
+  const [course,           setCourse]     = useState<Course>(userCourse)
   // selectedStageIds: set of stageId strings from the curriculum
   const [selectedStageIds, setSelected]  = useState<Set<string>>(new Set())
   // expandedLevelIds: levels with stages shown
@@ -179,16 +183,26 @@ export default function MockTestBuilder({
     if (m === 'naplan_y9') {
       setQCount(NAPLAN_CONFIG.qCount)
       setTimeMins(NAPLAN_CONFIG.timeMins)
+      setStep('topics')
     } else if (m === 'prelim_y11') {
-      const cfg = PRELIM_CONFIGS[course]
+      // Use the student's enrolled course — no picker needed
+      const c = userCourse
+      setCourse(c)
+      const cfg = PRELIM_CONFIGS[c]
       setQCount(cfg.qCount)
       setTimeMins(cfg.timeMins)
-    } else if (m !== 'school_test') {
-      const cfg = COURSE_CONFIGS[course]
+      setStep('topics')   // topics step shows confirm card for curriculum modes
+    } else if (m === 'hsc_trial' || m === 'hsc') {
+      const c = userCourse
+      setCourse(c)
+      const cfg = COURSE_CONFIGS[c]
       setQCount(cfg.qCount)
       setTimeMins(cfg.timeMins)
+      setStep('topics')
+    } else {
+      // school_test — go to topic picker
+      setStep('topics')
     }
-    setStep('topics')
   }
 
   // ── Build → create test + navigate ────────────────────────────────────────
@@ -279,13 +293,13 @@ export default function MockTestBuilder({
             What are you preparing for?
           </p>
 
-          {[
-            { mode: 'school_test' as Mode, icon: '🏫', label: 'School Test',         desc: 'Choose specific topics to prepare for an upcoming school test' },
-            { mode: 'naplan_y9'  as Mode, icon: '📐', label: 'NAPLAN Year 9',        desc: 'NSW numeracy — 40 questions, 65 min, all strands (ACARA format)' },
-            { mode: 'prelim_y11' as Mode, icon: '📓', label: 'Year 11 Preliminary',  desc: 'NSW Prelim exam simulation — full Year 11 syllabus with real timing' },
-            { mode: 'hsc_trial'  as Mode, icon: '📋', label: 'HSC Trial',            desc: 'Full simulation of your trial exam — all topics, real timing' },
-            { mode: 'hsc'        as Mode, icon: '🎓', label: 'HSC Exam',             desc: 'Final HSC preparation — full curriculum, exam conditions' },
-          ].map(opt => (
+          {([
+            { mode: 'school_test' as Mode, icon: '🏫', label: 'School Test',         desc: 'Choose specific topics to prepare for an upcoming school test',          show: true },
+            { mode: 'naplan_y9'  as Mode, icon: '📐', label: 'NAPLAN Year 9',        desc: 'NSW numeracy — 40 questions, 65 min, all strands (ACARA format)',         show: userYear === 9 },
+            { mode: 'prelim_y11' as Mode, icon: '📓', label: 'Year 11 Preliminary',  desc: 'NSW Prelim exam simulation — full Year 11 syllabus with real timing',     show: true },
+            { mode: 'hsc_trial'  as Mode, icon: '📋', label: 'HSC Trial',            desc: 'Full simulation of your trial exam — all topics, real timing',            show: true },
+            { mode: 'hsc'        as Mode, icon: '🎓', label: 'HSC Exam',             desc: 'Final HSC preparation — full curriculum, exam conditions',                show: true },
+          ] as const).filter(opt => opt.show).map(opt => (
             <button
               key={opt.mode}
               onClick={() => handleModeSelect(opt.mode)}
@@ -492,76 +506,61 @@ export default function MockTestBuilder({
             </>
           )}
 
-          {/* Prelim Y11: course selection */}
-          {mode === 'prelim_y11' && (
-            <>
-              <p className="text-xs font-black uppercase tracking-wider mb-4" style={{ color: '#666672' }}>
-                Select your course
-              </p>
-              <div className="grid grid-cols-2 gap-3 mb-5">
-                {(Object.entries(PRELIM_CONFIGS) as [Course, typeof PRELIM_CONFIGS[Course]][]).map(([key, cfg]) => (
-                  <button
-                    key={key}
-                    onClick={() => {
-                      setCourse(key)
-                      setQCount(cfg.qCount)
-                      setTimeMins(cfg.timeMins)
-                    }}
-                    className="p-4 rounded-2xl border-2 text-left transition-all"
-                    style={{
-                      borderColor: course === key ? '#7C3AED' : '#E5E7EB',
-                      background:  course === key ? 'rgba(124,58,237,0.07)' : 'white',
-                    }}
-                  >
-                    <p className="font-black text-sm" style={{ color: course === key ? '#7C3AED' : '#0F0F14' }}>
-                      {cfg.label}
-                    </p>
-                    <p className="text-xs mt-1 text-gray-400">
-                      {cfg.qCount} questions · {formatMins(cfg.timeMins)}
-                    </p>
-                  </button>
-                ))}
-              </div>
-              <div className="bg-blue-50 rounded-2xl p-4 mb-5 text-xs text-blue-700">
-                <p className="font-black mb-1">NSW Preliminary format</p>
-                <p>Section I: 10 MCQ (15 min) · Section II: Short answer + extended response</p>
-              </div>
-            </>
-          )}
+          {/* Prelim Y11 / HSC Trial / HSC: summary confirm card (course auto-detected from profile) */}
+          {(mode === 'prelim_y11' || mode === 'hsc_trial' || mode === 'hsc') && (() => {
+            const configs = mode === 'prelim_y11' ? PRELIM_CONFIGS : COURSE_CONFIGS
+            const cfg     = configs[course]
+            const modeIcon  = mode === 'prelim_y11' ? '📓' : mode === 'hsc_trial' ? '📋' : '🎓'
+            const modeTitle = mode === 'prelim_y11' ? 'Year 11 Preliminary' : mode === 'hsc_trial' ? 'HSC Trial Exam' : 'HSC Exam'
+            const formatNote = mode === 'prelim_y11'
+              ? 'Section I: 10 MCQ · Section II: Short answer + extended response'
+              : 'Section I: 10 MCQ (15 min) · Section II: Extended response with full working'
+            return (
+              <div className="mb-6">
+                {/* Hero card */}
+                <div className="rounded-3xl p-6 mb-4 text-white" style={{ background: 'linear-gradient(135deg,#0F0F14,#1A1A2E)' }}>
+                  <div className="flex items-center gap-3 mb-5">
+                    <span className="text-4xl">{modeIcon}</span>
+                    <div>
+                      <p className="font-black text-lg text-white leading-tight">{modeTitle}</p>
+                      <p className="text-sm font-bold mt-0.5" style={{ color: '#A78BFA' }}>{cfg.label}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 text-center mb-4">
+                    {[
+                      { label: 'Questions', value: String(cfg.qCount) },
+                      { label: 'Time',      value: formatMins(cfg.timeMins) },
+                      { label: 'Format',    value: 'Exam' },
+                    ].map(item => (
+                      <div key={item.label} className="rounded-xl py-3 px-2" style={{ background: 'rgba(255,255,255,0.07)' }}>
+                        <p className="font-black text-base text-white">{item.value}</p>
+                        <p className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>{item.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>{formatNote}</p>
+                </div>
 
-          {/* HSC Trial / HSC: course selection */}
-          {(mode === 'hsc_trial' || mode === 'hsc') && (
-            <>
-              <p className="text-xs font-black uppercase tracking-wider mb-4" style={{ color: '#666672' }}>
-                Select your course
-              </p>
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                {(Object.entries(COURSE_CONFIGS) as [Course, typeof COURSE_CONFIGS[Course]][]).map(([key, cfg]) => (
-                  <button
-                    key={key}
-                    onClick={() => {
-                      setCourse(key)
-                      setQCount(cfg.qCount)
-                      setTimeMins(cfg.timeMins)
-                    }}
-                    className="p-4 rounded-2xl border-2 text-left transition-all"
-                    style={{
-                      borderColor: course === key ? '#7C3AED' : '#E5E7EB',
-                      background: course === key ? 'rgba(124,58,237,0.07)' : 'white',
-                    }}
-                  >
-                    <p className="font-black text-sm" style={{ color: course === key ? '#7C3AED' : '#0F0F14' }}>
-                      {cfg.label}
-                    </p>
-                    <p className="text-xs mt-1 text-gray-400">
-                      {cfg.qCount} questions · {formatMins(cfg.timeMins)}
-                    </p>
-                  </button>
-                ))}
+                {/* Scope bullets */}
+                <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-4">
+                  <p className="text-xs font-black uppercase tracking-wider mb-3" style={{ color: '#666672' }}>What&apos;s covered</p>
+                  <div className="space-y-2">
+                    {[
+                      `Full ${cfg.label} syllabus`,
+                      'Adaptive difficulty — harder as you improve',
+                      'Step-by-step AI review after',
+                      'Band prediction + topic readiness report',
+                    ].map(item => (
+                      <div key={item} className="flex items-center gap-2 text-sm text-gray-700">
+                        <span className="text-violet-500 shrink-0">✓</span>
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-
-            </>
-          )}
+            )
+          })()}
 
           {/* Optional title */}
           <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-6">
