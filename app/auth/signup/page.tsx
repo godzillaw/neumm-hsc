@@ -186,7 +186,7 @@ export default function SignupPage() {
             <p className="font-black text-white text-lg leading-none">Neumm</p>
             <p className="text-xs font-bold tracking-widest uppercase"
               style={{ color: 'rgba(255,255,255,0.55)' }}>
-              HSC Mathematics
+              Math Year 9 - 12
             </p>
           </div>
         </div>

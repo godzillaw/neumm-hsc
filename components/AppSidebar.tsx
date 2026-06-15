@@ -40,7 +40,7 @@ export default function AppSidebar() {
           <p className="font-black text-white text-base leading-none">neumm</p>
           <p className="text-[10px] font-bold uppercase tracking-widest mt-0.5"
             style={{ color: 'rgba(255,255,255,0.3)' }}>
-            HSC Maths
+            Math Year 9 - 12
           </p>
         </div>
       </div>
