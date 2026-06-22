@@ -4,6 +4,17 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter }   from 'next/navigation'
 import type { Mission, Level, Stage, ExplanationBlock } from '@/lib/curriculum'
 import { POINTS }      from '@/lib/gamification-constants'
+import dynamic from 'next/dynamic'
+
+const AreaModelVisual     = dynamic(() => import('@/components/visuals/AreaModelVisual'),     { ssr: false })
+const NumberLineVisual    = dynamic(() => import('@/components/visuals/NumberLineVisual'),    { ssr: false })
+const FunctionMachineVisual = dynamic(() => import('@/components/visuals/FunctionMachineVisual'), { ssr: false })
+
+const STAGE_VISUALS: Record<string, { component: React.ComponentType<{ color?: string }>}> = {
+  'y11-ext1-l1-s1a': { component: AreaModelVisual },
+  'y11-ext1-l2-s2a': { component: NumberLineVisual },
+  'y11-ext1-l3-s3a': { component: FunctionMachineVisual },
+}
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -527,6 +538,12 @@ function StageIntroSheet({
               : <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.8)' }}>{stage.explanation}</p>
             }
           </div>
+
+          {/* Interactive visual (only for stages that have one) */}
+          {STAGE_VISUALS[stage.stageId] && (() => {
+            const Visual = STAGE_VISUALS[stage.stageId].component
+            return <Visual color={level.color} />
+          })()}
 
           {/* Key concept tags */}
           <div>
