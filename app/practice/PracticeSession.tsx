@@ -17,6 +17,17 @@ import DiagramRenderer, { extractDiagramSpec }         from '@/components/Diagra
 import type { DiagramSpec }                             from '@/components/DiagramRenderer'
 import type { PracticeQuestion, SubmitResult }         from './actions'
 import type { ChatMessage, ConceptVideo, AssessOpenAnswerResult } from '@/lib/actions/tutor'
+import dynamic from 'next/dynamic'
+
+const AreaModelVisual       = dynamic(() => import('@/components/visuals/AreaModelVisual'),       { ssr: false })
+const NumberLineVisual      = dynamic(() => import('@/components/visuals/NumberLineVisual'),      { ssr: false })
+const FunctionMachineVisual = dynamic(() => import('@/components/visuals/FunctionMachineVisual'), { ssr: false })
+
+const STAGE_VISUALS: Record<string, React.ComponentType<{ color?: string }>> = {
+  'y11-ext1-l1-s1a': AreaModelVisual,
+  'y11-ext1-l2-s2a': NumberLineVisual,
+  'y11-ext1-l3-s3a': FunctionMachineVisual,
+}
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -812,6 +823,12 @@ function StageIntroScreen({ stageId, onStart }: { stageId: string; onStart: () =
             <p className="text-sm leading-relaxed text-white">{stage.explanation}</p>
           </div>
         )}
+
+        {/* Interactive visual — dual coding for supported stages */}
+        {STAGE_VISUALS[stage.stageId] && (() => {
+          const Visual = STAGE_VISUALS[stage.stageId]
+          return <div className="mb-4"><Visual color={level.color} /></div>
+        })()}
 
         {/* Video — only shown when videoHint is set */}
         {stage.videoHint && (
