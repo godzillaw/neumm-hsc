@@ -832,18 +832,22 @@ function StageIntroScreen({ stageId, onStart }: { stageId: string; onStart: () =
 
         {/* Video — only shown when videoHint is set */}
         {stage.videoHint && (
-          <div
-            className="rounded-2xl overflow-hidden mb-4"
-            style={{ border: '1px solid rgba(255,255,255,0.1)' }}
-          >
-            <iframe
-              className="w-full"
-              style={{ height: 220 }}
-              src={`https://www.youtube.com/embed/${stage.videoHint}`}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              title={`${stage.title} intro`}
-            />
+          <div className="mb-4 space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="text-base">▶️</span>
+              <p className="text-[11px] font-black uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                Watch first — Eddie Woo explains it live
+              </p>
+            </div>
+            <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.12)', aspectRatio: '16/9' }}>
+              <iframe
+                className="w-full h-full"
+                src={`https://www.youtube.com/embed/${stage.videoHint}?rel=0&modestbranding=1`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                title={`${stage.title} — Eddie Woo`}
+              />
+            </div>
           </div>
         )}
 

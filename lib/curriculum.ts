@@ -1213,6 +1213,7 @@ const YEAR_11_EXT1_MISSION: Mission = {
             ]},
             { type: 'tip', body: 'Memorise the three special identities — they appear in over 80% of algebra questions. Write them out from memory at the start of every practice session until they are automatic.' },
           ],
+          videoHint: 'aI9fAobtplA',
         },
         {
           stageId: 'y11-ext1-l1-s1b', code: '1B', title: 'Factorising',
@@ -1384,6 +1385,7 @@ const YEAR_11_EXT1_MISSION: Mission = {
             ]},
             { type: 'tip', body: 'Infinity (∞) is a concept, not a number — it can never be reached, so it ALWAYS gets a round bracket (never a square bracket). This is one of the most common notation errors in HSC responses.' },
           ],
+          videoHint: 'vRBHZMxwhf4',
         },
         {
           stageId: 'y11-ext1-l2-s2b', code: '2B', title: 'Surds and Their Arithmetic',
@@ -1508,6 +1510,7 @@ const YEAR_11_EXT1_MISSION: Mission = {
             ]},
             { type: 'tip', body: 'When a question asks you to evaluate f(2) or f(a + 1), replace every instance of x in the formula with the given expression. Bracket the substitution to avoid sign errors: f(a+1) = 3(a+1)² − 2 not 3a+1² − 2.' },
           ],
+          videoHint: '5-sdU476MLA',
         },
         {
           stageId: 'y11-ext1-l3-s3b', code: '3B', title: 'Functions, Relations, and Graphs',
