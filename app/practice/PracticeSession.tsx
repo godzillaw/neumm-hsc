@@ -22,9 +22,11 @@ import dynamic from 'next/dynamic'
 const AreaModelVisual       = dynamic(() => import('@/components/visuals/AreaModelVisual'),       { ssr: false })
 const NumberLineVisual      = dynamic(() => import('@/components/visuals/NumberLineVisual'),      { ssr: false })
 const FunctionMachineVisual = dynamic(() => import('@/components/visuals/FunctionMachineVisual'), { ssr: false })
+const FactorisingVisual     = dynamic(() => import('@/components/visuals/FactorisingVisual'),     { ssr: false })
 
 const STAGE_VISUALS: Record<string, React.ComponentType<{ color?: string }>> = {
   'y11-ext1-l1-s1a': AreaModelVisual,
+  'y11-ext1-l1-s1b': FactorisingVisual,
   'y11-ext1-l2-s2a': NumberLineVisual,
   'y11-ext1-l3-s3a': FunctionMachineVisual,
 }

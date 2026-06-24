@@ -6,12 +6,14 @@ import type { Mission, Level, Stage, ExplanationBlock } from '@/lib/curriculum'
 import { POINTS }      from '@/lib/gamification-constants'
 import dynamic from 'next/dynamic'
 
-const AreaModelVisual     = dynamic(() => import('@/components/visuals/AreaModelVisual'),     { ssr: false })
-const NumberLineVisual    = dynamic(() => import('@/components/visuals/NumberLineVisual'),    { ssr: false })
+const AreaModelVisual       = dynamic(() => import('@/components/visuals/AreaModelVisual'),       { ssr: false })
+const NumberLineVisual      = dynamic(() => import('@/components/visuals/NumberLineVisual'),      { ssr: false })
 const FunctionMachineVisual = dynamic(() => import('@/components/visuals/FunctionMachineVisual'), { ssr: false })
+const FactorisingVisual     = dynamic(() => import('@/components/visuals/FactorisingVisual'),     { ssr: false })
 
 const STAGE_VISUALS: Record<string, { component: React.ComponentType<{ color?: string }>}> = {
   'y11-ext1-l1-s1a': { component: AreaModelVisual },
+  'y11-ext1-l1-s1b': { component: FactorisingVisual },
   'y11-ext1-l2-s2a': { component: NumberLineVisual },
   'y11-ext1-l3-s3a': { component: FunctionMachineVisual },
 }
