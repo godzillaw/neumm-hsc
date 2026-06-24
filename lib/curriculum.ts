@@ -1222,15 +1222,14 @@ const YEAR_11_EXT1_MISSION: Mission = {
           content: [
             { type: 'text', body: 'Here\'s the thing about factorising: it\'s not just an algebra trick. It\'s the key that unlocks equation solving. Right now, if someone gives you x² + 5x + 6 = 0, you\'re stuck. But once you know how to factorise it into (x + 2)(x + 3) = 0 — the answer becomes obvious in one second: x = −2 or x = −3. That\'s why this skill matters.' },
             { type: 'text', body: 'Factorising is expanding in reverse. When you expand (x + 2)(x + 3) you get x² + 5x + 6. Factorising is the puzzle of looking at x² + 5x + 6 and working out it came from (x + 2)(x + 3). Think of it as unmixing ingredients — you\'re trying to find what went in.' },
-            { type: 'rules', heading: 'How to recognise which method to use — scan in this order', items: [
-              '1. Common factor in every term? → Take out the HCF first. Always. No exceptions.',
-              '2. Two terms, both perfect squares, minus sign? → Difference of Squares: a² − b² = (a+b)(a−b)',
-              '3. Three terms, first & last are perfect squares, middle = 2×√first×√last? → Perfect Square',
-              '4. Three terms ax² + bx + c (no pattern above)? → Split the middle term',
-              '5. Four terms? → Group in pairs',
-              '6. Two cubes? → Sum/Difference of Cubes formula',
+            { type: 'table', headers: ['What does it look like?', 'Method', 'Example'], rows: [
+              ['Terms share a common factor', 'HCF — do this FIRST, always', '6x² + 9x → 3x(2x + 3)'],
+              ['2 terms, a² − b² (minus, no middle term)', 'Difference of Squares', 'x² − 25 → (x+5)(x−5)'],
+              ['3 terms, looks like (a ± b)²', 'Perfect Square', 'x² + 6x + 9 → (x+3)²'],
+              ['3 terms ax² + bx + c', 'Split the Middle Term', '2x²+7x+3 → (2x+1)(x+3)'],
+              ['4 terms', 'Group in pairs', 'ax+ay+bx+by → (a+b)(x+y)'],
+              ['2 terms, a³ ± b³', 'Sum/Diff of Cubes', 'x³−8 → (x−2)(x²+2x+4)'],
             ]},
-            { type: 'text', body: 'The most important rule: ALWAYS look for a common factor first. If you skip this, you end up with horrible large numbers to work with. Taking out the HCF first makes every other method dramatically easier.' },
             { type: 'formula', latex: 'a^2 - b^2 = (a+b)(a-b)', label: 'Difference of Two Squares — NO middle term, must be MINUS' },
             { type: 'formula', latex: 'a^3 + b^3 = (a+b)(a^2 - ab + b^2)', label: 'Sum of cubes' },
             { type: 'formula', latex: 'a^3 - b^3 = (a-b)(a^2 + ab + b^2)', label: 'Difference of cubes' },
