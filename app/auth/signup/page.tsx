@@ -1,34 +1,15 @@
 'use client'
 
-import { useState }                   from 'react'
-import { signInWithGoogle }            from '@/lib/auth'
-import { signUpAction }                from '@/app/actions/auth'
-import AgeGate                         from '@/components/auth/AgeGate'
-import ConsentCheckboxes               from '@/components/auth/ConsentCheckboxes'
-import MinorConsentNotice              from '@/components/auth/MinorConsentNotice'
+import { useState }              from 'react'
+import { signInWithGoogle }      from '@/lib/auth'
+import { signUpAction }          from '@/app/actions/auth'
+import MinorConsentNotice        from '@/components/auth/MinorConsentNotice'
 
-// ─── Feature bullets (left panel) ─────────────────────────────────────────────
-const FEATURES = [
-  {
-    emoji: '🗺️',
-    title: 'Personalised to your level — adaptive learning',
-    desc:  'Get more advanced in the maths topics you choose with questions that adapt to your level.',
-  },
-  {
-    emoji: '👩‍🏫',
-    title: '24/7 digital tutor with you',
-    desc:  'Your 24/7 AI tutor gives step-by-step solutions, clear explanations, and answers your questions instantly — so you actually understand, not just memorise.',
-  },
-  {
-    emoji: '📈',
-    title: 'Exam mode built for your Math success',
-    desc:  'Choose specific topics to practise or run full HSC-style mock exams. Train under real exam conditions and focus exactly where you need to improve.',
-  },
-]
+// ─── Age gate months ──────────────────────────────────────────────────────────
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 
 type Step = 'age-gate' | 'form'
 
-// ─── Component ─────────────────────────────────────────────────────────────────
 export default function SignupPage() {
   const [step,           setStep]           = useState<Step>('age-gate')
   const [birthYear,      setBirthYear]      = useState<number | null>(null)
@@ -37,6 +18,13 @@ export default function SignupPage() {
   const [showMinorModal, setShowMinorModal] = useState(false)
   const [consentChecked, setConsentChecked] = useState(false)
 
+  // Age gate fields
+  const [day,   setDay]   = useState('')
+  const [month, setMonth] = useState('')
+  const [year,  setYear]  = useState('')
+  const [ageError, setAgeError] = useState<string | null>(null)
+
+  // Form fields
   const [firstName,     setFirstName]     = useState('')
   const [lastName,      setLastName]      = useState('')
   const [email,         setEmail]         = useState('')
@@ -46,34 +34,30 @@ export default function SignupPage() {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error,         setError]         = useState<string | null>(null)
 
-  // ── Age gate handlers ─────────────────────────────────────────────────────
-  function handleAgeComplete(year: number, minor: boolean) {
-    setBirthYear(year)
-    setIsMinor(minor)
-    setStep('form')
+  const currentYear = new Date().getFullYear()
+  const yearOptions = Array.from({ length: 96 }, (_, i) => currentYear - 5 - i)
+  const daysInMonth = month && year ? new Date(parseInt(year), parseInt(month), 0).getDate() : 31
+  const dayOptions  = Array.from({ length: daysInMonth }, (_, i) => i + 1)
+
+  // ── Age gate ──────────────────────────────────────────────────────────────
+  function handleAgeSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setAgeError(null)
+    const d = parseInt(day), m = parseInt(month), y = parseInt(year)
+    if (!d || !m || !y) { setAgeError('Please select your full date of birth.'); return }
+    const dob = new Date(y, m - 1, d)
+    if (dob.getDate() !== d || dob.getMonth() !== m - 1) { setAgeError('Please enter a valid date.'); return }
+    let age = currentYear - y
+    const hadBirthday = new Date().getMonth() + 1 > m || (new Date().getMonth() + 1 === m && new Date().getDate() >= d)
+    if (!hadBirthday) age--
+    if (age < 13) { setUnder13(true); return }
+    setBirthYear(y); setIsMinor(age < 18); setStep('form')
   }
 
-  function handleUnder13() {
-    setUnder13(true)
-  }
-
-  // ── Consent checkbox handler ──────────────────────────────────────────────
+  // ── Consent ───────────────────────────────────────────────────────────────
   function handleConsentChange(checked: boolean) {
-    if (checked && isMinor) {
-      setShowMinorModal(true)
-    } else {
-      setConsentChecked(checked)
-    }
-  }
-
-  function handleMinorConfirm() {
-    setShowMinorModal(false)
-    setConsentChecked(true)
-  }
-
-  function handleMinorCancel() {
-    setShowMinorModal(false)
-    setConsentChecked(false)
+    if (checked && isMinor) { setShowMinorModal(true) }
+    else { setConsentChecked(checked) }
   }
 
   // ── Signup ────────────────────────────────────────────────────────────────
@@ -83,38 +67,20 @@ export default function SignupPage() {
     if (password.length < 8) { setError('Password must be at least 8 characters.'); return }
     if (!consentChecked) { setError('Please agree to the Terms and Privacy Policy.'); return }
     setLoading(true)
-
     try {
       const now = new Date().toISOString()
-      // Server Action: creates user + signs in via cookies() from next/headers.
-      // This is the only pattern that guarantees session cookies are committed
-      // before window.location.href fires on Vercel.
       const result = await signUpAction({
-        email,
-        password,
+        email, password,
         displayName: `${firstName} ${lastName}`.trim(),
-        birthYear,
-        isMinor,
-        termsAcceptedAt:        now,
-        termsVersion:           '1.0',
-        privacyAcceptedAt:      now,
-        privacyVersion:         '1.0',
+        birthYear, isMinor,
+        termsAcceptedAt: now, termsVersion: '1.0',
+        privacyAcceptedAt: now, privacyVersion: '1.0',
         minorGuardianConfirmed: isMinor ? true : null,
-        ip:                     null,
+        ip: null,
       })
-
-      if (!result.ok) {
-        setError(result.error)
-        setLoading(false)
-        return
-      }
-
-      // cookies() mutations are applied by Next.js before this line runs.
-      // window.location.href triggers a full navigation — middleware finds
-      // the session and allows access to the destination.
+      if (!result.ok) { setError(result.error); setLoading(false); return }
       window.location.href = result.redirect
-    } catch (err) {
-      console.error('[signup] unexpected error:', err)
+    } catch {
       setError('Something went wrong. Please try again.')
       setLoading(false)
     }
@@ -122,10 +88,7 @@ export default function SignupPage() {
 
   async function handleGoogle() {
     setError(null)
-    if (!consentChecked) {
-      setError('Please agree to the Terms and Privacy Policy before continuing.')
-      return
-    }
+    if (!consentChecked) { setError('Please agree to the Terms and Privacy Policy before continuing.'); return }
     setGoogleLoading(true)
     const { error: err } = await signInWithGoogle('/onboarding/year')
     if (err) { setError(err.message); setGoogleLoading(false) }
@@ -134,275 +97,290 @@ export default function SignupPage() {
   // ── Under-13 screen ───────────────────────────────────────────────────────
   if (under13) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-white" style={{ fontFamily: "'Nunito', sans-serif" }}>
-        <div style={{ maxWidth: 400, width: '100%', textAlign: 'center' }}>
-          <div style={{ fontSize: 56, marginBottom: 16 }}>🔒</div>
-          <h2 style={{ color: '#0D3349', fontWeight: 900, fontSize: 20, marginBottom: 12, marginTop: 0 }}>
+      <PageShell>
+        <div style={{ textAlign: 'center', padding: '20px 0' }}>
+          <div style={{ fontSize: 52, marginBottom: 16 }}>🔒</div>
+          <h2 style={{ color: 'white', fontWeight: 800, fontSize: 20, marginBottom: 12, letterSpacing: '-0.02em' }}>
             Age Restriction
           </h2>
-          <p style={{ color: '#6B7280', fontSize: 14, lineHeight: 1.7, marginBottom: 20 }}>
-            Neumm is not available to users under 13 years of age.
+          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, lineHeight: 1.7, marginBottom: 20 }}>
+            Neumm is not available to users under 13 years of age.<br />
             Contact{' '}
-            <a href="mailto:support@neumm.com.au" style={{ color: '#185FA5', fontWeight: 700 }}>
-              support@neumm.com.au
-            </a>{' '}
-            if this is an error.
+            <a href="mailto:support@neumm.com.au" style={{ color: '#818CF8', fontWeight: 600 }}>support@neumm.com.au</a>
+            {' '}if this is an error.
           </p>
-          <button
-            onClick={() => setUnder13(false)}
-            style={{ color: '#185FA5', fontWeight: 700, fontSize: 14, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
+          <button onClick={() => setUnder13(false)}
+            style={{ color: '#818CF8', fontWeight: 700, fontSize: 14, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
             ← Back to sign up
           </button>
         </div>
-      </div>
+      </PageShell>
     )
   }
 
   return (
-    <div className="min-h-screen flex" style={{ fontFamily: "'Nunito', sans-serif" }}>
-
-      {/* ── LEFT PANEL ── */}
-      <div
-        className="hidden md:flex flex-col justify-between w-1/2 p-10 relative overflow-hidden"
-        style={{ background: 'linear-gradient(160deg, #0C2D5A 0%, #185FA5 60%, #1E7BC4 100%)' }}
-      >
-        {/* Decorative circles */}
-        <div className="absolute top-[-80px] right-[-80px] w-72 h-72 rounded-full opacity-10"
-          style={{ border: '2px solid white' }} />
-        <div className="absolute top-[-40px] right-[-40px] w-48 h-48 rounded-full opacity-10"
-          style={{ border: '2px solid white' }} />
-        <div className="absolute bottom-[-60px] left-[-60px] w-64 h-64 rounded-full opacity-10"
-          style={{ border: '2px solid white' }} />
-        <div className="absolute bottom-[80px] right-[-100px] w-80 h-80 rounded-full opacity-10"
-          style={{ border: '2px solid white' }} />
-
-        {/* Logo */}
-        <div className="flex items-center gap-3 relative z-10">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg"
-            style={{ backgroundColor: 'rgba(255,255,255,0.15)', color: 'white' }}>
-            N
-          </div>
-          <div>
-            <p className="font-black text-white text-lg leading-none">Neumm</p>
-            <p className="text-xs font-bold tracking-widest uppercase"
-              style={{ color: 'rgba(255,255,255,0.55)' }}>
-              Math Year 9 - 12
-            </p>
-          </div>
-        </div>
-
-        {/* Hero */}
-        <div className="relative z-10 flex-1 flex flex-col justify-center py-12">
-          <p className="text-xs font-black uppercase tracking-widest mb-4"
-            style={{ color: 'rgba(255,255,255,0.5)' }}>
-            ● Adaptive learning platform
-          </p>
-          <h1 className="text-4xl font-black text-white leading-tight mb-4">
-            Your Math<br />
-            <span style={{ color: '#7EC8F4' }}>Companion.</span>
+    <PageShell wide={step === 'form'}>
+      {/* ── STEP 1: AGE GATE ── */}
+      {step === 'age-gate' && (
+        <>
+          <h1 style={{ fontSize: 26, fontWeight: 800, color: 'white', letterSpacing: '-0.03em', marginBottom: 6, marginTop: 0 }}>
+            Create your account
           </h1>
-          <p className="text-base font-medium mb-10"
-            style={{ color: 'rgba(255,255,255,0.7)', maxWidth: 380 }}>
-            Helping you in your Math journey.
+          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', marginBottom: 28 }}>
+            Already have an account?{' '}
+            <a href="/math-nsw/app/auth/login" style={{ color: '#818CF8', fontWeight: 600, textDecoration: 'none' }}>Sign in →</a>
           </p>
 
-          {/* Feature bullets */}
-          <div className="space-y-5">
-            {FEATURES.map((f, i) => (
-              <div key={i} className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-xl"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}>
-                  {f.emoji}
-                </div>
-                <div>
-                  <p className="font-black text-white text-sm">{f.title}</p>
-                  <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.6)' }}>{f.desc}</p>
-                </div>
+          {/* Age gate form */}
+          <form onSubmit={handleAgeSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.6)', marginBottom: 10, letterSpacing: '0.02em' }}>
+                DATE OF BIRTH
+              </label>
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', marginBottom: 14, marginTop: -4, lineHeight: 1.5 }}>
+                We need to verify your age to comply with our eligibility requirements.
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1.5fr', gap: 10 }}>
+                {[
+                  { label: 'Day', value: day, setter: setDay, options: dayOptions.map(d => ({ v: String(d), l: String(d) })) },
+                  { label: 'Month', value: month, setter: setMonth, options: MONTHS.map((m, i) => ({ v: String(i+1), l: m })) },
+                  { label: 'Year', value: year, setter: setYear, options: yearOptions.map(y => ({ v: String(y), l: String(y) })) },
+                ].map(sel => (
+                  <div key={sel.label}>
+                    <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', marginBottom: 6 }}>{sel.label}</label>
+                    <select value={sel.value} onChange={e => sel.setter(e.target.value)}
+                      style={{
+                        width: '100%', padding: '12px 10px', fontSize: 14, borderRadius: 10,
+                        background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                        color: sel.value ? 'white' : 'rgba(255,255,255,0.3)',
+                        outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
+                      }}>
+                      <option value="" style={{ background: '#1a1a2e' }}>{sel.label}</option>
+                      {sel.options.map(o => <option key={o.v} value={o.v} style={{ background: '#1a1a2e' }}>{o.l}</option>)}
+                    </select>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
 
-        {/* Footer */}
-        <p className="text-xs relative z-10" style={{ color: 'rgba(255,255,255,0.35)' }}>
-          © 2026 Caplix Pty Ltd. Built for Australian HSC students.
-        </p>
-      </div>
+            {ageError && <ErrorBox>{ageError}</ErrorBox>}
 
-      {/* ── RIGHT PANEL ── */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12 bg-white overflow-y-auto">
-        <div className="w-full max-w-md">
+            <button type="submit" style={{
+              width: '100%', padding: '14px', borderRadius: 12, border: 'none', cursor: 'pointer',
+              background: 'linear-gradient(135deg, #6366F1, #8B5CF6)', color: 'white',
+              fontSize: 15, fontWeight: 700, fontFamily: 'inherit',
+              boxShadow: '0 4px 24px rgba(99,102,241,0.45)', letterSpacing: '-0.01em',
+            }}>
+              Continue →
+            </button>
+          </form>
+        </>
+      )}
 
-          {/* ── STEP 1: AGE GATE ── */}
-          {step === 'age-gate' && (
-            <>
-              <div className="mb-7">
-                <h2 className="text-2xl font-black text-gray-900">Create your account</h2>
-                <p className="text-sm text-gray-500 mt-1">First, let&apos;s verify your age.</p>
-              </div>
-              <AgeGate onComplete={handleAgeComplete} onUnder13={handleUnder13} />
-            </>
+      {/* ── STEP 2: SIGNUP FORM ── */}
+      {step === 'form' && (
+        <>
+          <h1 style={{ fontSize: 26, fontWeight: 800, color: 'white', letterSpacing: '-0.03em', marginBottom: 6, marginTop: 0 }}>
+            Create your account
+          </h1>
+          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', marginBottom: 20 }}>
+            Already have an account?{' '}
+            <a href="/math-nsw/app/auth/login" style={{ color: '#818CF8', fontWeight: 600, textDecoration: 'none' }}>Sign in →</a>
+          </p>
+
+          {/* Minor badge */}
+          {isMinor && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)', marginBottom: 20 }}>
+              <span>👶</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#FCD34D' }}>Under-18 account — parent/guardian consent required</span>
+            </div>
           )}
 
-          {/* ── STEP 2: SIGNUP FORM ── */}
-          {step === 'form' && (
-            <>
-              {/* Heading */}
-              <div className="mb-7">
-                <h2 className="text-2xl font-black text-gray-900">Create your account</h2>
-              </div>
+          {/* Free trial badge */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px 14px', borderRadius: 10, background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', marginBottom: 20 }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#34D399', display: 'inline-block', flexShrink: 0 }} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#34D399' }}>7-day free trial — no credit card required</span>
+          </div>
 
-              {/* Minor badge */}
-              {isMinor && (
-                <div className="mb-4 flex items-center gap-2 rounded-xl px-4 py-2.5 border"
-                  style={{ backgroundColor: '#FFF7ED', borderColor: '#FED7AA' }}>
-                  <span className="text-base">👶</span>
-                  <span className="text-sm font-bold text-orange-700">
-                    Under-18 account — parent/guardian consent required
-                  </span>
-                </div>
-              )}
+          {/* Google */}
+          <button onClick={handleGoogle} disabled={googleLoading || loading || !consentChecked}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+              padding: '13px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)',
+              background: 'rgba(255,255,255,0.06)', color: 'white', fontSize: 14, fontWeight: 600,
+              cursor: 'pointer', marginBottom: 20, minHeight: 48, fontFamily: 'inherit',
+              opacity: (googleLoading || loading || !consentChecked) ? 0.5 : 1, transition: 'all 0.2s',
+            }}>
+            {googleLoading ? <Spinner /> : <GoogleIcon />}
+            Continue with Google
+          </button>
 
-              {/* Google */}
-              <button
-                onClick={handleGoogle}
-                disabled={googleLoading || loading || !consentChecked}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl text-sm font-bold border transition-all disabled:opacity-50 mb-5 min-h-[48px]"
-                style={{ borderColor: '#E5E7EB', backgroundColor: '#FAFAFA', color: '#374151' }}
-              >
-                {googleLoading ? <Spinner /> : <GoogleIcon />}
-                Continue with Google
-              </button>
+          {/* Divider */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+            <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', fontWeight: 500 }}>or sign up with email</span>
+            <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
+          </div>
 
-              {/* Divider */}
-              <div className="flex items-center gap-3 mb-5">
-                <div className="flex-1 h-px bg-gray-200" />
-                <span className="text-xs font-semibold text-gray-400">or sign up with email</span>
-                <div className="flex-1 h-px bg-gray-200" />
-              </div>
-
-              {/* Form */}
-              <form onSubmit={handleSignup} className="space-y-4">
-                {/* First + Last name row */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1.5">First name</label>
-                    <input
-                      type="text" value={firstName} onChange={e => setFirstName(e.target.value)}
-                      required placeholder="Alex" autoComplete="given-name"
-                      className="w-full px-3.5 py-3 text-sm rounded-xl border outline-none transition-all"
-                      style={{ borderColor: '#E5E7EB', fontFamily: 'inherit' }}
-                      onFocus={e => (e.target.style.borderColor = '#185FA5')}
-                      onBlur={e => (e.target.style.borderColor = '#E5E7EB')}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Last name</label>
-                    <input
-                      type="text" value={lastName} onChange={e => setLastName(e.target.value)}
-                      required placeholder="Chen" autoComplete="family-name"
-                      className="w-full px-3.5 py-3 text-sm rounded-xl border outline-none transition-all"
-                      style={{ borderColor: '#E5E7EB', fontFamily: 'inherit' }}
-                      onFocus={e => (e.target.style.borderColor = '#185FA5')}
-                      onBlur={e => (e.target.style.borderColor = '#E5E7EB')}
-                    />
-                  </div>
-                </div>
-
-                {/* Email */}
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5">Email address</label>
-                  <input
-                    type="email" value={email} onChange={e => setEmail(e.target.value)}
-                    required placeholder="alex@email.com" autoComplete="email"
-                    className="w-full px-3.5 py-3 text-sm rounded-xl border outline-none transition-all"
-                    style={{ borderColor: '#E5E7EB', fontFamily: 'inherit' }}
-                    onFocus={e => (e.target.style.borderColor = '#185FA5')}
-                    onBlur={e => (e.target.style.borderColor = '#E5E7EB')}
+          {/* Form */}
+          <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              {[
+                { label: 'FIRST NAME', value: firstName, setter: setFirstName, placeholder: 'Alex', autoComplete: 'given-name' },
+                { label: 'LAST NAME',  value: lastName,  setter: setLastName,  placeholder: 'Chen', autoComplete: 'family-name' },
+              ].map(f => (
+                <div key={f.label}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.6)', marginBottom: 8, letterSpacing: '0.02em' }}>{f.label}</label>
+                  <input type="text" value={f.value} onChange={e => f.setter(e.target.value)}
+                    required placeholder={f.placeholder} autoComplete={f.autoComplete}
+                    style={inputStyle}
+                    onFocus={e => { e.target.style.borderColor = 'rgba(99,102,241,0.6)'; e.target.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.12)' }}
+                    onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none' }}
                   />
                 </div>
+              ))}
+            </div>
 
-                {/* Password */}
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5">Password</label>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      value={password} onChange={e => setPassword(e.target.value)}
-                      required minLength={8} placeholder="At least 8 characters"
-                      autoComplete="new-password"
-                      className="w-full px-3.5 py-3 pr-11 text-sm rounded-xl border outline-none transition-all"
-                      style={{ borderColor: '#E5E7EB', fontFamily: 'inherit' }}
-                      onFocus={e => (e.target.style.borderColor = '#185FA5')}
-                      onBlur={e => (e.target.style.borderColor = '#E5E7EB')}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(v => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                      tabIndex={-1}
-                    >
-                      {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-                    </button>
-                  </div>
-                </div>
+            <div>
+              <label style={labelStyle}>EMAIL ADDRESS</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                required placeholder="alex@email.com" autoComplete="email"
+                style={inputStyle}
+                onFocus={e => { e.target.style.borderColor = 'rgba(99,102,241,0.6)'; e.target.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.12)' }}
+                onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none' }}
+              />
+            </div>
 
-                {/* Consent checkbox */}
-                <ConsentCheckboxes checked={consentChecked} onChange={handleConsentChange} />
-
-                {/* Error */}
-                {error && (
-                  <div className="text-sm rounded-xl px-4 py-3 font-semibold text-red-700 bg-red-50 border border-red-200">
-                    {error}
-                  </div>
-                )}
-
-                {/* Free trial badge */}
-                <div className="flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 border"
-                  style={{ backgroundColor: '#F0FFF4', borderColor: '#BBF7D0' }}>
-                  <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
-                  <span className="text-sm font-bold text-green-800">
-                    7-day free trial — no credit card required
-                  </span>
-                </div>
-
-                {/* Submit */}
-                <button
-                  type="submit"
-                  disabled={loading || googleLoading || !consentChecked}
-                  className="w-full py-3.5 rounded-xl text-sm font-black text-white transition-all active:scale-[0.98] disabled:opacity-50 min-h-[50px]"
-                  style={{ backgroundColor: '#185FA5' }}
-                >
-                  {loading
-                    ? <span className="flex items-center justify-center gap-2"><Spinner light />Creating account…</span>
-                    : 'Create my account →'}
+            <div>
+              <label style={labelStyle}>PASSWORD</label>
+              <div style={{ position: 'relative' }}>
+                <input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
+                  required minLength={8} placeholder="At least 8 characters" autoComplete="new-password"
+                  style={{ ...inputStyle, paddingRight: 44 }}
+                  onFocus={e => { e.target.style.borderColor = 'rgba(99,102,241,0.6)'; e.target.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.12)' }}
+                  onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none' }}
+                />
+                <button type="button" onClick={() => setShowPassword(v => !v)} tabIndex={-1}
+                  style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.35)', padding: 0, display: 'flex' }}>
+                  {showPassword ? <EyeOffIcon /> : <EyeIcon />}
                 </button>
+              </div>
+            </div>
 
-                <p className="text-xs text-center text-gray-400 leading-relaxed">
-                  Your data is stored securely in Australia and never sold to third parties.
-                </p>
-                <p className="text-xs text-center text-gray-400 mt-3">
-                  By using Neumm you agree to our{' '}
-                  <a href="/math-nsw/app/legal/terms" target="_blank" rel="noopener noreferrer" style={{ color: '#185FA5', fontWeight: 600 }}>Terms &amp; Conditions</a>
-                  {' '}and{' '}
-                  <a href="/math-nsw/app/legal/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#185FA5', fontWeight: 600 }}>Privacy Policy</a>.
-                </p>
-              </form>
+            {/* Consent */}
+            <label style={{
+              display: 'flex', gap: 12, alignItems: 'flex-start', cursor: 'pointer',
+              padding: '12px 14px', borderRadius: 12,
+              background: 'rgba(255,255,255,0.03)',
+              border: `1px solid ${consentChecked ? 'rgba(99,102,241,0.4)' : 'rgba(255,255,255,0.1)'}`,
+              transition: 'border-color 0.15s',
+            }}>
+              <input type="checkbox" checked={consentChecked} onChange={e => handleConsentChange(e.target.checked)}
+                style={{ marginTop: 2, accentColor: '#818CF8', flexShrink: 0, width: 15, height: 15, cursor: 'pointer' }}
+              />
+              <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', lineHeight: 1.6 }}>
+                I agree to Neumm&apos;s{' '}
+                <a href="/math-nsw/app/legal/terms" target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ color: '#818CF8', fontWeight: 600, textDecoration: 'none' }}>Terms and Conditions</a>
+                {' '}and{' '}
+                <a href="/math-nsw/app/legal/privacy" target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ color: '#818CF8', fontWeight: 600, textDecoration: 'none' }}>Privacy Policy</a>.
+                {isMinor && ' If I am under 18, I confirm my parent or guardian has agreed on my behalf.'}
+              </span>
+            </label>
 
-            </>
-          )}
+            {error && <ErrorBox>{error}</ErrorBox>}
+
+            <button type="submit" disabled={loading || googleLoading || !consentChecked}
+              style={{
+                width: '100%', padding: '14px', borderRadius: 12, border: 'none', cursor: 'pointer',
+                background: 'linear-gradient(135deg, #6366F1, #8B5CF6)', color: 'white',
+                fontSize: 15, fontWeight: 700, fontFamily: 'inherit', minHeight: 50,
+                boxShadow: '0 4px 24px rgba(99,102,241,0.45)', letterSpacing: '-0.01em',
+                opacity: (loading || googleLoading || !consentChecked) ? 0.5 : 1, transition: 'all 0.2s',
+              }}>
+              {loading
+                ? <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><Spinner light />Creating account…</span>
+                : 'Create my account →'}
+            </button>
+
+            <p style={{ fontSize: 12, textAlign: 'center', color: 'rgba(255,255,255,0.25)', lineHeight: 1.6, margin: 0 }}>
+              Your data is stored securely in Australia and never sold to third parties.
+            </p>
+          </form>
+        </>
+      )}
+
+      {showMinorModal && (
+        <MinorConsentNotice onConfirm={() => { setShowMinorModal(false); setConsentChecked(true) }} onCancel={() => { setShowMinorModal(false); setConsentChecked(false) }} />
+      )}
+    </PageShell>
+  )
+}
+
+// ─── Shared layout ────────────────────────────────────────────────────────────
+
+function PageShell({ children, wide = false }: { children: React.ReactNode; wide?: boolean }) {
+  return (
+    <div style={{
+      minHeight: '100vh', background: '#07090F',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      padding: '24px', fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+      position: 'relative', overflow: 'hidden',
+    }}>
+      {/* Glow */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
+        background: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(99,102,241,0.2) 0%, transparent 65%)' }} />
+      {/* Grid */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
+        backgroundImage: 'linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)',
+        backgroundSize: '60px 60px' }} />
+
+      <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: wide ? 480 : 440 }}>
+        {/* Logo */}
+        <a href="/math-nsw" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 36, textDecoration: 'none', justifyContent: 'center' }}>
+          <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #6366F1, #8B5CF6)', borderRadius: 10,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(99,102,241,0.4)', flexShrink: 0 }}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M4 16V4L10 13V4M10 13V16H16V4" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <span style={{ fontSize: 20, fontWeight: 800, color: 'white', letterSpacing: '-0.04em' }}>Neumm</span>
+        </a>
+
+        {/* Card */}
+        <div style={{
+          background: 'linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+          border: '1px solid rgba(255,255,255,0.08)', borderRadius: 24,
+          padding: '36px 32px', backdropFilter: 'blur(12px)',
+        }}>
+          {children}
         </div>
       </div>
-
-      {/* Minor consent modal */}
-      {showMinorModal && (
-        <MinorConsentNotice onConfirm={handleMinorConfirm} onCancel={handleMinorCancel} />
-      )}
     </div>
   )
 }
 
-// ─── Icons ─────────────────────────────────────────────────────────────────────
+function ErrorBox({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ padding: '12px 16px', borderRadius: 10, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#FCA5A5', fontSize: 13, fontWeight: 500 }}>
+      {children}
+    </div>
+  )
+}
+
+// ─── Shared input styles ──────────────────────────────────────────────────────
+const inputStyle: React.CSSProperties = {
+  width: '100%', padding: '13px 16px', borderRadius: 10, fontSize: 14,
+  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+  color: 'white', outline: 'none', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box',
+  transition: 'border-color 0.2s, box-shadow 0.2s',
+}
+
+const labelStyle: React.CSSProperties = {
+  display: 'block', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.6)',
+  marginBottom: 8, letterSpacing: '0.02em',
+}
+
+// ─── Icons ────────────────────────────────────────────────────────────────────
 function GoogleIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18">
@@ -416,7 +394,7 @@ function GoogleIcon() {
 
 function EyeIcon() {
   return (
-    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
       <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
     </svg>
@@ -425,7 +403,7 @@ function EyeIcon() {
 
 function EyeOffIcon() {
   return (
-    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
     </svg>
   )
@@ -433,9 +411,10 @@ function EyeOffIcon() {
 
 function Spinner({ light = false }: { light?: boolean }) {
   return (
-    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke={light ? 'white' : '#185FA5'} strokeWidth="4" />
-      <path className="opacity-75" fill={light ? 'white' : '#185FA5'} d="M4 12a8 8 0 018-8v8H4z" />
+    <svg style={{ animation: 'spin 1s linear infinite', width: 16, height: 16 }} fill="none" viewBox="0 0 24 24">
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke={light ? 'white' : '#818CF8'} strokeWidth="4" />
+      <path style={{ opacity: 0.75 }} fill={light ? 'white' : '#818CF8'} d="M4 12a8 8 0 018-8v8H4z" />
     </svg>
   )
 }
