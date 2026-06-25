@@ -77,7 +77,12 @@ export default async function ExamPage() {
   ])
 
   const yearStr  = (profileData.data as { year_group?: string; course?: string } | null)?.year_group ?? 'year_12'
-  const course   = (profileData.data as { year_group?: string; course?: string } | null)?.course ?? 'advanced'
+  const rawCourse = (profileData.data as { year_group?: string; course?: string } | null)?.course ?? 'advanced'
+  const COURSE_NORM: Record<string, string> = {
+    'Standard': 'standard', 'Advanced': 'advanced',
+    'Extension 1': 'extension1', 'Extension 2': 'extension2',
+  }
+  const course   = COURSE_NORM[rawCourse] ?? rawCourse
   const year     = parseInt(yearStr.replace('year_', ''), 10) || 12
   const mission  = getMission(year, course) ?? getAllMissions().find(m => m.year === 12) ?? getAllMissions()[0]
 
