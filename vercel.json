@@ -1,8 +1,10 @@
 {
   "redirects": [
-    { "source": "/",          "destination": "/math-nsw/app", "permanent": false },
-    { "source": "/math-nsw",  "destination": "https://hsc-math-marketing.vercel.app/math-nsw", "permanent": false },
-    { "source": "/math-nsw/", "destination": "https://hsc-math-marketing.vercel.app/math-nsw", "permanent": false }
+    { "source": "/", "destination": "/math-nsw/app", "permanent": false }
+  ],
+  "rewrites": [
+    { "source": "/math-nsw",       "destination": "https://hsc-math-marketing.vercel.app/math-nsw" },
+    { "source": "/math-nsw/:path*", "destination": "https://hsc-math-marketing.vercel.app/math-nsw/:path*" }
   ],
   "crons": [
     {
