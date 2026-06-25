@@ -42,7 +42,10 @@ const nextConfig = {
    */
   async rewrites() {
     return {
-      afterFiles: [
+      // fallback runs after ALL routes (static + dynamic) so dynamic app routes
+      // like /exam/[attemptId]/sit are matched first, then unmatched /math-nsw/*
+      // paths fall through to the marketing site proxy.
+      fallback: [
         {
           source: '/math-nsw',
           destination: 'https://hsc-math-marketing.vercel.app/math-nsw',
