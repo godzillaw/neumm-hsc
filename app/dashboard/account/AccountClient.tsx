@@ -24,10 +24,10 @@ const TIER_LABELS: Record<string, { label: string; colour: string }> = {
 }
 
 const COURSES = [
-  { id: 'Standard',    label: 'Standard',     desc: 'Mathematics Standard 1 & 2' },
-  { id: 'Advanced',    label: 'Advanced',     desc: 'Mathematics Advanced'        },
-  { id: 'Extension 1', label: 'Extension 1',  desc: 'Mathematics Extension 1'     },
-  { id: 'Extension 2', label: 'Extension 2',  desc: 'Mathematics Extension 2'     },
+  { id: 'standard',   label: 'Standard',    desc: 'Mathematics Standard 1 & 2' },
+  { id: 'advanced',   label: 'Advanced',    desc: 'Mathematics Advanced'        },
+  { id: 'extension1', label: 'Extension 1', desc: 'Mathematics Extension 1'     },
+  { id: 'extension2', label: 'Extension 2', desc: 'Mathematics Extension 2'     },
 ]
 
 const YEARS = [

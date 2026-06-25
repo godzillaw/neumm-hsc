@@ -1,4 +1,15 @@
 import { requireAuth }                 from '@/lib/auth-server'
+
+// Normalise legacy capitalized course values saved by old AccountClient
+function normaliseCourse(raw: string): string {
+  const map: Record<string, string> = {
+    'Standard':    'standard',
+    'Advanced':    'advanced',
+    'Extension 1': 'extension1',
+    'Extension 2': 'extension2',
+  }
+  return map[raw] ?? raw
+}
 import { createSupabaseServerClient }  from '@/lib/supabase-server'
 import AccountClient                   from './AccountClient'
 
@@ -23,7 +34,7 @@ export default async function AccountPage() {
         displayName={profile?.display_name ?? ''}
         tier={profile?.tier ?? 'basic_trial'}
         trialEnd={profile?.trial_end ?? null}
-        course={study?.course ?? 'Advanced'}
+        course={normaliseCourse(study?.course ?? 'advanced')}
         yearGroup={study?.year_group ?? 'year_12'}
       />
     </div>

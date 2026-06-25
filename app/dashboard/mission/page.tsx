@@ -26,7 +26,12 @@ export default async function MissionPage() {
     .maybeSingle()
 
   const yearStr    = (profile as { year_group?: string } | null)?.year_group ?? 'year_12'
-  const course     = (profile as { course?: string } | null)?.course ?? 'advanced'
+  const rawCourse  = (profile as { course?: string } | null)?.course ?? 'advanced'
+  const COURSE_MAP: Record<string, string> = {
+    'Standard': 'standard', 'Advanced': 'advanced',
+    'Extension 1': 'extension1', 'Extension 2': 'extension2',
+  }
+  const course     = COURSE_MAP[rawCourse] ?? rawCourse
   const year       = parseInt(yearStr.replace('year_', ''), 10)
   const mission    = getMission(year, course)
   const points     = await getUserPoints(user.id)
