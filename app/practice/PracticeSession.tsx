@@ -18,17 +18,184 @@ import type { DiagramSpec }                             from '@/components/Diagr
 import type { PracticeQuestion, SubmitResult }         from './actions'
 import type { ChatMessage, ConceptVideo, AssessOpenAnswerResult } from '@/lib/actions/tutor'
 import dynamic from 'next/dynamic'
+import { STAGE_VIDEOS } from '@/lib/stage-videos'
 
-const AreaModelVisual       = dynamic(() => import('@/components/visuals/AreaModelVisual'),       { ssr: false })
-const NumberLineVisual      = dynamic(() => import('@/components/visuals/NumberLineVisual'),      { ssr: false })
-const FunctionMachineVisual = dynamic(() => import('@/components/visuals/FunctionMachineVisual'), { ssr: false })
-const FactorisingVisual     = dynamic(() => import('@/components/visuals/FactorisingVisual'),     { ssr: false })
+const AreaModelVisual        = dynamic(() => import('@/components/visuals/AreaModelVisual'),        { ssr: false })
+const NumberLineVisual       = dynamic(() => import('@/components/visuals/NumberLineVisual'),       { ssr: false })
+const FunctionMachineVisual  = dynamic(() => import('@/components/visuals/FunctionMachineVisual'),  { ssr: false })
+const FactorisingVisual      = dynamic(() => import('@/components/visuals/FactorisingVisual'),      { ssr: false })
+const SurdsVisual            = dynamic(() => import('@/components/visuals/SurdsVisual'),            { ssr: false })
+const QuadraticVisual        = dynamic(() => import('@/components/visuals/QuadraticVisual'),        { ssr: false })
+const TrigonometryVisual     = dynamic(() => import('@/components/visuals/TrigonometryVisual'),     { ssr: false })
+const DifferentiationVisual  = dynamic(() => import('@/components/visuals/DifferentiationVisual'),  { ssr: false })
+const IntegrationVisual      = dynamic(() => import('@/components/visuals/IntegrationVisual'),      { ssr: false })
+const LogarithmVisual        = dynamic(() => import('@/components/visuals/LogarithmVisual'),        { ssr: false })
+const CombinatoricsVisual    = dynamic(() => import('@/components/visuals/CombinatoricsVisual'),    { ssr: false })
+const GraphTransformVisual   = dynamic(() => import('@/components/visuals/GraphTransformVisual'),   { ssr: false })
 
 const STAGE_VISUALS: Record<string, React.ComponentType<{ color?: string }>> = {
+  // ── Year 9 ────────────────────────────────────────────────────────────────
+  'y9-l1-s1': AreaModelVisual,
+  'y9-l1-s2': AreaModelVisual,
+  'y9-l1-s3': FactorisingVisual,
+  'y9-l1-s4': FactorisingVisual,
+  'y9-l1-s5': FactorisingVisual,
+  'y9-l2-s2': QuadraticVisual,
+  'y9-l4-s1': TrigonometryVisual,
+  'y9-l4-s2': TrigonometryVisual,
+  'y9-l4-s3': TrigonometryVisual,
+  'y9-l4-s4': TrigonometryVisual,
+  'y9-l4-s5': TrigonometryVisual,
+  'y9-l6-s1': LogarithmVisual,
+  'y9-l6-s2': LogarithmVisual,
+  'y9-l6-s3': LogarithmVisual,
+  // ── Year 10 ───────────────────────────────────────────────────────────────
+  'y10-l1-s1': AreaModelVisual,
+  'y10-l1-s2': FactorisingVisual,
+  'y10-l1-s4': QuadraticVisual,
+  'y10-l2-s2': LogarithmVisual,
+  'y10-l2-s3': LogarithmVisual,
+  'y10-l3-s1': FunctionMachineVisual,
+  'y10-l3-s2': QuadraticVisual,
+  'y10-l3-s4': LogarithmVisual,
+  'y10-l4-s1': TrigonometryVisual,
+  'y10-l4-s2': TrigonometryVisual,
+  'y10-l4-s3': TrigonometryVisual,
+  // ── Year 11 Standard ──────────────────────────────────────────────────────
+  'y11-std-l3-s2': LogarithmVisual,
+  'y11-std-l3-s3': LogarithmVisual,
+  // ── Year 11 Advanced ──────────────────────────────────────────────────────
+  'y11-adv-l1-s1b': AreaModelVisual,
+  'y11-adv-l1-s1c': FactorisingVisual,
+  'y11-adv-l1-s1h': QuadraticVisual,
+  'y11-adv-l2-s2a': NumberLineVisual,
+  'y11-adv-l2-s2b': SurdsVisual,
+  'y11-adv-l2-s2c': SurdsVisual,
+  'y11-adv-l2-s2d': SurdsVisual,
+  'y11-adv-l3-s3a': FunctionMachineVisual,
+  'y11-adv-l3-s3b': FunctionMachineVisual,
+  'y11-adv-l3-s3d': QuadraticVisual,
+  'y11-adv-l3-s3e': QuadraticVisual,
+  'y11-adv-l3-s3f': QuadraticVisual,
+  'y11-adv-l4-s4b': QuadraticVisual,
+  'y11-adv-l4-s4c': QuadraticVisual,
+  'y11-adv-l5-s5a': TrigonometryVisual,
+  'y11-adv-l5-s5b': TrigonometryVisual,
+  'y11-adv-l5-s5c': TrigonometryVisual,
+  'y11-adv-l6-s6a': LogarithmVisual,
+  'y11-adv-l6-s6b': LogarithmVisual,
+  'y11-adv-l6-s6c': LogarithmVisual,
+  'y11-adv-l6-s6d': LogarithmVisual,
+  'y11-adv-l9-s9a': DifferentiationVisual,
+  'y11-adv-l9-s9b': DifferentiationVisual,
+  'y11-adv-l9-s9c': DifferentiationVisual,
+  'y11-adv-l9-s9d': DifferentiationVisual,
+  'y11-adv-l9-s9e': DifferentiationVisual,
+  'y11-adv-l10-s10a': DifferentiationVisual,
+  'y11-adv-l10-s10b': DifferentiationVisual,
+  'y11-adv-l10-s10c': DifferentiationVisual,
+  'y11-adv-l10-s10d': DifferentiationVisual,
+  'y11-adv-l11-s11a': IntegrationVisual,
+  'y11-adv-l11-s11b': IntegrationVisual,
+  'y11-adv-l11-s11c': IntegrationVisual,
+  'y11-adv-l11-s11d': IntegrationVisual,
+  // ── Year 11 Extension 1 ───────────────────────────────────────────────────
   'y11-ext1-l1-s1a': AreaModelVisual,
   'y11-ext1-l1-s1b': FactorisingVisual,
+  'y11-ext1-l1-s1c': AreaModelVisual,
+  'y11-ext1-l1-s1f': QuadraticVisual,
   'y11-ext1-l2-s2a': NumberLineVisual,
+  'y11-ext1-l2-s2b': SurdsVisual,
+  'y11-ext1-l2-s2c': SurdsVisual,
+  'y11-ext1-l2-s2d': SurdsVisual,
   'y11-ext1-l3-s3a': FunctionMachineVisual,
+  'y11-ext1-l3-s3b': FunctionMachineVisual,
+  'y11-ext1-l3-s3d': QuadraticVisual,
+  'y11-ext1-l3-s3e': QuadraticVisual,
+  'y11-ext1-l3-s3f': QuadraticVisual,
+  'y11-ext1-l4-s4b': QuadraticVisual,
+  'y11-ext1-l4-s4c': QuadraticVisual,
+  'y11-ext1-l5-s5a': GraphTransformVisual,
+  'y11-ext1-l5-s5b': GraphTransformVisual,
+  'y11-ext1-l5-s5c': GraphTransformVisual,
+  'y11-ext1-l5-s5d': GraphTransformVisual,
+  'y11-ext1-l5-s5e': GraphTransformVisual,
+  'y11-ext1-l5-s5f': FunctionMachineVisual,
+  'y11-ext1-l5-s5g': GraphTransformVisual,
+  'y11-ext1-l6-s6c': GraphTransformVisual,
+  'y11-ext1-l6-s6e': GraphTransformVisual,
+  'y11-ext1-l6-s6f': FunctionMachineVisual,
+  'y11-ext1-l6-s6g': FunctionMachineVisual,
+  'y11-ext1-l7-s7a': TrigonometryVisual,
+  'y11-ext1-l7-s7b': TrigonometryVisual,
+  'y11-ext1-l7-s7c': TrigonometryVisual,
+  'y11-ext1-l7-s7d': TrigonometryVisual,
+  'y11-ext1-l7-s7e': TrigonometryVisual,
+  'y11-ext1-l8-s8a': TrigonometryVisual,
+  'y11-ext1-l8-s8b': GraphTransformVisual,
+  'y11-ext1-l8-s8c': TrigonometryVisual,
+  'y11-ext1-l8-s8d': TrigonometryVisual,
+  'y11-ext1-l9-s9a': DifferentiationVisual,
+  'y11-ext1-l9-s9b': DifferentiationVisual,
+  'y11-ext1-l9-s9c': DifferentiationVisual,
+  'y11-ext1-l9-s9d': DifferentiationVisual,
+  'y11-ext1-l9-s9e': DifferentiationVisual,
+  'y11-ext1-l9-s9f': DifferentiationVisual,
+  'y11-ext1-l10-s10a': DifferentiationVisual,
+  'y11-ext1-l10-s10b': DifferentiationVisual,
+  'y11-ext1-l10-s10c': DifferentiationVisual,
+  'y11-ext1-l10-s10d': DifferentiationVisual,
+  'y11-ext1-l10-s10e': DifferentiationVisual,
+  'y11-ext1-l11-s11a': IntegrationVisual,
+  'y11-ext1-l11-s11b': IntegrationVisual,
+  'y11-ext1-l11-s11c': IntegrationVisual,
+  'y11-ext1-l11-s11d': IntegrationVisual,
+  'y11-ext1-l12-s12a': CombinatoricsVisual,
+  'y11-ext1-l12-s12b': CombinatoricsVisual,
+  'y11-ext1-l12-s12c': CombinatoricsVisual,
+  'y11-ext1-l12-s12d': CombinatoricsVisual,
+  'y11-ext1-l12-s12e': CombinatoricsVisual,
+  'y11-ext1-l12-s12f': CombinatoricsVisual,
+  'y11-ext1-l12-s12g': CombinatoricsVisual,
+  // ── Year 12 Advanced ──────────────────────────────────────────────────────
+  'y12-adv-l1-s1a': DifferentiationVisual,
+  'y12-adv-l1-s1b': DifferentiationVisual,
+  'y12-adv-l1-s1c': DifferentiationVisual,
+  'y12-adv-l2-s2a': DifferentiationVisual,
+  'y12-adv-l2-s2b': DifferentiationVisual,
+  'y12-adv-l2-s2c': DifferentiationVisual,
+  'y12-adv-l3-s3a': IntegrationVisual,
+  'y12-adv-l3-s3b': IntegrationVisual,
+  'y12-adv-l3-s3c': IntegrationVisual,
+  'y12-adv-l3-s3d': IntegrationVisual,
+  'y12-adv-l4-s4a': TrigonometryVisual,
+  'y12-adv-l4-s4b': TrigonometryVisual,
+  'y12-adv-l4-s4c': TrigonometryVisual,
+  'y12-adv-l5-s5a': LogarithmVisual,
+  'y12-adv-l5-s5b': LogarithmVisual,
+  'y12-adv-l5-s5c': LogarithmVisual,
+  'y12-adv-l5-s5d': LogarithmVisual,
+  'y12-adv-l6-s6a': QuadraticVisual,
+  'y12-adv-l6-s6b': QuadraticVisual,
+  'y12-adv-l6-s6c': QuadraticVisual,
+  // ── Year 12 Extension 1 ───────────────────────────────────────────────────
+  'y12-ext1-l2-s2a': CombinatoricsVisual,
+  'y12-ext1-l2-s2b': CombinatoricsVisual,
+  'y12-ext1-l2-s2c': CombinatoricsVisual,
+  'y12-ext1-l2-s2d': CombinatoricsVisual,
+  'y12-ext1-l3-s3a': IntegrationVisual,
+  'y12-ext1-l3-s3b': IntegrationVisual,
+  'y12-ext1-l3-s3c': IntegrationVisual,
+  'y12-ext1-l4-s4a': DifferentiationVisual,
+  'y12-ext1-l4-s4b': DifferentiationVisual,
+  'y12-ext1-l5-s5a': IntegrationVisual,
+  'y12-ext1-l5-s5c': IntegrationVisual,
+  'y12-ext1-l6-s6a': LogarithmVisual,
+  'y12-ext1-l6-s6b': LogarithmVisual,
+  'y12-ext1-l6-s6c': LogarithmVisual,
+  'y12-ext1-l7-s7a': TrigonometryVisual,
+  'y12-ext1-l7-s7b': TrigonometryVisual,
+  'y12-ext1-l7-s7c': TrigonometryVisual,
 }
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -832,8 +999,8 @@ function StageIntroScreen({ stageId, onStart }: { stageId: string; onStart: () =
           return <div className="mb-4"><Visual color={level.color} /></div>
         })()}
 
-        {/* Video — only shown when videoHint is set */}
-        {stage.videoHint && (
+        {/* Video — from stage.videoHint or STAGE_VIDEOS lookup */}
+        {(stage.videoHint || STAGE_VIDEOS[stage.stageId]) && (
           <div className="mb-4 space-y-1.5">
             <div className="flex items-center gap-2">
               <span className="text-base">▶️</span>
@@ -844,7 +1011,7 @@ function StageIntroScreen({ stageId, onStart }: { stageId: string; onStart: () =
             <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.12)', aspectRatio: '16/9' }}>
               <iframe
                 className="w-full h-full"
-                src={`https://www.youtube.com/embed/${stage.videoHint}?rel=0&modestbranding=1`}
+                src={`https://www.youtube.com/embed/${stage.videoHint || STAGE_VIDEOS[stage.stageId]}?rel=0&modestbranding=1`}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 title={`${stage.title} — Eddie Woo`}
