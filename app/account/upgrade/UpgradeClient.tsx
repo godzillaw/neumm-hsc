@@ -35,8 +35,8 @@ const PLANS = [
 
 const REASON_HEADER: Record<string, { title: string; subtitle: string }> = {
   expired: {
-    title:    'Your free trial has ended',
-    subtitle: 'Add your payment details to continue where you left off.\nYour mastery map, streak, and progress are all saved.',
+    title:    "You've already done the hard part",
+    subtitle: "Starting is the hardest step — and you did it. Keep your momentum going.",
   },
   exam: {
     title:    'Exam mode is a paid feature',
