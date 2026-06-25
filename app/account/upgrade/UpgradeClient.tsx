@@ -7,11 +7,13 @@ const PLANS = [
   {
     id: 'basic', name: 'Basic', price: '$29', period: '/mo',
     features: [
-      '25 questions per day',
-      'Mission roadmap & XP',
-      'Adaptive difficulty',
-      'AI hint system',
-      'Streak tracking',
+      '30 questions per day',
+      'AI hints — nudges without giving away the answer',
+      'AI concept explainer — deep-dive any topic',
+      'AI tutor chat — ask anything about the question',
+      'Photo or draw your working — AI marks every step',
+      'Adaptive difficulty & mission roadmap with XP',
+      'Streak tracking & progress dashboard',
     ],
     cta: 'Choose Basic →',
     color: '#185FA5',
@@ -20,11 +22,12 @@ const PLANS = [
   {
     id: 'pro', name: 'Pro', price: '$49', period: '/mo',
     features: [
-      'Unlimited questions',
-      'Mission roadmap & XP',
-      'Adaptive difficulty',
-      'Full AI tutor (hints + explanations)',
-      'Streak tracking',
+      'Unlimited questions — no daily cap, ever',
+      'Full AI tutor — hints, explanations, and open chat',
+      'Photo or draw your working — AI marks each step',
+      'Adaptive difficulty & mission roadmap with XP',
+      'Streak tracking & leaderboard',
+      'Full progress dashboard across all topics',
       'Priority support',
     ],
     cta: 'Choose Pro →',
@@ -69,7 +72,7 @@ export default function UpgradeClient({ basicPriceId, proPriceId }: { basicPrice
       const res = await fetch('/math-nsw/app/api/stripe/checkout', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ priceId }),
+        body:    JSON.stringify({ priceId, plan: planId }),
       })
 
       // Handle non-JSON responses (e.g. redirect HTML from middleware)
