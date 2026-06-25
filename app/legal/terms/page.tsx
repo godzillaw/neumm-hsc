@@ -33,7 +33,7 @@ export default function TermsPage() {
       </p>
 
       <Section id="section-1" title="1. Introduction">
-        <p>Neumm is an adaptive learning platform for HSC Mathematics operated by <strong>Caplix Pty Ltd</strong> (ABN to be confirmed), a company incorporated in Australia (&ldquo;Caplix&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;).</p>
+        <p>Neumm is an adaptive learning platform for HSC Mathematics operated by <strong>Caplix Pty Ltd</strong> (ABN 55 628 774 701), a company incorporated in Australia (&ldquo;Caplix&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;).</p>
         <p>By accessing or using the Neumm platform at neumm.com.au or any related mobile or web application (&ldquo;the Service&rdquo;), you agree to be bound by these Terms and Conditions (&ldquo;Terms&rdquo;). If you do not agree, do not use the Service.</p>
         <p>These Terms constitute a legally binding agreement between you and Caplix Pty Ltd. References to &ldquo;Neumm&rdquo; refer to the Service and the brand operated by Caplix Pty Ltd.</p>
       </Section>
@@ -69,8 +69,10 @@ export default function TermsPage() {
         <SubHeading>3.5 Price Changes</SubHeading>
         <p>We may change subscription prices from time to time. We will provide at least 30 days&apos; notice of any price change by email and/or in-app notification. If you do not cancel before the price change takes effect, you agree to the new price. If you do not agree to a price change, you may cancel your subscription before it takes effect without penalty.</p>
 
-        <SubHeading id="section-3-6">3.6 Refunds</SubHeading>
-        <p>Neumm does not offer change-of-mind refunds for subscription fees already charged. No partial refunds are provided for the unused portion of a billing cycle following cancellation. However, nothing in these Terms limits or excludes any rights you may have under the Australian Consumer Law (ACL), including your right to a remedy if the Service is not provided with due care and skill or is not fit for the described purpose. If you believe the Service has failed to meet ACL statutory guarantees, contact <a href="mailto:support@neumm.com.au" style={{ color: '#185FA5' }}>support@neumm.com.au</a>. We will assess your claim and provide a remedy in accordance with our obligations under the ACL. Where the ACL permits us to limit our liability for breach of a statutory guarantee in relation to services, we limit our liability to re-supplying the service or paying the cost of having the service re-supplied.</p>
+        <SubHeading id="section-3-6">3.6 No Refund Policy</SubHeading>
+        <p><strong>All subscription fees are non-refundable.</strong> Neumm does not offer refunds or credits for any reason, including change of mind, partial use of a billing period, forgetting to cancel, or dissatisfaction with the Service.</p>
+        <p>No partial refunds are provided for the unused portion of a billing cycle following cancellation. Your access continues until the end of the current paid period, after which no further charges are made.</p>
+        <p>However, nothing in these Terms limits or excludes any rights you may have under the Australian Consumer Law (ACL), including your right to a remedy if the Service is not provided with due care and skill or is not fit for the described purpose. If you believe the Service has failed to meet ACL statutory guarantees, contact <a href="mailto:support@neumm.com.au" style={{ color: '#185FA5' }}>support@neumm.com.au</a>. We will assess your claim and provide a remedy in accordance with our obligations under the ACL. Where the ACL permits us to limit our liability for breach of a statutory guarantee in relation to services, we limit our liability to re-supplying the service or paying the cost of having the service re-supplied.</p>
       </Section>
 
       <Section id="section-4" title="4. Acceptable Use">

@@ -33,7 +33,7 @@ export default function PrivacyPage() {
       </p>
 
       <Section id="section-1" title="1. Who We Are">
-        <p><strong>Caplix Pty Ltd</strong> (ABN to be confirmed) operates the Neumm platform (&ldquo;Neumm&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;). Neumm is an adaptive learning platform for HSC Mathematics students in New South Wales, Australia.</p>
+        <p><strong>Caplix Pty Ltd</strong> (ABN 55 628 774 701) operates the Neumm platform (&ldquo;Neumm&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;). Neumm is an adaptive learning platform for HSC Mathematics students in New South Wales, Australia.</p>
         <p>Our privacy contact is: <a href="mailto:privacy@neumm.com.au" style={{ color: '#185FA5' }}>privacy@neumm.com.au</a></p>
         <p>This Privacy Policy explains how we collect, use, store, and disclose your personal information. By using Neumm, you consent to the practices described in this policy.</p>
       </Section>

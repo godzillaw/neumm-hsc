@@ -381,6 +381,12 @@ export default function SignupPage() {
                 <p className="text-xs text-center text-gray-400 leading-relaxed">
                   Your data is stored securely in Australia and never sold to third parties.
                 </p>
+                <p className="text-xs text-center text-gray-400 mt-3">
+                  By using Neumm you agree to our{' '}
+                  <a href="/math-nsw/app/legal/terms" target="_blank" rel="noopener noreferrer" style={{ color: '#185FA5', fontWeight: 600 }}>Terms &amp; Conditions</a>
+                  {' '}and{' '}
+                  <a href="/math-nsw/app/legal/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#185FA5', fontWeight: 600 }}>Privacy Policy</a>.
+                </p>
               </form>
 
             </>
