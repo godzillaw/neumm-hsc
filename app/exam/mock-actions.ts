@@ -239,7 +239,8 @@ export async function loadAttemptConfig(attemptId: string): Promise<{
 
   if (!attempt) return { error: 'Attempt not found' }
 
-  const mt = attempt.mock_tests as Record<string, unknown>
+  const mt = attempt.mock_tests as Record<string, unknown> | null
+  if (!mt) return { error: 'Test configuration not found. The test may have been deleted.' }
   const config: MockTestConfig = {
     id:            mt.id as string,
     title:         mt.title as string,
