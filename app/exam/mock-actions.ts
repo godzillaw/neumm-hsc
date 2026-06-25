@@ -257,44 +257,62 @@ export async function loadAttemptConfig(attemptId: string): Promise<{
   const prefixes = config.topicPrefixes ?? []
   const SELECT = 'id, outcome_id, difficulty_band, content_json, correct_answer, explanation'
 
+  // Core topics used when running a full-curriculum HSC/Prelim/NAPLAN mode
+  const CORE_TOPICS = [
+    'MA-CALC-D01','MA-CALC-D03','MA-CALC-D08','MA-CALC-D09',
+    'MA-CALC-I01','MA-CALC-I06','MA-CALC-I07',
+    'MA-TRIG-01','MA-TRIG-04','MA-TRIG-09',
+    'MA-EXP-02','MA-EXP-03','MA-EXP-05',
+    'MA-ALG-01','MA-ALG-06',
+    'MA-STAT-02','MA-STAT-05','MA-PROB-01',
+  ]
+
   type QRow = Record<string, unknown>
-  let pool: QRow[]
 
-  if (prefixes.length > 0) {
-    // Try exact outcome_id match first (format: MA-ALG-01-B1 … MA-ALG-01-B6)
-    const outcomeIds = prefixes.flatMap(p => [1,2,3,4,5,6].map(b => `${p}-B${b}`))
-    const { data: exact, error: e1 } = await svc
-      .from('questions')
-      .select(SELECT)
-      .in('outcome_id', outcomeIds)
-      .limit(3000)
-    if (e1) return { error: e1.message }
-    pool = (exact ?? []) as QRow[]
-
-    // Fallback: if exact match returned nothing, try prefix LIKE match per topic
-    if (pool.length === 0) {
+  const fetchPool = async (): Promise<QRow[]> => {
+    if (prefixes.length > 0) {
+      const outcomeIds = prefixes.flatMap(p => [1,2,3,4,5,6].map(b => `${p}-B${b}`))
+      const { data: exact, error: e1 } = await svc
+        .from('questions').select(SELECT).in('outcome_id', outcomeIds).limit(3000)
+      if (e1) return []
+      if ((exact ?? []).length > 0) return exact as QRow[]
+      // fallback: LIKE match
       const rows: QRow[] = []
       for (const p of prefixes) {
-        const { data: fb } = await svc
-          .from('questions')
-          .select(SELECT)
-          .like('outcome_id', `${p}%`)
-          .limit(500)
+        const { data: fb } = await svc.from('questions').select(SELECT).like('outcome_id', `${p}%`).limit(500)
         if (fb) rows.push(...(fb as QRow[]))
       }
-      pool = rows
+      return rows
+    } else {
+      const { data } = await svc.from('questions').select(SELECT).limit(7000)
+      return (data ?? []) as QRow[]
     }
-  } else {
-    // HSC / NAPLAN / Prelim — full curriculum
-    const { data, error } = await svc
-      .from('questions')
-      .select(SELECT)
-      .limit(7000)
-    if (error) return { error: error.message }
-    pool = (data ?? []) as QRow[]
   }
 
-  if (pool.length === 0) return { error: 'No questions available. The question bank may be empty — please contact support.' }
+  let pool = await fetchPool()
+
+  // If pool is empty, generate questions on demand then re-fetch
+  if (pool.length === 0) {
+    const topicsToGenerate = prefixes.length > 0 ? prefixes : CORE_TOPICS
+    const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.neumm.com.au/math-nsw/app').replace(/\/$/, '')
+    const yearGroup = config.mode === 'naplan_y9' ? 'year_9'
+      : config.mode === 'prelim_y11' ? 'year_11'
+      : 'year_12'
+
+    await Promise.all(
+      topicsToGenerate.slice(0, 14).map(topic =>
+        fetch(`${appUrl}/api/generate-questions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ topic, yearGroup }),
+        }).catch(() => { /* ignore per-topic errors */ })
+      )
+    )
+
+    pool = await fetchPool()
+  }
+
+  if (pool.length === 0) return { error: 'Question generation failed. Please try again in a moment.' }
 
   // Build adaptive question set:
   // Ensure coverage across all selected topics, then fill remaining with best spread
