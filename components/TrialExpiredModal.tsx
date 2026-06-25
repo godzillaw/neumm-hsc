@@ -46,11 +46,11 @@ export default function TrialExpiredModal({ tier }: { tier: string }) {
 
   const heading = isPaymentFailed
     ? 'Payment failed'
-    : 'Your free trial has ended'
+    : "You've already done the hard part"
 
   const subtext = isPaymentFailed
     ? "We couldn't process your last payment. Update your payment details to keep practising."
-    : 'Upgrade to continue practising. Your mastery map, XP, streak, and progress are all saved.'
+    : "Starting is the hardest step — and you did it. Keep your momentum going."
 
   return (
     /* Full-screen overlay — not dismissable */
