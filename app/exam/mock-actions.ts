@@ -1,6 +1,6 @@
 'use server'
 
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { createSupabaseServerClient, createSupabaseServiceClient } from '@/lib/supabase-server'
 import { requireAuth }                 from '@/lib/auth-server'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -252,8 +252,9 @@ export async function loadAttemptConfig(attemptId: string): Promise<{
     timeLimitMins: mt.time_limit_mins as number,
   }
 
-  // Fetch question pool
-  const prefixes = config.topicPrefixes
+  // Fetch question pool — use service client to bypass RLS on the questions table
+  const svc = createSupabaseServiceClient()
+  const prefixes = config.topicPrefixes ?? []
   const SELECT = 'id, outcome_id, difficulty_band, content_json, correct_answer, explanation'
 
   type QRow = Record<string, unknown>
@@ -262,7 +263,7 @@ export async function loadAttemptConfig(attemptId: string): Promise<{
   if (prefixes.length > 0) {
     // Try exact outcome_id match first (format: MA-ALG-01-B1 … MA-ALG-01-B6)
     const outcomeIds = prefixes.flatMap(p => [1,2,3,4,5,6].map(b => `${p}-B${b}`))
-    const { data: exact, error: e1 } = await supabase
+    const { data: exact, error: e1 } = await svc
       .from('questions')
       .select(SELECT)
       .in('outcome_id', outcomeIds)
@@ -274,7 +275,7 @@ export async function loadAttemptConfig(attemptId: string): Promise<{
     if (pool.length === 0) {
       const rows: QRow[] = []
       for (const p of prefixes) {
-        const { data: fb } = await supabase
+        const { data: fb } = await svc
           .from('questions')
           .select(SELECT)
           .like('outcome_id', `${p}%`)
@@ -285,7 +286,7 @@ export async function loadAttemptConfig(attemptId: string): Promise<{
     }
   } else {
     // HSC / NAPLAN / Prelim — full curriculum
-    const { data, error } = await supabase
+    const { data, error } = await svc
       .from('questions')
       .select(SELECT)
       .limit(7000)
@@ -293,7 +294,7 @@ export async function loadAttemptConfig(attemptId: string): Promise<{
     pool = (data ?? []) as QRow[]
   }
 
-  if (pool.length === 0) return { error: 'No questions available. Please check topic selection or try a different mode.' }
+  if (pool.length === 0) return { error: 'No questions available. The question bank may be empty — please contact support.' }
 
   // Build adaptive question set:
   // Ensure coverage across all selected topics, then fill remaining with best spread
