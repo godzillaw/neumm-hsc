@@ -283,7 +283,7 @@ export default function SignupPage() {
                 <a href="/math-nsw/app/legal/terms" target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ color: '#818CF8', fontWeight: 600, textDecoration: 'none' }}>Terms and Conditions</a>
                 {' '}and{' '}
                 <a href="/math-nsw/app/legal/privacy" target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ color: '#818CF8', fontWeight: 600, textDecoration: 'none' }}>Privacy Policy</a>.
-                {isMinor && ' If I am under 18, I confirm my parent or guardian has agreed on my behalf.'}
+                {' '}I confirm my parent or guardian has agreed on my behalf.
               </span>
             </label>
 

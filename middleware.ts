@@ -103,27 +103,6 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    // ── 4. Legal version check — only for dashboard/* paths ─────────────────
-    // Skip for /auth/* to avoid redirect loops
-    const isDashboardPath = pathname.startsWith('/dashboard')
-    const isAuthPath      = pathname.startsWith('/auth')
-
-    if (isDashboardPath && !isAuthPath) {
-      const currentTermsVersion   = process.env.CURRENT_TERMS_VERSION   ?? '1.0'
-      const currentPrivacyVersion = process.env.CURRENT_PRIVACY_VERSION ?? '1.0'
-
-      const userTermsVersion   = raw?.terms_version   ?? null
-      const userPrivacyVersion = raw?.privacy_version ?? null
-
-      const termsOutdated   = !userTermsVersion   || userTermsVersion   !== currentTermsVersion
-      const privacyOutdated = !userPrivacyVersion || userPrivacyVersion !== currentPrivacyVersion
-
-      if (termsOutdated || privacyOutdated) {
-        const url = request.nextUrl.clone()
-        url.pathname = '/auth/reaccept'
-        return NextResponse.redirect(url)
-      }
-    }
   }
 
   return supabaseResponse
