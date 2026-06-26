@@ -12,6 +12,7 @@ import type { ExplanationBlock }                       from '@/lib/curriculum'
 import { POINTS }                                     from '@/lib/gamification-constants'
 import AIDisclosureBanner                              from '@/components/tutor/AIDisclosureBanner'
 import WorkingInput                                   from '@/components/WorkingInput'
+import MathKeyboardInput                               from '@/components/MathKeyboardInput'
 import MathText                                        from '@/components/MathText'
 import DiagramRenderer, { extractDiagramSpec }         from '@/components/DiagramRenderer'
 import type { DiagramSpec }                             from '@/components/DiagramRenderer'
@@ -1110,7 +1111,9 @@ export default function PracticeSession({
   const [videoSearchQuery, setVideoSearchQuery] = useState('')
 
   // Open-response working input
+  const [openInputMode,       setOpenInputMode]       = useState<'draw' | 'keyboard'>('draw')
   const [workingBase64,       setWorkingBase64]       = useState<string | null>(null)
+  const [keyboardLatex,       setKeyboardLatex]       = useState('')
   const [openFeedback,        setOpenFeedback]        = useState<AssessOpenAnswerResult | null>(null)
   const [openFeedbackLoading, setOpenFeedbackLoading] = useState(false)
 
@@ -1180,6 +1183,7 @@ export default function PracticeSession({
     setVideoSearchQuery('')
     setElapsed(0)
     setWorkingBase64(null)
+    setKeyboardLatex('')
     setOpenFeedback(null)
     setOpenFeedbackLoading(false)
 
@@ -1323,25 +1327,37 @@ export default function PracticeSession({
 
   // ── Open-response submit ────────────────────────────────────────────────────
   async function handleOpenSubmit() {
-    if (!question || !workingBase64 || phase !== 'ready') return
+    const hasDrawing  = openInputMode === 'draw'     && !!workingBase64
+    const hasKeyboard = openInputMode === 'keyboard' && !!keyboardLatex.trim()
+    if (!question || (!hasDrawing && !hasKeyboard) || phase !== 'ready') return
     if (timerRef.current) clearInterval(timerRef.current)
     const timeMs = Date.now() - startMsRef.current
     setPhase('submitting')
     setOpenFeedbackLoading(true)
 
-    // Compress image client-side before sending — reduces payload from ~1-3 MB to
-    // ~50-150 KB, cutting API latency by 3-10×.  Always outputs JPEG.
-    const compressedImage = await compressImageForAI(workingBase64)
-
-    // Assess working image with Claude vision (haiku — fast)
-    const assessment = await assessOpenAnswer({
-      questionText:       question.content.question_text,
-      modelAnswer:        question.content.model_answer,
-      solutionSteps:      question.step_by_step,
-      marks:              question.content.marks,
-      markingCriteria:    question.content.marking_criteria,
-      workingImageBase64: compressedImage,
-    })
+    let assessment: AssessOpenAnswerResult
+    if (openInputMode === 'keyboard') {
+      assessment = await assessOpenAnswer({
+        questionText:    question.content.question_text,
+        modelAnswer:     question.content.model_answer,
+        solutionSteps:   question.step_by_step,
+        marks:           question.content.marks,
+        markingCriteria: question.content.marking_criteria,
+        workingLatex:    keyboardLatex.trim(),
+      })
+    } else {
+      // Compress image client-side before sending — reduces payload from ~1-3 MB to
+      // ~50-150 KB, cutting API latency by 3-10×.  Always outputs JPEG.
+      const compressedImage = await compressImageForAI(workingBase64!)
+      assessment = await assessOpenAnswer({
+        questionText:       question.content.question_text,
+        modelAnswer:        question.content.model_answer,
+        solutionSteps:      question.step_by_step,
+        marks:              question.content.marks,
+        markingCriteria:    question.content.marking_criteria,
+        workingImageBase64: compressedImage,
+      })
+    }
     setOpenFeedback(assessment)
     setOpenFeedbackLoading(false)
 
@@ -1735,12 +1751,41 @@ export default function PracticeSession({
                 Show all working below
               </span>
             </div>
+            {/* Input mode toggle */}
+            {(isInteractive || isSubmitting) && !isAnswered && (
+              <div style={{ display: 'flex', gap: 6, marginBottom: 4 }}>
+                {(['draw', 'keyboard'] as const).map(mode => (
+                  <button
+                    key={mode}
+                    onClick={() => { if (!isSubmitting) setOpenInputMode(mode) }}
+                    disabled={isSubmitting}
+                    style={{
+                      padding: '5px 14px', borderRadius: 10, fontSize: 12, fontWeight: 700,
+                      border: '1.5px solid',
+                      borderColor: openInputMode === mode ? '#7C3AED' : '#DDD6FE',
+                      background: openInputMode === mode ? '#EDE9FE' : 'white',
+                      color: openInputMode === mode ? '#7C3AED' : '#6B7280',
+                      cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {mode === 'draw' ? '✏️ Draw / Photo' : '⌨️ Type'}
+                  </button>
+                ))}
+              </div>
+            )}
             {/* Canvas / photo input */}
             {(isInteractive || isSubmitting) && !isAnswered ? (
-              <WorkingInput
-                onChange={setWorkingBase64}
-                disabled={isSubmitting}
-              />
+              openInputMode === 'keyboard' ? (
+                <MathKeyboardInput
+                  onChange={setKeyboardLatex}
+                  disabled={isSubmitting}
+                />
+              ) : (
+                <WorkingInput
+                  onChange={setWorkingBase64}
+                  disabled={isSubmitting}
+                />
+              )
             ) : isAnswered && workingBase64 ? (
               /* Show submitted working thumbnail after answering */
               <div className="rounded-2xl overflow-hidden border-2" style={{ borderColor: '#DDD6FE' }}>
@@ -1752,6 +1797,11 @@ export default function PracticeSession({
                 <img src={`data:image/png;base64,${workingBase64}`} alt="Your working"
                   className="w-full object-contain max-h-48"
                   style={{ background: '#FFF' }} />
+              </div>
+            ) : isAnswered && keyboardLatex ? (
+              <div className="rounded-2xl border-2 px-4 py-3" style={{ borderColor: '#DDD6FE', fontFamily: 'monospace', fontSize: 13, color: '#5B21B6', background: '#F5F3FF' }}>
+                <p style={{ fontSize: 10, fontWeight: 700, color: '#A78BFA', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 1 }}>Submitted answer</p>
+                {keyboardLatex}
               </div>
             ) : null}
           </div>
@@ -1938,9 +1988,13 @@ export default function PracticeSession({
             </div>
             {/* Row 2: Submit — full width so there's room for the label */}
             {question.question_type === 'open' ? (
-              <button onClick={handleOpenSubmit} disabled={!workingBase64}
+              <button
+                onClick={handleOpenSubmit}
+                disabled={openInputMode === 'draw' ? !workingBase64 : !keyboardLatex.trim()}
                 className="btn-gradient w-full py-3 rounded-2xl text-sm font-black min-h-[48px]">
-                {workingBase64 ? '✅ Submit for Marking' : '✏️ Add your working above first'}
+                {(openInputMode === 'draw' ? !!workingBase64 : !!keyboardLatex.trim())
+                  ? '✅ Submit for Marking'
+                  : openInputMode === 'keyboard' ? '⌨️ Type your answer above first' : '✏️ Add your working above first'}
               </button>
             ) : (
               <button onClick={handleSubmit} disabled={!selectedOption}

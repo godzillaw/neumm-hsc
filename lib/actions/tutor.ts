@@ -412,11 +412,12 @@ export async function assessOpenAnswer(params: {
   solutionSteps:   string[]
   marks:           number
   markingCriteria: string[]
-  workingImageBase64: string  // raw base64, no "data:" prefix
+  workingImageBase64?: string  // raw base64, no "data:" prefix — mutually exclusive with workingLatex
+  workingLatex?:   string      // typed LaTeX answer submitted via keyboard input
 }): Promise<AssessOpenAnswerResult> {
   const {
     questionText, modelAnswer, solutionSteps, marks,
-    markingCriteria, workingImageBase64,
+    markingCriteria, workingImageBase64, workingLatex,
   } = params
 
   // Build marking criteria list — one entry per mark
@@ -432,7 +433,8 @@ export async function assessOpenAnswer(params: {
     .join(',\n  ')
 
   // Concise prompt — fewer input tokens = faster response
-  const prompt = `NSW HSC Mathematics marker. Mark the student's handwritten working in the image.
+  const inputDesc = workingLatex ? 'typed LaTeX answer' : 'handwritten working in the image'
+  const prompt = `NSW HSC Mathematics marker. Mark the student's ${inputDesc}.
 
 Q: ${questionText}
 Marks available: ${marks}
@@ -452,34 +454,38 @@ Return ONLY valid JSON (no markdown, no commentary):
   ]
 }
 
-If image is blank/unreadable set score to 0 and all stepResults passed to false. Use Unicode math symbols, not LaTeX.`
+If ${workingLatex ? 'the answer is empty or clearly wrong' : 'image is blank/unreadable'} set score to 0 and all stepResults passed to false. Use Unicode math symbols, not LaTeX.`
 
-  // Detect image format from base64 magic bytes:
-  //   PNG  → starts with "iVBOR"  (\x89PNG)
-  //   JPEG → starts with "/9j/"   (\xFF\xD8\xFF)
-  //   default to jpeg (we always compress to JPEG client-side before sending)
-  const mediaType: 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif' =
-    workingImageBase64.startsWith('iVBOR') ? 'image/png' : 'image/jpeg'
+  // Build message content — either image (draw mode) or plain text (keyboard mode)
+  type ContentBlock = Anthropic.ImageBlockParam | Anthropic.TextBlockParam
+  let messageContent: ContentBlock[]
+
+  if (workingLatex) {
+    messageContent = [
+      { type: 'text', text: `Student's typed answer (LaTeX):\n${workingLatex}\n\n${prompt}` },
+    ]
+  } else {
+    // Detect image format from base64 magic bytes
+    const mediaType: 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif' =
+      (workingImageBase64 ?? '').startsWith('iVBOR') ? 'image/png' : 'image/jpeg'
+    messageContent = [
+      {
+        type: 'image',
+        source: {
+          type:       'base64',
+          media_type: mediaType,
+          data:       workingImageBase64 ?? '',
+        },
+      },
+      { type: 'text', text: prompt },
+    ]
+  }
 
   try {
     const response = await anthropic.messages.create({
-      // Haiku is 3-5× faster than Sonnet and fully capable of reading handwritten maths
       model:      'claude-haiku-4-5',
       max_tokens: 700,
-      messages: [{
-        role: 'user',
-        content: [
-          {
-            type: 'image',
-            source: {
-              type:       'base64',
-              media_type: mediaType,
-              data:       workingImageBase64,
-            },
-          },
-          { type: 'text', text: prompt },
-        ],
-      }],
+      messages: [{ role: 'user', content: messageContent }],
     })
 
     const raw = response.content
