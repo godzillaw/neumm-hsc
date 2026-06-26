@@ -2,6 +2,7 @@
 
 import { createSupabaseServerClient, createSupabaseServiceClient } from '@/lib/supabase-server'
 import { requireAuth }                 from '@/lib/auth-server'
+import Anthropic                       from '@anthropic-ai/sdk'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -291,24 +292,46 @@ export async function loadAttemptConfig(attemptId: string): Promise<{
 
   let pool = await fetchPool()
 
-  // If pool is empty, generate questions on demand then re-fetch
+  // If pool is empty, generate questions directly via Anthropic SDK then re-fetch
   if (pool.length === 0) {
-    const topicsToGenerate = prefixes.length > 0 ? prefixes : CORE_TOPICS
-    const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.neumm.com.au/math-nsw/app').replace(/\/$/, '')
-    const yearGroup = config.mode === 'naplan_y9' ? 'year_9'
-      : config.mode === 'prelim_y11' ? 'year_11'
-      : 'year_12'
+    const topicsToGenerate = (prefixes.length > 0 ? prefixes : CORE_TOPICS).slice(0, 14)
+    const apiKey = process.env.ANTHROPIC_API_KEY
+    if (apiKey) {
+      const ai = new Anthropic({ apiKey })
+      await Promise.all(topicsToGenerate.map(async (topic) => {
+        try {
+          // Skip if questions already exist for this topic
+          const { data: ex } = await svc.from('questions').select('id').ilike('outcome_id', `${topic}-%`).limit(1)
+          if (ex && ex.length > 0) return
 
-    await Promise.all(
-      topicsToGenerate.slice(0, 14).map(topic =>
-        fetch(`${appUrl}/api/generate-questions`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ topic, yearGroup }),
-        }).catch(() => { /* ignore per-topic errors */ })
-      )
-    )
-
+          const res = await ai.messages.create({
+            model: 'claude-haiku-4-5',
+            max_tokens: 3000,
+            messages: [{ role: 'user', content:
+              `Generate 6 multiple-choice NSW HSC Mathematics questions on: "${topic}". One per difficulty band 1–6.
+Return ONLY a JSON array, no markdown:
+[{"outcome_id":"${topic}-B1","difficulty_band":1,"question_text":"...","option_a":"...","option_b":"...","option_c":"...","option_d":"...","correct_option":"a","explanation":"..."},...]` }],
+          })
+          const raw = res.content.filter((b): b is Anthropic.TextBlock => b.type === 'text').map(b => b.text).join('')
+          const s = raw.indexOf('['), e = raw.lastIndexOf(']')
+          if (s === -1 || e <= s) return
+          const parsed = JSON.parse(raw.slice(s, e + 1)) as Record<string, unknown>[]
+          if (!parsed.length) return
+          await svc.from('questions').insert(parsed.map(q => ({
+            outcome_id:      `${topic}-B${Math.max(1, Math.min(6, Number(q.difficulty_band ?? 3)))}`,
+            course:          'Advanced Mathematics',
+            difficulty_band: Math.max(1, Math.min(6, Number(q.difficulty_band ?? 3))),
+            format:          'multiple_choice',
+            content_json:    { question_text: String(q.question_text ?? ''), option_a: String(q.option_a ?? ''), option_b: String(q.option_b ?? ''), option_c: String(q.option_c ?? ''), option_d: String(q.option_d ?? '') },
+            correct_answer:  String(q.correct_option ?? 'a').toLowerCase().charAt(0),
+            explanation:     String(q.explanation ?? ''),
+            step_by_step:    [],
+            nesa_outcome_code: '',
+            served_to:       [],
+          })))
+        } catch { /* skip failed topic */ }
+      }))
+    }
     pool = await fetchPool()
   }
 
