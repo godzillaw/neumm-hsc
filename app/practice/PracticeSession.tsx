@@ -1111,7 +1111,7 @@ export default function PracticeSession({
   const [videoSearchQuery, setVideoSearchQuery] = useState('')
 
   // Open-response working input
-  const [openInputMode,       setOpenInputMode]       = useState<'draw' | 'keyboard'>('draw')
+  const [openInputMode,       setOpenInputMode]       = useState<'draw' | 'keyboard'>('keyboard')
   const [workingBase64,       setWorkingBase64]       = useState<string | null>(null)
   const [keyboardLatex,       setKeyboardLatex]       = useState('')
   const [openFeedback,        setOpenFeedback]        = useState<AssessOpenAnswerResult | null>(null)
@@ -1754,7 +1754,7 @@ export default function PracticeSession({
             {/* Input mode toggle */}
             {(isInteractive || isSubmitting) && !isAnswered && (
               <div style={{ display: 'flex', gap: 6, marginBottom: 4 }}>
-                {(['draw', 'keyboard'] as const).map(mode => (
+                {(['keyboard', 'draw'] as const).map(mode => (
                   <button
                     key={mode}
                     onClick={() => { if (!isSubmitting) setOpenInputMode(mode) }}
