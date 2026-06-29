@@ -66,7 +66,7 @@ export interface Mission {
 // These map to the outcome_id column in the questions table.
 // Format: "MA-CALC-D01" (topic prefix) or "MA-CALC-D01-B3" (with band suffix)
 
-// ── YEAR 9 (NSW Stage 5 Mathematics) ─────────────────────────────────────────
+// ── YEAR 9 (NSW Stage 5 Core — NESA 2022 K-10 Syllabus) ──────────────────────
 const YEAR_9_MISSION: Mission = {
   missionId: 'y9',
   title: 'Year 9 Mathematics',
@@ -74,259 +74,165 @@ const YEAR_9_MISSION: Mission = {
   course: 'all',
   shortLabel: 'Yr 9',
   levels: [
-    // ── Chapter 1: Algebra ───────────────────────────────────────────────────
+    // ── Level 1: Financial Mathematics ──────────────────────────────────────
     {
-      levelId: 'y9-l1', levelNum: 1, title: 'Algebra', emoji: '✏️', color: '#6366F1',
+      levelId: 'y9-l1', levelNum: 1, title: 'Financial Mathematics', emoji: '💰', color: '#10B981',
       stages: [
         {
-          stageId: 'y9-l1-s1', code: '2A', title: 'Reviewing Algebra',
-          outcomeIds: ['MA-ALG-01'], topicIds: ['MA-ALG-01'],
-          explanation: 'Review the language of algebra: terms, coefficients, like terms, and expressions. Simplify by collecting like terms and applying the four operations.',
+          stageId: 'y9-l1-s1', code: '1A', title: 'Earning Money',
+          outcomeIds: ['MA5-FIN-C-01'], topicIds: ['MA5-FIN-C-01'],
+          explanation: 'Calculate wages (hourly rate × hours), salaries, overtime rates, commission, and piecework pay. Understand PAYG (Pay As You Go) income tax: gross income minus tax deductions gives net (take-home) pay.',
         },
         {
-          stageId: 'y9-l1-s2', code: '2B', title: 'Expanding Expressions',
-          outcomeIds: ['MA-ALG-01'], topicIds: ['MA-ALG-01'],
-          explanation: 'Expand brackets using the distributive law: a(b+c) = ab+ac. For double brackets (a+b)(c+d) use FOIL. Perfect squares and difference of squares are key special cases.',
-        },
-        {
-          stageId: 'y9-l1-s3', code: '2C', title: 'Factorising Using the HCF',
-          outcomeIds: ['MA-ALG-01'], topicIds: ['MA-ALG-01'],
-          explanation: 'Factorising is the reverse of expanding. Find the highest common factor (HCF) of all terms and place it outside the brackets: 6x² + 9x = 3x(2x + 3).',
-        },
-        {
-          stageId: 'y9-l1-s4', code: '2D', title: 'Factorising the Difference of Two Squares',
-          outcomeIds: ['MA-ALG-01'], topicIds: ['MA-ALG-01'],
-          explanation: 'a² − b² = (a+b)(a−b). Recognise perfect squares in both terms, then apply this identity directly. Always check for a common factor before using this formula.',
-        },
-        {
-          stageId: 'y9-l1-s5', code: '2E', title: 'Factorising Trinomials',
-          outcomeIds: ['MA-ALG-01'], topicIds: ['MA-ALG-01'],
-          explanation: 'To factorise x² + bx + c, find two numbers that multiply to c and add to b: x² + 5x + 6 = (x+2)(x+3). For ax² + bx + c, use the splitting method.',
-        },
-        {
-          stageId: 'y9-l1-s6', code: '2F', title: 'Algebraic Fractions',
-          outcomeIds: ['MA-ALG-01'], topicIds: ['MA-ALG-01'],
-          explanation: 'Simplify algebraic fractions by factorising numerator and denominator and cancelling common factors. Add and subtract by finding the LCD first.',
+          stageId: 'y9-l1-s2', code: '1B', title: 'Simple Interest and Spending',
+          outcomeIds: ['MA5-FIN-C-01'], topicIds: ['MA5-FIN-C-01'],
+          explanation: 'Simple interest: I = Prt where P is principal, r is annual rate (as decimal), t is time in years. Total amount A = P + I. Also solve problems involving discounts, GST, and best-buy comparisons.',
         },
       ],
     },
-    // ── Chapter 2: Equations & Inequalities ─────────────────────────────────
+    // ── Level 2: Numbers of Any Magnitude ───────────────────────────────────
     {
-      levelId: 'y9-l2', levelNum: 2, title: 'Equations & Inequalities', emoji: '⚖️', color: '#8B5CF6',
+      levelId: 'y9-l2', levelNum: 2, title: 'Numbers of Any Magnitude', emoji: '🔢', color: '#F59E0B',
       stages: [
         {
-          stageId: 'y9-l2-s1', code: '2G', title: 'Solving Linear Equations',
-          outcomeIds: ['MA-ALG-03'], topicIds: ['MA-ALG-03'],
-          explanation: 'Isolate the variable by performing inverse operations on both sides. Expand brackets and collect like terms first. Always check your answer by substituting back.',
+          stageId: 'y9-l2-s1', code: '2A', title: 'Scientific Notation',
+          outcomeIds: ['MA5-MAG-C-01'], topicIds: ['MA5-MAG-C-01'],
+          explanation: 'Express very large and very small numbers in scientific notation: a × 10ⁿ where 1 ≤ a < 10. Large: 4 500 000 = 4.5 × 10⁶. Small: 0.000032 = 3.2 × 10⁻⁵. Use index laws to multiply and divide.',
         },
         {
-          stageId: 'y9-l2-s2', code: '2H', title: 'Solving Quadratic Equations',
-          outcomeIds: ['MA-ALG-01'], topicIds: ['MA-ALG-01'],
-          explanation: 'Rearrange to ax² + bx + c = 0, then factorise and set each factor to zero, or use the quadratic formula x = (−b ± √(b²−4ac))/2a.',
-        },
-        {
-          stageId: 'y9-l2-s3', code: '2I', title: 'Solving Simultaneous Equations',
-          outcomeIds: ['MA-ALG-03'], topicIds: ['MA-ALG-03'],
-          explanation: 'Use substitution (rearrange one equation, substitute into the other) or elimination (multiply equations to match a coefficient, then add or subtract).',
-        },
-        {
-          stageId: 'y9-l2-s4', code: '2J', title: 'Using Graphs to Solve Equations',
-          outcomeIds: ['MA-ALG-03'], topicIds: ['MA-ALG-03'],
-          explanation: 'Graph each equation; the intersection point gives the solution. This method works for any pair of equations, including non-linear ones.',
-        },
-        {
-          stageId: 'y9-l2-s5', code: '2K', title: 'Linear Inequalities',
-          outcomeIds: ['MA-ALG-05'], topicIds: ['MA-ALG-05'],
-          explanation: 'Solve inequalities like equations, but reverse the inequality sign when multiplying or dividing by a negative number. Graph solutions on a number line.',
+          stageId: 'y9-l2-s2', code: '2B', title: 'Significant Figures and Error',
+          outcomeIds: ['MA5-MAG-C-01'], topicIds: ['MA5-MAG-C-01'],
+          explanation: 'Round numbers to a specified number of significant figures. Absolute error = |measured − true|. Percentage error = (absolute error / true value) × 100%. Understand limits of accuracy in measurement.',
         },
       ],
     },
-    // ── Chapter 3: Measurement ───────────────────────────────────────────────
+    // ── Level 3: Algebra & Indices ───────────────────────────────────────────
     {
-      levelId: 'y9-l3', levelNum: 3, title: 'Measurement', emoji: '📏', color: '#0EA5E9',
+      levelId: 'y9-l3', levelNum: 3, title: 'Algebra & Indices', emoji: '✏️', color: '#6366F1',
       stages: [
         {
-          stageId: 'y9-l3-s1', code: '3A', title: 'Pythagoras\' Theorem',
-          outcomeIds: ['MA-COORD-01'], topicIds: ['MA-COORD-01'],
-          explanation: 'In a right triangle, a² + b² = c² where c is the hypotenuse. Use it to find missing sides and to test whether a triangle is right-angled.',
+          stageId: 'y9-l3-s1', code: '3A', title: 'Algebraic Techniques A',
+          outcomeIds: ['MA5-ALG-C-01'], topicIds: ['MA5-ALG-C-01'],
+          explanation: 'Simplify algebraic fractions with numerical denominators by finding the LCD and cancelling common factors. Expand algebraic expressions including products with two or more terms.',
         },
         {
-          stageId: 'y9-l3-s2', code: '3B', title: 'Perimeter and Area',
-          outcomeIds: ['MA-COORD-01'], topicIds: ['MA-COORD-01'],
-          explanation: 'Perimeter is the total boundary length; area is the enclosed surface. Know formulas for triangles, parallelograms, trapeziums, circles (A = πr²), and composite shapes.',
-        },
-        {
-          stageId: 'y9-l3-s3', code: '3C', title: 'Surface Area',
-          outcomeIds: ['MA-COORD-01'], topicIds: ['MA-COORD-01'],
-          explanation: 'Surface area is the total area of all faces of a 3D solid. Draw a net if needed. Key solids: prisms (2 bases + rectangles), pyramids (1 base + triangles), cylinders (2 circles + rectangle).',
-        },
-        {
-          stageId: 'y9-l3-s4', code: '3D', title: 'Volume',
-          outcomeIds: ['MA-COORD-01'], topicIds: ['MA-COORD-01'],
-          explanation: 'Volume of a prism = base area × height. Volume of a pyramid = ⅓ × base area × height. Cylinder: V = πr²h; Cone: V = ⅓πr²h; Sphere: V = 4/3 πr³.',
+          stageId: 'y9-l3-s2', code: '3B', title: 'Indices A',
+          outcomeIds: ['MA5-IND-C-01'], topicIds: ['MA5-IND-C-01'],
+          explanation: 'Apply index laws to algebraic expressions: aᵐ × aⁿ = aᵐ⁺ⁿ, aᵐ ÷ aⁿ = aᵐ⁻ⁿ, (aᵐ)ⁿ = aᵐⁿ, a⁰ = 1. Simplify expressions with negative-integer indices: a⁻ⁿ = 1/aⁿ.',
         },
       ],
     },
-    // ── Chapter 4: Right-Angled Trigonometry ─────────────────────────────────
+    // ── Level 4: Equations ───────────────────────────────────────────────────
     {
-      levelId: 'y9-l4', levelNum: 4, title: 'Trigonometry', emoji: '📐', color: '#14B8A6',
+      levelId: 'y9-l4', levelNum: 4, title: 'Equations', emoji: '⚖️', color: '#8B5CF6',
       stages: [
         {
-          stageId: 'y9-l4-s1', code: '3E', title: 'Trigonometric Ratios (SOH CAH TOA)',
-          outcomeIds: ['MA-TRIG-07'], topicIds: ['MA-TRIG-07'],
-          explanation: 'sin θ = O/H, cos θ = A/H, tan θ = O/A. Label sides as Opposite, Adjacent, Hypotenuse relative to the angle. Use your calculator for non-special angles.',
-        },
-        {
-          stageId: 'y9-l4-s2', code: '3F', title: 'Finding an Unknown Side',
-          outcomeIds: ['MA-TRIG-07'], topicIds: ['MA-TRIG-07'],
-          explanation: 'Choose the ratio that links the unknown side to the known side and angle. Multiply or divide to isolate the unknown. Always round at the final step only.',
-        },
-        {
-          stageId: 'y9-l4-s3', code: '3G', title: 'Finding an Unknown Angle',
-          outcomeIds: ['MA-TRIG-07'], topicIds: ['MA-TRIG-07'],
-          explanation: 'Use the inverse trig functions: θ = sin⁻¹(O/H), θ = cos⁻¹(A/H), θ = tan⁻¹(O/A). Your calculator gives the principal angle; check the context for obtuse solutions.',
-        },
-        {
-          stageId: 'y9-l4-s4', code: '3H', title: 'Angles of Elevation and Depression',
-          outcomeIds: ['MA-TRIG-08'], topicIds: ['MA-TRIG-08'],
-          explanation: 'Elevation is measured up from horizontal; depression is measured down. Draw and label the right triangle, identify the angle, then apply the appropriate trig ratio.',
-        },
-        {
-          stageId: 'y9-l4-s5', code: '3I', title: 'Bearings',
-          outcomeIds: ['MA-TRIG-08'], topicIds: ['MA-TRIG-08'],
-          explanation: 'Bearings are measured clockwise from North (000° to 360°). Convert bearing problems into right triangles using north-south and east-west components.',
+          stageId: 'y9-l4-s1', code: '4A', title: 'Equations A',
+          outcomeIds: ['MA5-EQU-C-01'], topicIds: ['MA5-EQU-C-01'],
+          explanation: 'Solve linear equations of up to 3 steps by performing inverse operations on both sides. Includes equations with brackets, like terms, and one algebraic fraction. Always check by substituting back.',
         },
       ],
     },
-    // ── Chapter 5: Linear Relationships & Coordinate Geometry ───────────────
+    // ── Level 5: Linear Relationships ────────────────────────────────────────
     {
-      levelId: 'y9-l5', levelNum: 5, title: 'Coordinate Geometry', emoji: '📉', color: '#EC4899',
+      levelId: 'y9-l5', levelNum: 5, title: 'Linear Relationships', emoji: '📉', color: '#EC4899',
       stages: [
         {
-          stageId: 'y9-l5-s1', code: '4A', title: 'Graphing Linear Relationships',
-          outcomeIds: ['MA-COORD-02'], topicIds: ['MA-COORD-02'],
-          explanation: 'Plot y = mx + b using the y-intercept b and gradient m = rise/run. Alternatively, find two intercepts (set x=0 for y-intercept, set y=0 for x-intercept) and draw the line through them.',
+          stageId: 'y9-l5-s1', code: '5A', title: 'Linear Relationships A',
+          outcomeIds: ['MA5-LIN-C-01'], topicIds: ['MA5-LIN-C-01'],
+          explanation: 'Find distance between 2 points using d = √((x₂−x₁)² + (y₂−y₁)²). Find midpoint M = ((x₁+x₂)/2, (y₁+y₂)/2). Calculate gradient m = (y₂−y₁)/(x₂−x₁). Graph linear equations on the Cartesian plane.',
         },
         {
-          stageId: 'y9-l5-s2', code: '4B', title: 'Finding the Equation of a Line',
-          outcomeIds: ['MA-COORD-02'], topicIds: ['MA-COORD-02'],
-          explanation: 'Given gradient m and y-intercept b: y = mx + b. Given two points: find m first, then substitute one point to find b. Given gradient and one point: use y − y₁ = m(x − x₁).',
-        },
-        {
-          stageId: 'y9-l5-s3', code: '4C', title: 'Parallel and Perpendicular Lines',
-          outcomeIds: ['MA-COORD-02'], topicIds: ['MA-COORD-02'],
-          explanation: 'Parallel lines have equal gradients. Perpendicular lines have gradients whose product is −1: m₂ = −1/m₁. Use these to find equations of lines through given points.',
-        },
-        {
-          stageId: 'y9-l5-s4', code: '4D', title: 'Length and Midpoint',
-          outcomeIds: ['MA-COORD-02'], topicIds: ['MA-COORD-02'],
-          explanation: 'Distance: d = √((x₂−x₁)² + (y₂−y₁)²) from Pythagoras. Midpoint: M = ((x₁+x₂)/2, (y₁+y₂)/2). These formulas apply to any two points on the number plane.',
+          stageId: 'y9-l5-s2', code: '5B', title: 'Linear Relationships B',
+          outcomeIds: ['MA5-LIN-C-02'], topicIds: ['MA5-LIN-C-02'],
+          explanation: 'Graph and interpret y = mx + b: m is gradient, b is y-intercept. Identify and use the gradient–intercept form to write equations of lines. Recognise and find equations of parallel lines (equal m) and perpendicular lines (m₁ × m₂ = −1).',
         },
       ],
     },
-    // ── Chapter 6: Indices & Scientific Notation ─────────────────────────────
+    // ── Level 6: Non-Linear Relationships ────────────────────────────────────
     {
-      levelId: 'y9-l6', levelNum: 6, title: 'Indices & Scientific Notation', emoji: '🔢', color: '#F59E0B',
+      levelId: 'y9-l6', levelNum: 6, title: 'Non-Linear Relationships', emoji: '📈', color: '#F97316',
       stages: [
         {
-          stageId: 'y9-l6-s1', code: '6A', title: 'Index Laws: Multiplying and Dividing',
-          outcomeIds: ['MA-ALG-08'], topicIds: ['MA-ALG-08'],
-          explanation: 'aᵐ × aⁿ = aᵐ⁺ⁿ (multiply, add indices). aᵐ ÷ aⁿ = aᵐ⁻ⁿ (divide, subtract indices). These laws only apply when the bases are the same.',
+          stageId: 'y9-l6-s1', code: '6A', title: 'Non-Linear Relationships A',
+          outcomeIds: ['MA5-NLI-C-01'], topicIds: ['MA5-NLI-C-01'],
+          explanation: 'Identify connections between algebraic and graphical forms of quadratic (y = ax²+bx+c) and exponential (y = aˣ) relationships. Recognise key features: turning points, intercepts, asymptotes.',
         },
         {
-          stageId: 'y9-l6-s2', code: '6B', title: 'Index Laws: Powers, Products and Quotients',
-          outcomeIds: ['MA-ALG-08'], topicIds: ['MA-ALG-08'],
-          explanation: '(aᵐ)ⁿ = aᵐⁿ (power of a power). (ab)ⁿ = aⁿbⁿ (power of a product). (a/b)ⁿ = aⁿ/bⁿ (power of a quotient). Apply these before the multiplication/division laws.',
-        },
-        {
-          stageId: 'y9-l6-s3', code: '6C', title: 'Zero and Negative Indices',
-          outcomeIds: ['MA-ALG-08'], topicIds: ['MA-ALG-08'],
-          explanation: 'a⁰ = 1 for any non-zero a. a⁻ⁿ = 1/aⁿ — a negative index means reciprocal. Never leave a negative index in a final answer; write it as a fraction.',
-        },
-        {
-          stageId: 'y9-l6-s4', code: '6D', title: 'Scientific Notation',
-          outcomeIds: ['MA-ALG-08'], topicIds: ['MA-ALG-08'],
-          explanation: 'Write numbers as a × 10ⁿ where 1 ≤ a < 10. Large numbers: 45 000 = 4.5 × 10⁴. Small numbers: 0.000 32 = 3.2 × 10⁻⁴. Multiply/divide by applying index laws.',
-        },
-        {
-          stageId: 'y9-l6-s5', code: '6E', title: 'Fractional Indices',
-          outcomeIds: ['MA-ALG-08'], topicIds: ['MA-ALG-08'],
-          explanation: 'a^(1/n) = ⁿ√a (the nth root). a^(m/n) = (ⁿ√a)ᵐ. Evaluate fractional indices by taking the root first (to keep numbers small), then raising to the power.',
+          stageId: 'y9-l6-s2', code: '6B', title: 'Non-Linear Relationships B',
+          outcomeIds: ['MA5-NLI-C-02'], topicIds: ['MA5-NLI-C-02'],
+          explanation: 'Graph and compare parabolas y = ax²+bx+c (vertex, axis of symmetry, intercepts) and exponential curves y = aˣ (growth a>1, decay 0<a<1, asymptote y=0). Describe transformations and features.',
         },
       ],
     },
-    // ── Chapter 7: Properties of Geometrical Figures ─────────────────────────
+    // ── Level 7: Measurement ─────────────────────────────────────────────────
     {
-      levelId: 'y9-l7', levelNum: 7, title: 'Geometrical Figures', emoji: '🔷', color: '#10B981',
+      levelId: 'y9-l7', levelNum: 7, title: 'Measurement', emoji: '📏', color: '#0EA5E9',
       stages: [
         {
-          stageId: 'y9-l7-s1', code: '7A', title: 'Triangles',
-          outcomeIds: ['MA-COORD-01'], topicIds: ['MA-COORD-01'],
-          explanation: 'Angle sum of a triangle = 180°. Exterior angle = sum of two non-adjacent interior angles. Congruent triangles have identical shape and size (SSS, SAS, AAS, RHS).',
+          stageId: 'y9-l7-s1', code: '7A', title: 'Area and Surface Area A',
+          outcomeIds: ['MA5-ARE-C-01'], topicIds: ['MA5-ARE-C-01'],
+          explanation: 'Solve problems involving areas of composite shapes (triangles, quadrilaterals, circles, sectors). Find surface areas of right prisms and cylinders. SA of cylinder = 2πr² + 2πrh.',
         },
         {
-          stageId: 'y9-l7-s2', code: '7B', title: 'Quadrilaterals',
-          outcomeIds: ['MA-COORD-01'], topicIds: ['MA-COORD-01'],
-          explanation: 'Angle sum of a quadrilateral = 360°. Know properties of parallelogram, rectangle, rhombus, square, trapezium, and kite — sides, angles, diagonals.',
-        },
-        {
-          stageId: 'y9-l7-s3', code: '7C', title: 'Polygons',
-          outcomeIds: ['MA-COORD-01'], topicIds: ['MA-COORD-01'],
-          explanation: 'Sum of interior angles of an n-sided polygon = (n−2) × 180°. Each interior angle of a regular polygon = (n−2) × 180° / n. Exterior angles always sum to 360°.',
-        },
-        {
-          stageId: 'y9-l7-s4', code: '7D', title: 'Similar Figures and Scale Factors',
-          outcomeIds: ['MA-COORD-01'], topicIds: ['MA-COORD-01'],
-          explanation: 'Similar figures have the same shape but different sizes. Corresponding sides are in the same ratio (the scale factor k). Area scales by k², volume scales by k³.',
+          stageId: 'y9-l7-s2', code: '7B', title: 'Volume A',
+          outcomeIds: ['MA5-VOL-C-01'], topicIds: ['MA5-VOL-C-01'],
+          explanation: 'Solve problems involving volumes of composite solids built from right prisms and cylinders. Volume of prism = base area × height. Volume of cylinder = πr²h. Convert between cubic units.',
         },
       ],
     },
-    // ── Chapter 8: Probability ───────────────────────────────────────────────
+    // ── Level 8: Trigonometry ─────────────────────────────────────────────────
     {
-      levelId: 'y9-l8', levelNum: 8, title: 'Probability', emoji: '🎲', color: '#F97316',
+      levelId: 'y9-l8', levelNum: 8, title: 'Trigonometry', emoji: '📐', color: '#14B8A6',
       stages: [
         {
-          stageId: 'y9-l8-s1', code: '8A', title: 'Probability Review',
-          outcomeIds: ['MA-PROB-01'], topicIds: ['MA-PROB-01'],
-          explanation: 'P(event) = (favourable outcomes) / (total equally likely outcomes). P ranges from 0 (impossible) to 1 (certain). P(A) + P(not A) = 1 always holds.',
+          stageId: 'y9-l8-s1', code: '8A', title: 'Trigonometry A',
+          outcomeIds: ['MA5-TRG-C-01'], topicIds: ['MA5-TRG-C-01'],
+          explanation: 'Apply trigonometric ratios (SOH CAH TOA) to find unknown sides and angles in right-angled triangles. sin θ = O/H, cos θ = A/H, tan θ = O/A. Use inverse functions to find angles. Round at the final step.',
         },
         {
-          stageId: 'y9-l8-s2', code: '8B', title: 'Sample Space and Venn Diagrams',
-          outcomeIds: ['MA-PROB-01'], topicIds: ['MA-PROB-01'],
-          explanation: 'A sample space lists all possible outcomes. Venn diagrams show relationships between sets. P(A or B) = P(A) + P(B) − P(A and B) for any two events.',
-        },
-        {
-          stageId: 'y9-l8-s3', code: '8C', title: 'Compound Events and Tree Diagrams',
-          outcomeIds: ['MA-PROB-02'], topicIds: ['MA-PROB-02'],
-          explanation: 'For multi-step experiments, multiply along branches and add across branches on a tree diagram. For independent events: P(A and B) = P(A) × P(B).',
+          stageId: 'y9-l8-s2', code: '8B', title: 'Trigonometry B',
+          outcomeIds: ['MA5-TRG-C-02'], topicIds: ['MA5-TRG-C-02'],
+          explanation: 'Apply trigonometry to solve problems involving angles of elevation and depression, and bearings. Bearings are measured clockwise from North (000°–360°). Draw clear diagrams labelling the right-angled triangle.',
         },
       ],
     },
-    // ── Chapter 9: Statistics ────────────────────────────────────────────────
+    // ── Level 9: Geometry ─────────────────────────────────────────────────────
     {
-      levelId: 'y9-l9', levelNum: 9, title: 'Statistics', emoji: '📊', color: '#6366F1',
+      levelId: 'y9-l9', levelNum: 9, title: 'Geometry', emoji: '🔷', color: '#6366F1',
       stages: [
         {
-          stageId: 'y9-l9-s1', code: '9A', title: 'Classifying and Displaying Data',
-          outcomeIds: ['MA-STAT-01'], topicIds: ['MA-STAT-01'],
-          explanation: 'Data is categorical (groups) or numerical (measurements). Displays: dot plots, stem-and-leaf plots, frequency histograms. Choose based on data type and what you want to show.',
+          stageId: 'y9-l9-s1', code: '9A', title: 'Properties of Geometrical Figures A',
+          outcomeIds: ['MA5-GEO-C-01'], topicIds: ['MA5-GEO-C-01'],
+          explanation: 'Identify and apply properties of similar figures: corresponding angles are equal, corresponding sides are in the same ratio (scale factor k). Solve problems using ratios and scale factors. Area scales by k², volume by k³.',
+        },
+      ],
+    },
+    // ── Level 10: Statistics & Probability ───────────────────────────────────
+    {
+      levelId: 'y9-l10', levelNum: 10, title: 'Statistics & Probability', emoji: '📊', color: '#8B5CF6',
+      stages: [
+        {
+          stageId: 'y9-l10-s1', code: '10A', title: 'Data Analysis A',
+          outcomeIds: ['MA5-DAT-C-01'], topicIds: ['MA5-DAT-C-01'],
+          explanation: 'Calculate and interpret standard deviation as a measure of spread. Find quartiles Q1, Q3, and IQR = Q3 − Q1. Represent datasets using box plots and use them to compare distributions (centre, spread, shape, outliers).',
         },
         {
-          stageId: 'y9-l9-s2', code: '9B', title: 'Measures of Location and Spread',
-          outcomeIds: ['MA-STAT-02'], topicIds: ['MA-STAT-02'],
-          explanation: 'Centre: mean (sum ÷ n), median (middle value), mode. Spread: range, interquartile range IQR = Q3 − Q1. Outliers are more than 1.5 × IQR beyond Q1 or Q3.',
+          stageId: 'y9-l10-s2', code: '10B', title: 'Data Analysis B',
+          outcomeIds: ['MA5-DAT-C-02'], topicIds: ['MA5-DAT-C-02'],
+          explanation: 'Identify and classify datasets involving two variables (bivariate data). Construct and interpret scatterplots. Describe the direction (positive/negative), strength, and form of the relationship. Correlation ≠ causation.',
         },
         {
-          stageId: 'y9-l9-s3', code: '9C', title: 'Box Plots and Comparing Data Sets',
-          outcomeIds: ['MA-STAT-03'], topicIds: ['MA-STAT-03'],
-          explanation: 'Box plots show min, Q1, median, Q3, max. Place two box plots on the same axis to compare distributions. Comment on centre, spread, shape, and outliers.',
+          stageId: 'y9-l10-s3', code: '10C', title: 'Probability A',
+          outcomeIds: ['MA5-PRO-C-01'], topicIds: ['MA5-PRO-C-01'],
+          explanation: 'Solve problems using tree diagrams and tables for multistage chance experiments, with and without replacement. For independent events: P(A and B) = P(A) × P(B). Use simulations to estimate probabilities.',
         },
       ],
     },
   ],
 }
 
-// ── YEAR 10 ──────────────────────────────────────────────────────────────────
+// ── YEAR 10 (NSW Stage 5 Path — NESA 2022 K-10 Syllabus) ─────────────────────
 const YEAR_10_MISSION: Mission = {
   missionId: 'y10',
   title: 'Year 10 Mathematics',
@@ -334,195 +240,183 @@ const YEAR_10_MISSION: Mission = {
   course: 'all',
   shortLabel: 'Yr 10',
   levels: [
-    // ── Chapter 1: Algebra ───────────────────────────────────────────────────
+    // ── Level 1: Financial Mathematics ──────────────────────────────────────
     {
-      levelId: 'y10-l1', levelNum: 1, title: 'Algebra', emoji: '✏️', color: '#8B5CF6',
+      levelId: 'y10-l1', levelNum: 1, title: 'Financial Mathematics', emoji: '💰', color: '#10B981',
       stages: [
         {
-          stageId: 'y10-l1-s1', code: '1A', title: 'Expanding and Factorising',
-          outcomeIds: ['MA-ALG-01'], topicIds: ['MA-ALG-01'],
-          explanation: 'Review expanding (removing brackets) and factorising (finding brackets). Master difference of squares, perfect squares, and trinomials — these appear throughout Year 10 and 11.',
-        },
-        {
-          stageId: 'y10-l1-s2', code: '1B', title: 'Further Factorisation',
-          outcomeIds: ['MA-ALG-01'], topicIds: ['MA-ALG-01'],
-          explanation: 'Factorise ax² + bx + c where a ≠ 1 using the splitting method: find two numbers that multiply to ac and add to b, then group and factor. Sum and difference of cubes: a³ ± b³ = (a ± b)(a² ∓ ab + b²).',
-        },
-        {
-          stageId: 'y10-l1-s3', code: '1C', title: 'Algebraic Fractions',
-          outcomeIds: ['MA-ALG-01'], topicIds: ['MA-ALG-01'],
-          explanation: 'Simplify by factorising then cancelling common factors. Add/subtract: use the lowest common denominator (LCD). Multiply/divide: cancel across numerators and denominators first.',
-        },
-        {
-          stageId: 'y10-l1-s4', code: '1D', title: 'Quadratic Equations',
-          outcomeIds: ['MA-ALG-01'], topicIds: ['MA-ALG-01'],
-          explanation: 'Solve ax² + bx + c = 0 by factorising, completing the square, or using x = (−b ± √(b²−4ac))/2a. The discriminant Δ = b²−4ac tells you: Δ>0 (2 roots), Δ=0 (1 root), Δ<0 (no real roots).',
-        },
-        {
-          stageId: 'y10-l1-s5', code: '1E', title: 'Simultaneous Equations',
-          outcomeIds: ['MA-ALG-03'], topicIds: ['MA-ALG-03'],
-          explanation: 'For non-linear simultaneous equations (e.g. line and parabola), substitute the linear equation into the other. The discriminant of the resulting quadratic tells you the number of intersections.',
+          stageId: 'y10-l1-s1', code: '1A', title: 'Compound Interest and Depreciation',
+          outcomeIds: ['MA5-FIN-C-02'], topicIds: ['MA5-FIN-C-02'],
+          explanation: 'Compound interest: A = P(1 + r)ⁿ where r is rate per period and n is number of periods. Depreciation (reducing balance): V = P(1 − r)ⁿ. Adjust r and n for different compounding frequencies. Compare with simple interest.',
         },
       ],
     },
-    // ── Chapter 2: Logarithms and Equations ─────────────────────────────────
+    // ── Level 2: Algebra — Path ──────────────────────────────────────────────
     {
-      levelId: 'y10-l2', levelNum: 2, title: 'Logarithms & Equations', emoji: '🔢', color: '#6366F1',
+      levelId: 'y10-l2', levelNum: 2, title: 'Algebra', emoji: '✏️', color: '#6366F1',
       stages: [
         {
-          stageId: 'y10-l2-s1', code: '2A', title: 'Review of Index Laws',
-          outcomeIds: ['MA-ALG-08'], topicIds: ['MA-ALG-08'],
-          explanation: 'Review all index laws: product rule, quotient rule, power of a power, zero index, negative indices, and fractional indices. These form the foundation for solving exponential equations.',
+          stageId: 'y10-l2-s1', code: '2A', title: 'Algebraic Techniques B',
+          outcomeIds: ['MA5-ALG-P-01'], topicIds: ['MA5-ALG-P-01'],
+          explanation: 'Factorise by taking out a common algebraic factor. Expand binomial products using FOIL. Factorise monic quadratic expressions x²+bx+c by finding two numbers that multiply to c and add to b.',
         },
         {
-          stageId: 'y10-l2-s2', code: '2B', title: 'Logarithms and Their Laws',
-          outcomeIds: ['MA-EXP-03'], topicIds: ['MA-EXP-03'],
-          explanation: 'log_a(x) = y means aʸ = x. Log laws: log(AB) = logA + logB; log(A/B) = logA − logB; log(Aⁿ) = n·logA; log_a(a) = 1; log_a(1) = 0. Change of base: log_a(x) = log(x)/log(a).',
+          stageId: 'y10-l2-s2', code: '2B', title: 'Algebraic Techniques C',
+          outcomeIds: ['MA5-ALG-P-02'], topicIds: ['MA5-ALG-P-02'],
+          explanation: 'Simplify algebraic fractions involving binomial numerators. Expand and factorise using special products: difference of two squares a²−b²=(a+b)(a−b), perfect squares (a±b)²=a²±2ab+b². Factorise non-monic quadratics ax²+bx+c.',
         },
         {
-          stageId: 'y10-l2-s3', code: '2C', title: 'Solving Exponential and Log Equations',
-          outcomeIds: ['MA-EXP-04'], topicIds: ['MA-EXP-04'],
-          explanation: 'For 2ˣ = 16: make bases equal (2ˣ = 2⁴, so x = 4). For equations like 3ˣ = 10: take log of both sides x = log(10)/log(3). Always check that log arguments are positive.',
+          stageId: 'y10-l2-s3', code: '2C', title: 'Indices B',
+          outcomeIds: ['MA5-IND-P-01'], topicIds: ['MA5-IND-P-01'],
+          explanation: 'Apply index laws to algebraic expressions involving negative-integer indices. Simplify expressions like (2x⁻³y²)⁻² by applying all index laws in sequence. Express answers without negative indices.',
         },
         {
-          stageId: 'y10-l2-s4', code: '2D', title: 'Harder Equations',
-          outcomeIds: ['MA-ALG-03'], topicIds: ['MA-ALG-03'],
-          explanation: 'Solve equations involving multiple fractions, nested brackets, or absolute values. For |ax + b| = c: solve ax + b = c and ax + b = −c separately, then check both solutions.',
+          stageId: 'y10-l2-s4', code: '2D', title: 'Indices C — Surds and Fractional Indices',
+          outcomeIds: ['MA5-IND-P-02'], topicIds: ['MA5-IND-P-02'],
+          explanation: 'Surds are irrational roots: √2, √3, etc. Simplify: √12 = 2√3. Rationalise denominators: 1/√2 = √2/2. Fractional indices: a^(1/n) = ⁿ√a and a^(m/n) = (ⁿ√a)ᵐ. Apply index laws to expressions with fractional indices.',
         },
       ],
     },
-    // ── Chapter 3: Functions and Other Graphs ────────────────────────────────
+    // ── Level 3: Equations — Path ────────────────────────────────────────────
     {
-      levelId: 'y10-l3', levelNum: 3, title: 'Functions & Graphs', emoji: '📉', color: '#EC4899',
+      levelId: 'y10-l3', levelNum: 3, title: 'Equations', emoji: '⚖️', color: '#8B5CF6',
       stages: [
         {
-          stageId: 'y10-l3-s1', code: '3A', title: 'Functions and Relations',
-          outcomeIds: ['MA-FUNC-01', 'MA-FUNC-02'], topicIds: ['MA-FUNC-01', 'MA-FUNC-02'],
-          explanation: 'A function maps each input to exactly one output (vertical line test). Key functions: constant, linear, quadratic, absolute value. Domain and range restrict inputs and outputs.',
+          stageId: 'y10-l3-s1', code: '3A', title: 'Equations B',
+          outcomeIds: ['MA5-EQU-P-01'], topicIds: ['MA5-EQU-P-01'],
+          explanation: 'Solve monic quadratic equations x²+bx+c=0 by factorising or quadratic formula. Solve simple cubic equations ax³=k. Solve linear inequalities and graph solutions on a number line; reverse the inequality when multiplying/dividing by a negative.',
         },
         {
-          stageId: 'y10-l3-s2', code: '3B', title: 'Quadratic Graphs',
-          outcomeIds: ['MA-ALG-02'], topicIds: ['MA-ALG-02'],
-          explanation: 'y = a(x−h)² + k has vertex (h, k), axis x = h, opens up if a > 0 (down if a < 0). Find intercepts by substituting x = 0 and solving y = 0. Sketch by plotting vertex and intercepts.',
-        },
-        {
-          stageId: 'y10-l3-s3', code: '3C', title: 'The Hyperbola y = k/x',
-          outcomeIds: ['MA-FUNC-07'], topicIds: ['MA-FUNC-07'],
-          explanation: 'The hyperbola y = k/x has asymptotes at x = 0 and y = 0. k > 0 gives branches in Q1 and Q3; k < 0 gives branches in Q2 and Q4. Transformations shift the asymptotes.',
-        },
-        {
-          stageId: 'y10-l3-s4', code: '3D', title: 'Exponential Graphs',
-          outcomeIds: ['MA-EXP-01', 'MA-EXP-02'], topicIds: ['MA-EXP-01', 'MA-EXP-02'],
-          explanation: 'y = aˣ: passes through (0,1), horizontal asymptote y = 0. a > 1 gives growth (increasing); 0 < a < 1 gives decay (decreasing). Reflections and shifts modify the asymptote and starting point.',
-        },
-        {
-          stageId: 'y10-l3-s5', code: '3E', title: 'The Circle',
-          outcomeIds: ['MA-FUNC-07'], topicIds: ['MA-FUNC-07'],
-          explanation: 'Equation of circle with centre (h, k) and radius r: (x−h)² + (y−k)² = r². Expand to get the general form. Complete the square to convert general form back to centre-radius form.',
+          stageId: 'y10-l3-s2', code: '3B', title: 'Equations C',
+          outcomeIds: ['MA5-EQU-P-02'], topicIds: ['MA5-EQU-P-02'],
+          explanation: 'Rearrange literal equations (change the subject). Solve non-monic quadratic equations ax²+bx+c=0 using factorisation or the quadratic formula x=(−b±√(b²−4ac))/2a. Solve linear simultaneous equations by substitution and elimination.',
         },
       ],
     },
-    // ── Chapter 4: Trigonometry ──────────────────────────────────────────────
+    // ── Level 4: Relationships & Graphs — Path ───────────────────────────────
     {
-      levelId: 'y10-l4', levelNum: 4, title: 'Trigonometry', emoji: '〜', color: '#14B8A6',
+      levelId: 'y10-l4', levelNum: 4, title: 'Relationships & Graphs', emoji: '📉', color: '#EC4899',
       stages: [
         {
-          stageId: 'y10-l4-s1', code: '4A', title: 'Trigonometry in Acute Triangles',
-          outcomeIds: ['MA-TRIG-07'], topicIds: ['MA-TRIG-07'],
-          explanation: 'Review SOH CAH TOA for right-angled triangles. Exact values: sin30°=½, cos30°=√3/2, sin45°=1/√2, sin60°=√3/2, tan45°=1. Always simplify using these exact values.',
+          stageId: 'y10-l4-s1', code: '4A', title: 'Linear Relationships C',
+          outcomeIds: ['MA5-LIN-P-01'], topicIds: ['MA5-LIN-P-01'],
+          explanation: 'Apply midpoint, gradient, and distance formulas to solve coordinate geometry problems. Use various forms of line equations: general form ax+by+c=0, point-gradient form y−y₁=m(x−x₁). Identify and apply line and rotational symmetry in graphs.',
         },
         {
-          stageId: 'y10-l4-s2', code: '4B', title: 'The Sine Rule',
-          outcomeIds: ['MA-TRIG-07'], topicIds: ['MA-TRIG-07'],
-          explanation: 'a/sinA = b/sinB = c/sinC. Use when you know an angle and its opposite side plus one more piece. The ambiguous case arises when using the sine rule to find an angle — always check if two triangles are possible.',
+          stageId: 'y10-l4-s2', code: '4B', title: 'Non-Linear Relationships C',
+          outcomeIds: ['MA5-NLI-P-01'], topicIds: ['MA5-NLI-P-01'],
+          explanation: 'Graph and describe transformations of parabolas y=a(x−h)²+k, exponentials y=aˣ+c, hyperbolas y=k/x+c, and circles (x−h)²+(y−k)²=r². Complete the square to find the centre and radius of a circle from general form.',
         },
         {
-          stageId: 'y10-l4-s3', code: '4C', title: 'The Cosine Rule',
-          outcomeIds: ['MA-TRIG-07'], topicIds: ['MA-TRIG-07'],
-          explanation: 'a² = b² + c² − 2bc·cosA. Use when you know two sides and the included angle (SAS) or all three sides (SSS). Rearranged: cosA = (b²+c²−a²)/2bc to find angles.',
-        },
-        {
-          stageId: 'y10-l4-s4', code: '4D', title: 'Area of a Triangle and Radians',
-          outcomeIds: ['MA-TRIG-09'], topicIds: ['MA-TRIG-09'],
-          explanation: 'Area = ½ab·sinC. Radians: π rad = 180°. Arc length l = rθ, sector area A = ½r²θ (θ in radians). Radians simplify many formulas in higher mathematics.',
-        },
-        {
-          stageId: 'y10-l4-s5', code: '4E', title: 'Problems in 3D',
-          outcomeIds: ['MA-TRIG-08'], topicIds: ['MA-TRIG-08'],
-          explanation: 'For 3D problems, identify right-angled or oblique triangles within the figure. Draw separate 2D diagrams for each triangle. Apply the appropriate rule systematically.',
+          stageId: 'y10-l4-s3', code: '4C', title: 'Functions and Other Graphs',
+          outcomeIds: ['MA5-FNC-P-01'], topicIds: ['MA5-FNC-P-01'],
+          explanation: 'Define relations and functions. Use function notation f(x). Find domain and range and graph functions. Graph regions corresponding to linear inequalities in one and two variables. Use the vertical line test to determine if a relation is a function.',
         },
       ],
     },
-    // ── Chapter 5: Polynomials ───────────────────────────────────────────────
+    // ── Level 5: Polynomials & Logarithms — Path ─────────────────────────────
     {
-      levelId: 'y10-l5', levelNum: 5, title: 'Polynomials', emoji: '📐', color: '#F59E0B',
+      levelId: 'y10-l5', levelNum: 5, title: 'Polynomials & Logarithms', emoji: '🔢', color: '#F59E0B',
       stages: [
         {
-          stageId: 'y10-l5-s1', code: '5A', title: 'Polynomials — Introduction',
-          outcomeIds: ['MA-ALG-04'], topicIds: ['MA-ALG-04'],
-          explanation: 'A polynomial is an expression aₙxⁿ + … + a₁x + a₀ with non-negative integer powers. Degree = highest power. Operations: add/subtract like terms; multiply using the distributive law.',
+          stageId: 'y10-l5-s1', code: '5A', title: 'Polynomials',
+          outcomeIds: ['MA5-POL-P-01'], topicIds: ['MA5-POL-P-01'],
+          explanation: 'Define polynomials P(x) = aₙxⁿ + … + a₁x + a₀. Add, subtract, and multiply polynomials. Divide using long division: P(x) = D(x)Q(x) + R(x). Remainder theorem: remainder = P(a) when dividing by (x−a). Factor theorem: (x−a) is a factor iff P(a)=0. Graph polynomials using roots and end behaviour.',
         },
         {
-          stageId: 'y10-l5-s2', code: '5B', title: 'Dividing Polynomials',
-          outcomeIds: ['MA-ALG-04'], topicIds: ['MA-ALG-04'],
-          explanation: 'Long division of polynomials: set up like number long division. The division algorithm: P(x) = D(x)·Q(x) + R(x), where degree of R < degree of D. The result confirms the factor theorem.',
-        },
-        {
-          stageId: 'y10-l5-s3', code: '5C', title: 'The Remainder and Factor Theorems',
-          outcomeIds: ['MA-ALG-04'], topicIds: ['MA-ALG-04'],
-          explanation: 'Remainder theorem: when P(x) is divided by (x−a), the remainder is P(a). Factor theorem: (x−a) is a factor of P(x) if and only if P(a) = 0. Use to test and find factors.',
-        },
-        {
-          stageId: 'y10-l5-s4', code: '5D', title: 'Graphing Polynomials',
-          outcomeIds: ['MA-FUNC-07'], topicIds: ['MA-FUNC-07'],
-          explanation: 'Sketch by finding roots (y=0), y-intercept, and leading coefficient behaviour. A root of multiplicity 2 means the graph touches the x-axis; multiplicity 3 means it crosses with a cubic shape.',
+          stageId: 'y10-l5-s2', code: '5B', title: 'Logarithms',
+          outcomeIds: ['MA5-LOG-P-01'], topicIds: ['MA5-LOG-P-01'],
+          explanation: 'log_a(x) = y means aʸ = x. Log laws: log(AB) = logA + logB; log(A/B) = logA − logB; log(Aⁿ) = n logA; log_a(a) = 1; log_a(1) = 0. Change of base: log_a(x) = log(x)/log(a). Solve exponential equations using logarithms.',
         },
       ],
     },
-    // ── Chapter 6: Variation ─────────────────────────────────────────────────
+    // ── Level 6: Variation & Rates of Change — Path ──────────────────────────
     {
-      levelId: 'y10-l6', levelNum: 6, title: 'Variation', emoji: '📈', color: '#10B981',
+      levelId: 'y10-l6', levelNum: 6, title: 'Variation & Rates of Change', emoji: '📈', color: '#14B8A6',
       stages: [
         {
-          stageId: 'y10-l6-s1', code: '6A', title: 'Direct Variation',
-          outcomeIds: ['MA-ALG-05'], topicIds: ['MA-ALG-05'],
-          explanation: 'y varies directly as x means y = kx (k ≠ 0). The graph is a straight line through the origin. Find k using any known pair (x, y): k = y/x.',
+          stageId: 'y10-l6-s1', code: '6A', title: 'Variation A',
+          outcomeIds: ['MA5-RAT-P-01'], topicIds: ['MA5-RAT-P-01'],
+          explanation: 'Direct variation: y = kx (proportional — graph is a line through origin). Inverse variation: y = k/x (graph is a hyperbola). Find k from a given data pair. Identify and distinguish between direct and inverse variation from tables, graphs, and equations.',
         },
         {
-          stageId: 'y10-l6-s2', code: '6B', title: 'Inverse Variation',
-          outcomeIds: ['MA-ALG-05'], topicIds: ['MA-ALG-05'],
-          explanation: 'y varies inversely as x means y = k/x (k ≠ 0). The graph is a hyperbola. Find k using any known pair: k = xy. As x doubles, y halves.',
-        },
-        {
-          stageId: 'y10-l6-s3', code: '6C', title: 'Further Variation',
-          outcomeIds: ['MA-ALG-05'], topicIds: ['MA-ALG-05'],
-          explanation: 'y varies directly as x² means y = kx². y varies inversely as √x means y = k/√x. Identify the type from context, use a data pair to find k, then use the formula to answer questions.',
+          stageId: 'y10-l6-s2', code: '6B', title: 'Variation B — Rates of Change',
+          outcomeIds: ['MA5-RAT-P-02'], topicIds: ['MA5-RAT-P-02'],
+          explanation: 'Analyse graphs that are increasing or decreasing at a constant or variable rate. Interpret gradient of a graph as an instantaneous rate of change. Construct graphical representations of rates of change from descriptions and tables.',
         },
       ],
     },
-    // ── Chapter 7: Statistics & Probability ─────────────────────────────────
+    // ── Level 7: Further Trigonometry — Path ─────────────────────────────────
     {
-      levelId: 'y10-l7', levelNum: 7, title: 'Statistics & Probability', emoji: '📊', color: '#F97316',
+      levelId: 'y10-l7', levelNum: 7, title: 'Further Trigonometry', emoji: '📐', color: '#F97316',
       stages: [
         {
-          stageId: 'y10-l7-s1', code: '7A', title: 'Data Analysis and Box Plots',
-          outcomeIds: ['MA-STAT-03'], topicIds: ['MA-STAT-03'],
-          explanation: 'Box plots display the five-number summary (min, Q1, median, Q3, max). Compare distributions using parallel box plots. Comment on shape (skewed vs symmetric), centre, spread, and outliers.',
+          stageId: 'y10-l7-s1', code: '7A', title: 'Trigonometry C — 3D Problems',
+          outcomeIds: ['MA5-TRG-P-01'], topicIds: ['MA5-TRG-P-01'],
+          explanation: 'Solve 3-dimensional problems involving right-angled triangles by identifying and extracting 2D right-angled triangles from the 3D figure. Draw clear diagrams. Apply Pythagoras and SOH CAH TOA systematically across multiple triangles.',
         },
         {
-          stageId: 'y10-l7-s2', code: '7B', title: 'Standard Deviation',
-          outcomeIds: ['MA-STAT-04'], topicIds: ['MA-STAT-04'],
-          explanation: 'Standard deviation σ measures spread around the mean. Calculated as the square root of the mean of squared deviations. Use your calculator\'s statistics mode; understand what a large vs small σ means.',
+          stageId: 'y10-l7-s2', code: '7B', title: 'Trigonometry D — Sine & Cosine Rules',
+          outcomeIds: ['MA5-TRG-P-02'], topicIds: ['MA5-TRG-P-02'],
+          explanation: 'Use exact trig values (sin/cos/tan of 30°, 45°, 60°). Sine rule: a/sinA = b/sinB (use when angle and opposite side are known). Cosine rule: a²=b²+c²−2bc cosA (use for SAS or SSS). Area = ½ab sinC. Apply to bearings and practical problems.',
+        },
+      ],
+    },
+    // ── Level 8: Further Measurement — Path ──────────────────────────────────
+    {
+      levelId: 'y10-l8', levelNum: 8, title: 'Further Measurement', emoji: '📏', color: '#0EA5E9',
+      stages: [
+        {
+          stageId: 'y10-l8-s1', code: '8A', title: 'Area and Surface Area B',
+          outcomeIds: ['MA5-ARE-P-01'], topicIds: ['MA5-ARE-P-01'],
+          explanation: 'Find surface areas of right pyramids (base + triangular faces), cones (πrl + πr²), and spheres (4πr²). Solve problems involving composite solids. Convert between units of area.',
         },
         {
-          stageId: 'y10-l7-s3', code: '7C', title: 'Probability — Venn Diagrams and Tables',
-          outcomeIds: ['MA-PROB-01'], topicIds: ['MA-PROB-01'],
-          explanation: 'P(A or B) = P(A) + P(B) − P(A and B). Use Venn diagrams or two-way tables to organise data. Independent events: P(A and B) = P(A) × P(B). Check independence using this formula.',
+          stageId: 'y10-l8-s2', code: '8B', title: 'Volume B',
+          outcomeIds: ['MA5-VOL-P-01'], topicIds: ['MA5-VOL-P-01'],
+          explanation: 'Find volumes of right pyramids (⅓ × base area × h), cones (⅓πr²h), and spheres (4/3πr³). Solve problems involving composite solids and related rates. Convert between cubic units.',
+        },
+      ],
+    },
+    // ── Level 9: Geometry — Path ──────────────────────────────────────────────
+    {
+      levelId: 'y10-l9', levelNum: 9, title: 'Geometry', emoji: '🔷', color: '#6366F1',
+      stages: [
+        {
+          stageId: 'y10-l9-s1', code: '9A', title: 'Properties of Geometrical Figures B',
+          outcomeIds: ['MA5-GEO-P-01'], topicIds: ['MA5-GEO-P-01'],
+          explanation: 'Establish and apply the four congruence tests (SSS, SAS, AAS, RHS). Develop and apply the three similarity conditions (AA, SAS ratio, SSS ratio). Use congruence and similarity to solve problems involving properties of triangles, quadrilaterals, and other plane shapes.',
         },
         {
-          stageId: 'y10-l7-s4', code: '7D', title: 'Conditional Probability',
-          outcomeIds: ['MA-PROB-02'], topicIds: ['MA-PROB-02'],
-          explanation: 'Conditional probability P(A|B) = P(A and B)/P(B): the probability of A given B has occurred. Dependent events change probability after each selection. Tree diagrams track changing probabilities.',
+          stageId: 'y10-l9-s2', code: '9B', title: 'Properties of Geometrical Figures C',
+          outcomeIds: ['MA5-GEO-P-02'], topicIds: ['MA5-GEO-P-02'],
+          explanation: 'Construct formal two-column or paragraph proofs involving congruent and similar triangles. Prove properties of plane shapes (e.g. diagonals of a parallelogram bisect each other). Give reasons for every step.',
+        },
+        {
+          stageId: 'y10-l9-s3', code: '9C', title: 'Circle Geometry',
+          outcomeIds: ['MA5-CIR-P-01'], topicIds: ['MA5-CIR-P-01'],
+          explanation: 'Prove and apply circle theorems: angle at centre = 2 × angle at circumference; angles in the same segment are equal; angle in a semicircle = 90°; opposite angles in a cyclic quadrilateral are supplementary. Tangent–radius perpendicularity, equal tangents from external point, alternate segment theorem.',
+        },
+      ],
+    },
+    // ── Level 10: Networks & Further Statistics — Path ────────────────────────
+    {
+      levelId: 'y10-l10', levelNum: 10, title: 'Networks & Further Statistics', emoji: '🕸️', color: '#8B5CF6',
+      stages: [
+        {
+          stageId: 'y10-l10-s1', code: '10A', title: 'Introduction to Networks',
+          outcomeIds: ['MA5-NET-P-01'], topicIds: ['MA5-NET-P-01'],
+          explanation: 'A graph/network has vertices and edges. Degree of a vertex = number of edges. Euler\'s formula for planar graphs: V − E + F = 2. An Eulerian trail uses every edge once (exists iff exactly 0 or 2 odd-degree vertices). An Eulerian circuit returns to the start (exists iff all vertices have even degree).',
+        },
+        {
+          stageId: 'y10-l10-s2', code: '10B', title: 'Data Analysis C — Statistical Inquiry',
+          outcomeIds: ['MA5-DAT-P-01'], topicIds: ['MA5-DAT-P-01'],
+          explanation: 'Plan, conduct, and review a statistical inquiry: formulate a question, collect data (census or sample), choose appropriate displays and summary statistics, analyse results, and draw conclusions. Evaluate the validity and reliability of data sources.',
+        },
+        {
+          stageId: 'y10-l10-s3', code: '10C', title: 'Probability B — Venn Diagrams & Conditional',
+          outcomeIds: ['MA5-PRO-P-01'], topicIds: ['MA5-PRO-P-01'],
+          explanation: 'Use Venn diagrams and two-way tables to organise data and calculate probabilities. Conditional probability: P(A|B) = P(A∩B)/P(B). Test independence: A and B are independent iff P(A∩B) = P(A) × P(B). Apply to problems involving selection with and without replacement.',
         },
       ],
     },
