@@ -1060,7 +1060,7 @@ const YEAR_12_STANDARD_MISSION: Mission = {
   ],
 }
 
-// ── YEAR 12 EXTENSION 2 ───────────────────────────────────────────────────────
+// ── YEAR 12 EXTENSION 2 (NESA 2024 Ext2 syllabus) ────────────────────────────
 const YEAR_12_EXT2_MISSION: Mission = {
   missionId: 'y12-ext2',
   title: 'Year 12 Extension 2',
@@ -1068,58 +1068,113 @@ const YEAR_12_EXT2_MISSION: Mission = {
   course: 'extension2',
   shortLabel: 'Ext 2',
   levels: [
-    // ── Area: Proof ──────────────────────────────────────────────────────────
+    // ── Area: The Nature of Proof ────────────────────────────────────────────
     {
-      levelId: 'y12-ext2-l1', levelNum: 1, title: 'Proof', emoji: '🔍', color: '#6366F1',
+      levelId: 'y12-ext2-l1', levelNum: 1, title: 'The Nature of Proof', emoji: '🔍', color: '#6366F1',
       stages: [
         {
-          stageId: 'y12-ext2-l1-s1', code: '1A', title: 'The Nature of Proof',
+          stageId: 'y12-ext2-l1-s1', code: '1A', title: 'Types of Proof',
           outcomeIds: ['MEX12-1'], topicIds: ['MEX-P1'],
-          explanation: 'Prove inequalities using algebraic techniques: multiply out and rearrange, use AM-GM inequality, or argue via properties of squares (x² ≥ 0). Prove conditional statements and biconditionals. Further proof by mathematical induction: summation formulas, divisibility, inequalities, and matrix powers. Understand the structure of a rigorous proof and avoid circular arguments.',
+          explanation: 'Understand and apply proof techniques: direct proof (assume P, deduce Q), proof by contrapositive (prove ¬Q → ¬P), proof by contradiction (assume ¬P, derive a contradiction), and proof by exhaustion (verify all cases). Disprove statements using a single counterexample. Distinguish necessary conditions, sufficient conditions, and "if and only if" biconditionals.',
+        },
+        {
+          stageId: 'y12-ext2-l1-s2', code: '1B', title: 'Proof by Mathematical Induction',
+          outcomeIds: ['MEX12-1'], topicIds: ['MEX-P1'],
+          explanation: 'Structure: (1) prove the base case, (2) assume true for n = k (inductive hypothesis), (3) prove true for n = k + 1 using the hypothesis. Apply to: sum and product formulas, divisibility results (e.g. 3 | n³ − n), inequalities (e.g. 2ⁿ > n²), and geometric series. Identify and avoid gaps in inductive arguments.',
+        },
+        {
+          stageId: 'y12-ext2-l1-s3', code: '1C', title: 'Inequalities and Further Proofs',
+          outcomeIds: ['MEX12-1'], topicIds: ['MEX-P1'],
+          explanation: 'Prove inequalities algebraically: rearrange to show expression ≥ 0 using the fact that squares are non-negative (x² ≥ 0). Apply the AM-GM inequality: (a + b)/2 ≥ √(ab) for a, b ≥ 0. Prove geometric results about triangles and circles using algebraic or vector methods. Prove results involving sigma notation and recursive definitions.',
         },
       ],
     },
-    // ── Area: Vectors ────────────────────────────────────────────────────────
+    // ── Area: Further Work with Vectors ─────────────────────────────────────
     {
       levelId: 'y12-ext2-l2', levelNum: 2, title: 'Further Work with Vectors', emoji: '→', color: '#8B5CF6',
       stages: [
         {
-          stageId: 'y12-ext2-l2-s1', code: '2A', title: 'Vector Equations of Lines and Curves',
+          stageId: 'y12-ext2-l2-s1', code: '2A', title: 'Vectors in 2D and 3D',
           outcomeIds: ['MEX12-2'], topicIds: ['MEX-V1'],
-          explanation: 'The vector equation of a line through point a with direction d is r = a + td, t ∈ ℝ. Convert between vector, parametric, and Cartesian forms. Find intersections by equating components. The vector equation of a circle and other curves. Apply vectors to prove geometrical results such as concurrency of medians and perpendicularity.',
+          explanation: 'Represent vectors as column vectors or in component form (xi + yj or xi + yj + zk). Scalar multiplication, addition and subtraction. Magnitude |v| = √(x² + y²). Dot product a·b = |a||b|cosθ = a₁b₁ + a₂b₂. Unit vectors, perpendicular vectors (a·b = 0), and projections. Apply to angle between vectors and resolving into components.',
+        },
+        {
+          stageId: 'y12-ext2-l2-s2', code: '2B', title: 'Vector Equations of Lines and Planes',
+          outcomeIds: ['MEX12-2'], topicIds: ['MEX-V1'],
+          explanation: 'Line through point a with direction d: r = a + td, t ∈ ℝ. Convert between vector, parametric, and Cartesian forms. Find intersections by equating components. Determine whether lines are parallel, intersecting, or skew. Equations of circles and curves in vector parametric form. Apply to motion: position, velocity, and acceleration as vectors.',
+        },
+        {
+          stageId: 'y12-ext2-l2-s3', code: '2C', title: 'Geometric Proofs with Vectors',
+          outcomeIds: ['MEX12-2'], topicIds: ['MEX-V1'],
+          explanation: 'Use vectors to prove geometric results: midpoints (average of position vectors), collinearity (vectors are scalar multiples), perpendicularity (dot product = 0), concurrency of medians, rhombus diagonals bisect at right angles, angle in a semicircle = 90°. Express geometric statements algebraically and use vector identities to complete proofs.',
         },
       ],
     },
     // ── Area: Complex Numbers ────────────────────────────────────────────────
     {
-      levelId: 'y12-ext2-l3', levelNum: 3, title: 'Complex Numbers', emoji: '𝑖', color: '#0EA5E9',
+      levelId: 'y12-ext2-l3', levelNum: 3, title: 'Introduction to Complex Numbers', emoji: '𝑖', color: '#0EA5E9',
       stages: [
         {
-          stageId: 'y12-ext2-l3-s1', code: '3A', title: 'Introduction to Complex Numbers',
+          stageId: 'y12-ext2-l3-s1', code: '3A', title: 'Arithmetic and the Argand Diagram',
           outcomeIds: ['MEX12-3'], topicIds: ['MEX-N1'],
-          explanation: 'Define i = √(−1), so i² = −1. A complex number z = x + iy has real part Re(z) = x and imaginary part Im(z) = y. The Argand diagram plots z as the point (x, y). Modulus: |z| = √(x²+y²). Argument: arg(z) = θ where tanθ = y/x (with correct quadrant). Conjugate: z̄ = x − iy. Polar form: z = r(cosθ + i sinθ) = re^(iθ). De Moivre\'s theorem: zⁿ = rⁿ(cos nθ + i sin nθ).',
+          explanation: 'Define i = √(−1). Complex number z = x + iy: real part Re(z) = x, imaginary part Im(z) = y. Add/subtract (real and imaginary parts separately), multiply (FOIL), conjugate z̄ = x − iy, |z| = √(x² + y²). Division: multiply numerator and denominator by the conjugate. Argand diagram: plot z as point (x, y) or as a position vector.',
+        },
+        {
+          stageId: 'y12-ext2-l3-s2', code: '3B', title: 'Modulus-Argument and Polar Form',
+          outcomeIds: ['MEX12-3'], topicIds: ['MEX-N1'],
+          explanation: 'Modulus r = |z| = √(x² + y²). Argument θ = arg(z): angle measured from positive real axis (principal argument ∈ (−π, π]). Polar form: z = r(cosθ + i sinθ) = r cis θ. Multiply in polar form: |z₁z₂| = r₁r₂, arg(z₁z₂) = θ₁ + θ₂. Divide: |z₁/z₂| = r₁/r₂, arg(z₁/z₂) = θ₁ − θ₂. Geometric interpretation on the Argand diagram.',
+        },
+        {
+          stageId: 'y12-ext2-l3-s3', code: '3C', title: "De Moivre's Theorem and Roots",
+          outcomeIds: ['MEX12-3'], topicIds: ['MEX-N1'],
+          explanation: "De Moivre's theorem: (r cis θ)ⁿ = rⁿ cis(nθ). Use to find powers of complex numbers and to derive multiple-angle trig identities (expand (cosθ + i sinθ)ⁿ using binomial theorem). nth roots of unity: the n solutions of zⁿ = 1 are cis(2πk/n) for k = 0, 1, …, n−1. Find nth roots of any complex number.",
+        },
+        {
+          stageId: 'y12-ext2-l3-s4', code: '3D', title: 'Curves and Loci on the Argand Diagram',
+          outcomeIds: ['MEX12-4'], topicIds: ['MEX-N2'],
+          explanation: 'Describe and sketch regions and curves defined by conditions on z: |z − a| = r (circle centre a, radius r), |z − a| ≤ r (disk), |z − a| = |z − b| (perpendicular bisector of segment ab), arg(z − a) = θ (ray). Convert between algebraic and geometric descriptions. Identify loci of points satisfying given complex equations.',
         },
       ],
     },
-    // ── Area: Calculus ───────────────────────────────────────────────────────
+    // ── Area: Further Integration ────────────────────────────────────────────
     {
       levelId: 'y12-ext2-l4', levelNum: 4, title: 'Further Integration', emoji: '∫', color: '#EC4899',
       stages: [
         {
-          stageId: 'y12-ext2-l4-s1', code: '4A', title: 'Further Integration Techniques',
+          stageId: 'y12-ext2-l4-s1', code: '4A', title: 'Integration by Parts and Substitution',
           outcomeIds: ['MEX12-5'], topicIds: ['MEX-C1'],
-          explanation: 'Advanced integration: partial fractions (decompose rational functions before integrating), trigonometric substitutions (x = a sinθ or a tanθ to integrate √(a²−x²) or 1/(a²+x²)), integration by parts applied repeatedly or in a table. Evaluate definite integrals involving these techniques and identify when each method applies.',
+          explanation: 'Integration by substitution (reverse chain rule): choose u = g(x), rewrite integral entirely in u, integrate, substitute back. Integration by parts: ∫u dv = uv − ∫v du. Choose u using the LIATE order (Logarithm, Inverse trig, Algebraic, Trigonometric, Exponential). Apply repeatedly when needed, or use the tabular method for repeated integration by parts.',
+        },
+        {
+          stageId: 'y12-ext2-l4-s2', code: '4B', title: 'Partial Fractions and Trig Substitutions',
+          outcomeIds: ['MEX12-5'], topicIds: ['MEX-C1'],
+          explanation: 'Partial fractions: decompose a rational function P(x)/Q(x) (degree P < degree Q) into simpler fractions before integrating. Linear factors: A/(x−a). Repeated factors: A/(x−a) + B/(x−a)². Irreducible quadratics: (Ax+B)/(x²+bx+c). Trigonometric substitutions: x = a sinθ for √(a²−x²); x = a tanθ for a²+x²; x = a secθ for √(x²−a²).',
+        },
+        {
+          stageId: 'y12-ext2-l4-s3', code: '4C', title: 'Volumes of Solids of Revolution',
+          outcomeIds: ['MEX12-5'], topicIds: ['MEX-C1'],
+          explanation: 'Rotating y = f(x) about the x-axis from x = a to x = b gives volume V = π∫ₐᵇ [f(x)]² dx. Rotating about the y-axis: V = π∫[f(y)]² dy or use the shell method V = 2π∫ x f(x) dx. Volumes of regions between two curves: V = π∫[f(x)² − g(x)²] dx (washer method). Set up and evaluate using advanced integration techniques.',
         },
       ],
     },
-    // ── Area: Mechanics ──────────────────────────────────────────────────────
+    // ── Area: Applications of Calculus to Mechanics ──────────────────────────
     {
-      levelId: 'y12-ext2-l5', levelNum: 5, title: 'Mechanics', emoji: '⚡', color: '#14B8A6',
+      levelId: 'y12-ext2-l5', levelNum: 5, title: 'Applications of Calculus to Mechanics', emoji: '⚡', color: '#14B8A6',
       stages: [
         {
-          stageId: 'y12-ext2-l5-s1', code: '5A', title: 'Applications of Calculus to Mechanics',
+          stageId: 'y12-ext2-l5-s1', code: '5A', title: 'Motion and Forces',
           outcomeIds: ['MEX12-6'], topicIds: ['MEX-M1'],
-          explanation: 'Newton\'s second law: F = ma = m(dv/dt). Solve equations of motion involving forces such as gravity, air resistance proportional to velocity or velocity squared, and spring forces. Express acceleration as a = v(dv/dx) to solve problems where the force depends on position. Model and solve simple harmonic motion x = a sin(nt + φ) where a is amplitude and n is angular frequency, giving a = −n²x.',
+          explanation: "Newton's second law: F = ma. Velocity v = dx/dt, acceleration a = dv/dt = d²x/dt². Express acceleration as a = v dv/dx (useful when force depends on position). Solve equations of motion: constant acceleration (SUVAT), velocity-dependent resistance (F = −kv or F = −kv²), and gravity. Integrate to find position from velocity, or velocity from acceleration.",
+        },
+        {
+          stageId: 'y12-ext2-l5-s2', code: '5B', title: 'Simple Harmonic Motion',
+          outcomeIds: ['MEX12-6'], topicIds: ['MEX-M1'],
+          explanation: 'Simple harmonic motion (SHM): acceleration ẍ = −n²x. The restoring force is proportional to displacement from equilibrium and directed towards it. General solution: x = a cos(nt + φ) or x = a sin(nt + φ), where a = amplitude, n = angular frequency, period T = 2π/n. Velocity: v² = n²(a² − x²). Identify and solve SHM problems from equations of motion or physical descriptions.',
+        },
+        {
+          stageId: 'y12-ext2-l5-s3', code: '5C', title: 'Projectile Motion and Resisted Motion',
+          outcomeIds: ['MEX12-6'], topicIds: ['MEX-M1'],
+          explanation: 'Projectile motion: horizontal ẍ = 0 (constant velocity V cosα), vertical ÿ = −g (constant downward acceleration). Derive Cartesian equation of trajectory: y = x tanα − gx²/(2V²cos²α). Range, maximum height, time of flight. Resisted motion: include drag force (e.g. F = −mkv) and solve the resulting differential equation by separation of variables.',
         },
       ],
     },

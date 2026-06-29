@@ -139,9 +139,20 @@ export const STAGE_VIDEOS: Record<string, string> = {
   'y12-std-l5-s3': 'XciN7hTtIRM',   // The Normal Distribution
 
   // ─── Year 12 Extension 2 ──────────────────────────────────────────────────
-  'y12-ext2-l1-s1': 'RaoahH5O11w',  // The Nature of Proof
-  'y12-ext2-l2-s1': 'tt2DGYOi3hc',  // Vector Equations of Lines and Curves
-  'y12-ext2-l3-s1': 'c8W9_iaERnU',  // Introduction to Complex Numbers
-  'y12-ext2-l4-s1': 'K9q0E5ysDnw',  // Further Integration Techniques
-  'y12-ext2-l5-s1': '_8ObUA1e61w',  // Mechanics
+  'y12-ext2-l1-s1': 'RaoahH5O11w',  // Types of Proof
+  'y12-ext2-l1-s2': 'ILRrqghJzdE',  // Proof by Mathematical Induction
+  'y12-ext2-l1-s3': 'RaoahH5O11w',  // Inequalities and Further Proofs
+  'y12-ext2-l2-s1': 'tt2DGYOi3hc',  // Vectors in 2D and 3D
+  'y12-ext2-l2-s2': 'tt2DGYOi3hc',  // Vector Equations of Lines and Planes
+  'y12-ext2-l2-s3': 'tt2DGYOi3hc',  // Geometric Proofs with Vectors
+  'y12-ext2-l3-s1': 'c8W9_iaERnU',  // Arithmetic and the Argand Diagram
+  'y12-ext2-l3-s2': 'c8W9_iaERnU',  // Modulus-Argument and Polar Form
+  'y12-ext2-l3-s3': 'YVzvK7Slq-Q',  // De Moivre's Theorem and Roots
+  'y12-ext2-l3-s4': 'YVzvK7Slq-Q',  // Curves and Loci on the Argand Diagram
+  'y12-ext2-l4-s1': 'K9q0E5ysDnw',  // Integration by Parts and Substitution
+  'y12-ext2-l4-s2': 'K9q0E5ysDnw',  // Partial Fractions and Trig Substitutions
+  'y12-ext2-l4-s3': 'K9q0E5ysDnw',  // Volumes of Solids of Revolution
+  'y12-ext2-l5-s1': '_8ObUA1e61w',  // Motion and Forces
+  'y12-ext2-l5-s2': '_8ObUA1e61w',  // Simple Harmonic Motion
+  'y12-ext2-l5-s3': '_8ObUA1e61w',  // Projectile Motion and Resisted Motion
 }

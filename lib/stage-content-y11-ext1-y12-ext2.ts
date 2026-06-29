@@ -727,274 +727,347 @@ export const STAGE_CONTENT_Y11_EXT1_Y12_EXT2: Record<string, ExplanationBlock[]>
 
 
   // ══════════════════════════════════════════════════════════════════════════════
-  // YEAR 12 EXTENSION 2
+  // YEAR 12 EXTENSION 2 — expanded to match NESA 2024 syllabus
   // ══════════════════════════════════════════════════════════════════════════════
 
-  // ── L1 S1: The Nature of Proof ────────────────────────────────────────────────
+  // ── L1 S1: Types of Proof ────────────────────────────────────────────────────
   'y12-ext2-l1-s1': [
-    {
-      type: 'text',
-      body: 'Mathematical proof is a logically airtight argument that establishes a statement is true for all relevant cases. Extension 2 requires fluency with several proof techniques: direct proof, proof by contrapositive, proof by contradiction, and proof by mathematical induction. Understanding the structure of each method is as important as executing the algebra.',
-    },
-    {
-      type: 'rules',
-      heading: 'Proof methods and when to use them',
-      items: [
-        'Direct proof: assume the hypothesis and deduce the conclusion via logical steps. Use when the path forward is clear.',
-        'Contrapositive: prove "not Q ⟹ not P" instead of "P ⟹ Q" (logically equivalent). Use when the contrapositive is easier.',
-        'Contradiction: assume the statement is false and derive a logical impossibility. Use for existence/impossibility results.',
-        'Induction: prove a base case, then prove the inductive step. Use for statements about all positive integers (or a discrete set).',
-      ],
-    },
-    {
-      type: 'steps',
-      heading: 'Structure of a proof by mathematical induction',
-      items: [
-        'State what you are proving: "Let P(n) be the statement …"',
-        'Base case: verify P(1) (or P(0)) is true.',
-        'Inductive hypothesis: assume P(k) is true for some k ≥ 1.',
-        'Inductive step: prove P(k+1) is true using the assumption that P(k) is true.',
-        'Conclusion: "By the principle of mathematical induction, P(n) is true for all n ≥ 1."',
-      ],
-    },
-    {
-      type: 'example',
-      question: 'Prove by induction: 1 + 2 + 3 + ⋯ + n = n(n+1)/2.',
-      steps: [
-        'Base case (n=1): LHS = 1. RHS = 1×2/2 = 1. ✓',
-        'Assume P(k): 1+2+⋯+k = k(k+1)/2.',
-        'Prove P(k+1): 1+2+⋯+k+(k+1) = k(k+1)/2 + (k+1) = (k+1)[k/2 + 1] = (k+1)(k+2)/2.',
-        'This is exactly the formula with n = k+1. ✓',
-        'By induction, the result holds for all n ≥ 1.',
-      ],
-    },
-    {
-      type: 'example',
-      question: 'Prove that √2 is irrational.',
-      steps: [
-        'Assume for contradiction that √2 = p/q where p, q are integers with gcd(p,q)=1.',
-        'Then 2 = p²/q², so p² = 2q².',
-        'Therefore p² is even, which means p is even. Write p = 2m.',
-        'Then (2m)² = 2q² → 4m² = 2q² → q² = 2m².',
-        'So q² is even, meaning q is even.',
-        'But then p and q are both even, contradicting gcd(p,q) = 1. Contradiction. ✓',
-      ],
-    },
-    {
-      type: 'tip',
-      body: 'In an induction proof, the inductive step must use the inductive hypothesis — not just verify the formula algebraically for n = k+1. The argument must show how truth at k implies truth at k+1.',
-    },
+    { type: 'text', body: 'A mathematical proof is a logical argument that establishes the truth of a statement beyond doubt. There are several proof strategies; choosing the right one depends on the structure of the statement.' },
+    { type: 'rules', heading: 'Four Proof Strategies', items: [
+      '**Direct proof**: Assume P is true, then logically deduce Q. Works when the implication P → Q can be followed step by step.',
+      '**Contrapositive**: Prove ¬Q → ¬P (equivalent to P → Q). Useful when the negation is easier to work with.',
+      '**Contradiction**: Assume ¬P is true, then derive a logical impossibility. Used for statements like "there is no ..." or "√2 is irrational".',
+      '**Exhaustion**: Check every case when there are finitely many. Must verify all cases are covered.',
+      '**Counterexample**: Disprove "for all x, P(x)" by exhibiting one specific x where P(x) is false.',
+    ]},
+    { type: 'rules', heading: 'Necessary vs Sufficient', items: [
+      '$P \\Rightarrow Q$: P is **sufficient** for Q; Q is **necessary** for P.',
+      '$P \\Leftrightarrow Q$: P is both necessary and sufficient for Q ("if and only if").',
+    ]},
+    { type: 'example', question: 'Prove: if n² is even, then n is even (use contrapositive).', steps: [
+      'Contrapositive: if n is odd, then n² is odd.',
+      'Assume n is odd, so n = 2k + 1 for some integer k.',
+      'Then n² = (2k+1)² = 4k² + 4k + 1 = 2(2k²+2k) + 1, which is odd. ✓',
+      'Since the contrapositive is proved, the original statement is proved.',
+    ]},
+    { type: 'tip', body: 'Never assume what you are trying to prove. In a proof by contradiction, state clearly "Assume for contradiction that ..." and end with "This contradicts [something known to be true], so our assumption was false."' },
   ],
 
-  // ── L2 S1: Vector Equations of Lines and Curves ───────────────────────────────
+  // ── L1 S2: Proof by Mathematical Induction ───────────────────────────────────
+  'y12-ext2-l1-s2': [
+    { type: 'text', body: 'Mathematical induction proves a statement P(n) is true for all integers n ≥ n₀ by: (1) proving the base case P(n₀), and (2) proving that if P(k) is true (inductive hypothesis), then P(k+1) must also be true.' },
+    { type: 'steps', heading: 'Induction Template', items: [
+      '**Base case**: Prove P(1) [or P(0)] is true by direct substitution.',
+      '**Inductive hypothesis**: Assume P(k) is true for some arbitrary integer $k \\geq 1$.',
+      '**Inductive step**: Using the hypothesis, prove P(k+1) is true. This step is the core of the proof.',
+      '**Conclusion**: By the principle of mathematical induction, P(n) is true for all $n \\geq 1$.',
+    ]},
+    { type: 'formula', latex: '\\sum_{r=1}^{n} r = \\frac{n(n+1)}{2}', label: 'Classic induction target' },
+    { type: 'example', question: 'Prove by induction: $1 + 2 + 3 + \\cdots + n = \\dfrac{n(n+1)}{2}$ for all $n \\geq 1$.', steps: [
+      'Base case (n=1): LHS = 1. RHS = 1×2/2 = 1. ✓',
+      'Inductive hypothesis: Assume $1+2+\\cdots+k = k(k+1)/2$ for some $k \\geq 1$.',
+      'Inductive step: Show true for n = k+1.',
+      '$1+2+\\cdots+k+(k+1) = k(k+1)/2 + (k+1)$ [by hypothesis]',
+      '$= (k+1)[k/2 + 1] = (k+1)(k+2)/2$. This is the formula with n = k+1. ✓',
+      'By induction, the result holds for all $n \\geq 1$.',
+    ]},
+    { type: 'tip', body: 'In the inductive step, start with the LHS for n = k+1, identify the sum up to k (apply the hypothesis), then algebraically simplify to the RHS for n = k+1. Never start with "LHS = RHS" — that assumes what you need to prove.' },
+  ],
+
+  // ── L1 S3: Inequalities and Further Proofs ───────────────────────────────────
+  'y12-ext2-l1-s3': [
+    { type: 'text', body: 'Many inequality proofs rely on the fundamental fact that the square of any real number is non-negative: $x^2 \\geq 0$ for all real $x$, with equality iff $x = 0$.' },
+    { type: 'formula', latex: '\\frac{a+b}{2} \\geq \\sqrt{ab} \\quad (a, b \\geq 0)', label: 'AM–GM Inequality' },
+    { type: 'steps', heading: 'Proving an Inequality', items: [
+      'Rearrange so one side is 0: show $\\text{LHS} - \\text{RHS} \\geq 0$.',
+      'Factor or complete the square to express as a sum of squares or known non-negative quantities.',
+      'State when equality holds.',
+    ]},
+    { type: 'example', question: 'Prove that $a^2 + b^2 \\geq 2ab$ for all real $a, b$.', steps: [
+      'Consider $(a - b)^2 \\geq 0$ (square of a real number).',
+      'Expand: $a^2 - 2ab + b^2 \\geq 0$.',
+      'Rearrange: $a^2 + b^2 \\geq 2ab$. ✓',
+      'Equality holds when $a = b$.',
+    ]},
+    { type: 'example', question: 'Use AM-GM to prove that if $x + y = 1$ and $x, y > 0$, then $xy \\leq \\frac{1}{4}$.', steps: [
+      'By AM-GM: $(x+y)/2 \\geq \\sqrt{xy}$.',
+      'Since $x + y = 1$: $1/2 \\geq \\sqrt{xy}$.',
+      'Square: $1/4 \\geq xy$, i.e. $xy \\leq 1/4$. ✓',
+      'Equality when $x = y = 1/2$.',
+    ]},
+    { type: 'tip', body: 'When proving by induction that one function dominates another (e.g. $2^n > n^2$ for $n \\geq 5$), the inductive step often requires multiplying the hypothesis by 2 and comparing.' },
+  ],
+
+  // ── L2 S1: Vectors in 2D and 3D ─────────────────────────────────────────────
   'y12-ext2-l2-s1': [
-    {
-      type: 'text',
-      body: 'In 2D (and 3D), a line can be described by a vector equation: r = a + t·d, where a is a position vector of a point on the line, d is the direction vector, and t is a scalar parameter. This representation avoids the limitations of Cartesian form (e.g. vertical lines) and extends naturally to curves and 3D.',
-    },
-    {
-      type: 'formula',
-      latex: '\\mathbf{r} = \\mathbf{a} + t\\,\\mathbf{d},\\quad t \\in \\mathbb{R}',
-      label: 'Vector equation of a line through point a with direction d',
-    },
-    {
-      type: 'rules',
-      heading: 'Key concepts',
-      items: [
-        'Two lines are parallel if their direction vectors are scalar multiples of each other.',
-        'Two lines intersect if there exist values of t and s such that a + td = b + se.',
-        'Two lines are skew (in 3D) if they are not parallel and do not intersect.',
-        'The angle θ between two lines satisfies cosθ = |d₁·d₂| / (|d₁||d₂|).',
-        'A curve can be expressed as r(t) = (f(t), g(t)), tracing out the curve as t varies.',
-      ],
-    },
-    {
-      type: 'steps',
-      heading: 'Converting between vector and Cartesian forms (2D)',
-      items: [
-        'From vector form r = (a₁, a₂) + t(d₁, d₂): write x = a₁ + td₁, y = a₂ + td₂.',
-        'Eliminate t: t = (x − a₁)/d₁ = (y − a₂)/d₂ (assuming d₁, d₂ ≠ 0).',
-        'Cross-multiply: d₂(x − a₁) = d₁(y − a₂), which simplifies to a Cartesian line.',
-      ],
-    },
-    {
-      type: 'example',
-      question: 'Find the vector equation of the line through (1, 3) and (4, −1).',
-      steps: [
-        'Direction vector: d = (4−1, −1−3) = (3, −4).',
-        'Point on line: a = (1, 3).',
-        'Vector equation: r = (1, 3) + t(3, −4).',
-        'Parametric: x = 1 + 3t, y = 3 − 4t.',
-        'Cartesian (eliminate t): (x−1)/3 = (y−3)/(−4), i.e. 4x + 3y = 13.',
-      ],
-    },
-    {
-      type: 'tip',
-      body: 'The direction vector of a line is not unique — any scalar multiple works. The position vector a can be any point on the line. When checking if two vector equations describe the same line, verify the direction vectors are parallel AND that one point from each equation satisfies the other equation.',
-    },
+    { type: 'text', body: 'A vector has both magnitude and direction. In 2D we write $\\mathbf{v} = x\\mathbf{i} + y\\mathbf{j}$ or as a column $\\binom{x}{y}$. In 3D: $\\mathbf{v} = x\\mathbf{i} + y\\mathbf{j} + z\\mathbf{k}$.' },
+    { type: 'rules', heading: 'Key Vector Operations', items: [
+      'Addition: $(a_1\\mathbf{i}+a_2\\mathbf{j}) + (b_1\\mathbf{i}+b_2\\mathbf{j}) = (a_1+b_1)\\mathbf{i}+(a_2+b_2)\\mathbf{j}$',
+      'Scalar multiple: $\\lambda\\mathbf{v} = \\lambda x\\mathbf{i} + \\lambda y\\mathbf{j}$',
+      'Magnitude: $|\\mathbf{v}| = \\sqrt{x^2+y^2}$ (2D) or $\\sqrt{x^2+y^2+z^2}$ (3D)',
+      'Unit vector: $\\hat{\\mathbf{v}} = \\mathbf{v}/|\\mathbf{v}|$',
+      'Dot product: $\\mathbf{a}\\cdot\\mathbf{b} = a_1b_1+a_2b_2 = |\\mathbf{a}||\\mathbf{b}|\\cos\\theta$',
+      'Perpendicular iff $\\mathbf{a}\\cdot\\mathbf{b} = 0$',
+    ]},
+    { type: 'example', question: 'Find the angle between $\\mathbf{a} = 3\\mathbf{i} + 4\\mathbf{j}$ and $\\mathbf{b} = \\mathbf{i} + 2\\mathbf{j}$.', steps: [
+      '$\\mathbf{a}\\cdot\\mathbf{b} = 3\\times1 + 4\\times2 = 11$',
+      '$|\\mathbf{a}| = \\sqrt{9+16} = 5$, $|\\mathbf{b}| = \\sqrt{1+4} = \\sqrt{5}$',
+      '$\\cos\\theta = 11/(5\\sqrt{5})$',
+      '$\\theta = \\cos^{-1}(11/(5\\sqrt{5})) \\approx 10.3°$',
+    ]},
+    { type: 'tip', body: 'The projection of vector $\\mathbf{a}$ onto $\\mathbf{b}$ is $\\text{proj}_{\\mathbf{b}}\\mathbf{a} = \\dfrac{\\mathbf{a}\\cdot\\mathbf{b}}{|\\mathbf{b}|^2}\\mathbf{b}$. The scalar projection (length) is $\\dfrac{\\mathbf{a}\\cdot\\mathbf{b}}{|\\mathbf{b}|}$.' },
   ],
 
-  // ── L3 S1: Introduction to Complex Numbers ────────────────────────────────────
+  // ── L2 S2: Vector Equations of Lines and Planes ──────────────────────────────
+  'y12-ext2-l2-s2': [
+    { type: 'text', body: 'A line in 2D or 3D can be described using a position vector to a point on the line and a direction vector along the line.' },
+    { type: 'formula', latex: '\\mathbf{r} = \\mathbf{a} + t\\mathbf{d}, \\quad t \\in \\mathbb{R}', label: 'Vector equation of a line' },
+    { type: 'steps', heading: 'Converting Forms', items: [
+      'From two points A and B: direction $\\mathbf{d} = \\overrightarrow{AB} = \\mathbf{b} - \\mathbf{a}$, then $\\mathbf{r} = \\mathbf{a} + t(\\mathbf{b}-\\mathbf{a})$.',
+      'Parametric form: $x = a_1 + td_1$, $y = a_2 + td_2$.',
+      'Cartesian form (eliminate t): $\\dfrac{x-a_1}{d_1} = \\dfrac{y-a_2}{d_2}$.',
+      'Two lines are parallel if their direction vectors are scalar multiples. They intersect if there exist $s,t$ solving both parametric equations simultaneously.',
+    ]},
+    { type: 'example', question: 'Find the vector equation of the line through $A(1,2)$ and $B(3,7)$.', steps: [
+      'Direction: $\\mathbf{d} = B - A = (3-1)\\mathbf{i} + (7-2)\\mathbf{j} = 2\\mathbf{i}+5\\mathbf{j}$.',
+      'Vector equation: $\\mathbf{r} = (\\mathbf{i}+2\\mathbf{j}) + t(2\\mathbf{i}+5\\mathbf{j})$.',
+      'Parametric: $x = 1+2t$, $y = 2+5t$.',
+      'Cartesian: eliminate $t$: $(x-1)/2 = (y-2)/5$, i.e. $5x - 2y = 1$.',
+    ]},
+    { type: 'tip', body: 'Lines in 3D can be parallel, intersecting, or skew (neither parallel nor intersecting). Check for intersection by equating components — if the system is inconsistent, the lines are skew.' },
+  ],
+
+  // ── L2 S3: Geometric Proofs with Vectors ─────────────────────────────────────
+  'y12-ext2-l2-s3': [
+    { type: 'text', body: 'Vectors are a powerful tool for proving geometric results. Express all points as position vectors, then use vector algebra to establish the required relationship.' },
+    { type: 'rules', heading: 'Key Vector Geometry Facts', items: [
+      'Midpoint of AB: $\\mathbf{m} = \\frac{1}{2}(\\mathbf{a}+\\mathbf{b})$',
+      'G divides AB in ratio m:n from A: $\\mathbf{g} = \\frac{n\\mathbf{a}+m\\mathbf{b}}{m+n}$',
+      'Points are collinear iff $\\overrightarrow{AB} = k\\overrightarrow{AC}$ for some scalar $k$',
+      'AB ⊥ CD iff $\\overrightarrow{AB}\\cdot\\overrightarrow{CD} = 0$',
+    ]},
+    { type: 'example', question: 'Prove that the diagonals of a parallelogram bisect each other.', steps: [
+      'Let $A$, $B$, $C$, $D$ be vertices with position vectors $\\mathbf{a}, \\mathbf{b}, \\mathbf{c}, \\mathbf{d}$.',
+      'Since ABCD is a parallelogram: $\\overrightarrow{AB} = \\overrightarrow{DC}$, so $\\mathbf{b}-\\mathbf{a} = \\mathbf{c}-\\mathbf{d}$, giving $\\mathbf{b}+\\mathbf{d} = \\mathbf{a}+\\mathbf{c}$.',
+      'Midpoint of diagonal AC: $\\frac{1}{2}(\\mathbf{a}+\\mathbf{c})$.',
+      'Midpoint of diagonal BD: $\\frac{1}{2}(\\mathbf{b}+\\mathbf{d})$.',
+      'Since $\\mathbf{a}+\\mathbf{c} = \\mathbf{b}+\\mathbf{d}$, the midpoints are equal. ✓ The diagonals bisect each other.',
+    ]},
+    { type: 'tip', body: 'To prove three points are collinear, show $\\overrightarrow{AB} = k\\overrightarrow{BC}$ for some scalar k (they share the point B and are parallel).' },
+  ],
+
+  // ── L3 S1: Arithmetic and the Argand Diagram ─────────────────────────────────
   'y12-ext2-l3-s1': [
-    {
-      type: 'text',
-      body: 'Complex numbers extend the real numbers by introducing i = √(−1), so that every quadratic equation has solutions. A complex number z = a + bi has real part Re(z) = a and imaginary part Im(z) = b. The modulus |z| = √(a² + b²) and argument arg(z) = arctan(b/a) give the polar representation.',
-    },
-    {
-      type: 'formula',
-      latex: 'z = a + bi,\\quad i^2 = -1',
-      label: 'Rectangular (Cartesian) form',
-    },
-    {
-      type: 'formula',
-      latex: 'z = r(\\cos\\theta + i\\sin\\theta) = re^{i\\theta},\\quad r = |z|,\\;\\theta = \\arg(z)',
-      label: 'Polar / exponential form (Euler\'s formula)',
-    },
-    {
-      type: 'rules',
-      heading: 'Arithmetic with complex numbers',
-      items: [
-        'Addition: (a+bi) + (c+di) = (a+c) + (b+d)i',
-        'Subtraction: (a+bi) − (c+di) = (a−c) + (b−d)i',
-        'Multiplication: (a+bi)(c+di) = (ac−bd) + (ad+bc)i',
-        'Conjugate: z̄ = a − bi. Note: zz̄ = a² + b² = |z|².',
-        'Division: z/w = z·w̄ / |w|² (multiply numerator and denominator by conjugate of denominator).',
-      ],
-    },
-    {
-      type: 'rules',
-      heading: 'Modulus and argument',
-      items: [
-        '|z| = √(a² + b²)',
-        '|zw| = |z||w|, |z/w| = |z|/|w|',
-        'arg(zw) = arg(z) + arg(w), arg(z/w) = arg(z) − arg(w) (mod 2π)',
-        'arg(z̄) = −arg(z)',
-      ],
-    },
-    {
-      type: 'example',
-      question: 'Express z = 1 + i√3 in polar form and find z⁶.',
-      steps: [
-        '|z| = √(1 + 3) = 2.',
-        'arg(z) = arctan(√3/1) = π/3 (first quadrant).',
-        'Polar form: z = 2(cos π/3 + i sin π/3) = 2e^{iπ/3}.',
-        'z⁶ = 2⁶ e^{i·6π/3} = 64 e^{i2π} = 64(cos 2π + i sin 2π) = 64.',
-      ],
-    },
-    {
-      type: 'tip',
-      body: 'Use polar form for multiplication, division, and powers — these become simple arithmetic on moduli and arguments. Use rectangular form for addition and subtraction. The formula |z|² = zz̄ is essential for simplifying divisions.',
-    },
+    { type: 'text', body: 'Complex numbers extend the real numbers by introducing $i = \\sqrt{-1}$. Every complex number has a real part and an imaginary part, and can be plotted on the Argand diagram.' },
+    { type: 'formula', latex: 'z = x + iy, \\quad \\bar{z} = x - iy, \\quad |z| = \\sqrt{x^2+y^2}', label: 'Cartesian form' },
+    { type: 'rules', heading: 'Arithmetic Rules', items: [
+      'Add/subtract: $(a+bi)\\pm(c+di) = (a\\pm c)+(b\\pm d)i$',
+      'Multiply: $(a+bi)(c+di) = (ac-bd)+(ad+bc)i$ (use FOIL, $i^2=-1$)',
+      'Divide: multiply top and bottom by the conjugate $\\bar{z}$: $\\dfrac{a+bi}{c+di} = \\dfrac{(a+bi)(c-di)}{c^2+d^2}$',
+      '$z\\bar{z} = |z|^2 = x^2+y^2$ (always real and ≥ 0)',
+    ]},
+    { type: 'example', question: 'Simplify $\\dfrac{3+2i}{1-i}$.', steps: [
+      'Multiply by conjugate: $\\dfrac{(3+2i)(1+i)}{(1-i)(1+i)}$',
+      'Denominator: $1+1 = 2$',
+      'Numerator: $3+3i+2i+2i^2 = 3+5i-2 = 1+5i$',
+      'Result: $\\dfrac{1+5i}{2} = \\dfrac{1}{2} + \\dfrac{5}{2}i$',
+    ]},
+    { type: 'tip', body: 'On the Argand diagram, $z$ and $\\bar{z}$ are reflections of each other in the real axis. Adding two complex conjugates gives a real number: $z + \\bar{z} = 2x$.' },
   ],
 
-  // ── L4 S1: Further Integration Techniques ─────────────────────────────────────
+  // ── L3 S2: Modulus-Argument and Polar Form ───────────────────────────────────
+  'y12-ext2-l3-s2': [
+    { type: 'text', body: 'Every non-zero complex number can be written in polar (modulus-argument) form, which makes multiplication and division geometrically clear.' },
+    { type: 'formula', latex: 'z = r(\\cos\\theta + i\\sin\\theta) = r\\operatorname{cis}\\theta', label: 'Polar form' },
+    { type: 'rules', heading: 'Multiplication and Division in Polar Form', items: [
+      '$z_1 z_2 = r_1 r_2 \\operatorname{cis}(\\theta_1+\\theta_2)$ — multiply moduli, add arguments',
+      '$z_1/z_2 = (r_1/r_2)\\operatorname{cis}(\\theta_1-\\theta_2)$ — divide moduli, subtract arguments',
+      'Principal argument: $\\theta \\in (-\\pi,\\, \\pi]$. Use the quadrant of $(x,y)$ to determine sign of $\\theta$.',
+    ]},
+    { type: 'table', headers: ['Quadrant', 'Sign of x', 'Sign of y', 'arg(z)'], rows: [
+      ['1st', '+', '+', 'θ = arctan(y/x)'],
+      ['2nd', '−', '+', 'θ = π − arctan(y/|x|)'],
+      ['3rd', '−', '−', 'θ = −π + arctan(y/|x|)'],
+      ['4th', '+', '−', 'θ = −arctan(|y|/x)'],
+    ]},
+    { type: 'example', question: 'Write $z = -1 + i$ in polar form.', steps: [
+      '$r = \\sqrt{(-1)^2+1^2} = \\sqrt{2}$',
+      '$z$ is in the 2nd quadrant: $\\theta = \\pi - \\arctan(1/1) = \\pi - \\pi/4 = 3\\pi/4$',
+      '$z = \\sqrt{2}\\operatorname{cis}(3\\pi/4)$',
+    ]},
+    { type: 'tip', body: 'Geometrically: multiplying by $\\operatorname{cis}\\alpha$ rotates the point by angle $\\alpha$ about the origin. Multiplying by $r$ scales the modulus.' },
+  ],
+
+  // ── L3 S3: De Moivre's Theorem and Roots ─────────────────────────────────────
+  "y12-ext2-l3-s3": [
+    { type: 'text', body: "De Moivre's theorem is the key tool for computing powers of complex numbers and finding all nth roots." },
+    { type: 'formula', latex: "(r\\operatorname{cis}\\theta)^n = r^n\\operatorname{cis}(n\\theta)", label: "De Moivre's Theorem" },
+    { type: 'rules', heading: 'nth Roots of a Complex Number', items: [
+      'The $n$ solutions of $z^n = w$ (where $w = R\\operatorname{cis}\\phi$) are:',
+      '$z_k = R^{1/n}\\operatorname{cis}\\!\\left(\\dfrac{\\phi+2\\pi k}{n}\\right)$ for $k = 0, 1, \\ldots, n-1$',
+      'The $n$ roots are equally spaced around a circle of radius $R^{1/n}$, separated by angles of $2\\pi/n$.',
+      'Roots of unity ($w=1$, $R=1$, $\\phi=0$): $z_k = \\operatorname{cis}(2\\pi k/n)$',
+    ]},
+    { type: 'example', question: 'Find all cube roots of $z^3 = 8$.', steps: [
+      'Write $8 = 8\\operatorname{cis}(0)$. So $R=8$, $\\phi=0$, $n=3$.',
+      '$z_k = 8^{1/3}\\operatorname{cis}(2\\pi k/3) = 2\\operatorname{cis}(2\\pi k/3)$ for $k=0,1,2$.',
+      '$z_0 = 2\\operatorname{cis}(0) = 2$',
+      '$z_1 = 2\\operatorname{cis}(2\\pi/3) = 2(-\\tfrac{1}{2}+\\tfrac{\\sqrt{3}}{2}i) = -1+\\sqrt{3}i$',
+      '$z_2 = 2\\operatorname{cis}(4\\pi/3) = -1-\\sqrt{3}i$',
+    ]},
+    { type: 'tip', body: "To use De Moivre's theorem to find trig identities: expand $(\\cos\\theta+i\\sin\\theta)^n$ with the binomial theorem, then equate real and imaginary parts to $\\cos(n\\theta)$ and $\\sin(n\\theta)$." },
+  ],
+
+  // ── L3 S4: Curves and Loci on the Argand Diagram ─────────────────────────────
+  'y12-ext2-l3-s4': [
+    { type: 'text', body: 'A locus is a set of points satisfying a given condition. On the Argand diagram, conditions on $|z-a|$ and $\\arg(z-a)$ define circles, rays, and lines.' },
+    { type: 'table', headers: ['Condition', 'Locus', 'Description'], rows: [
+      ['|z − a| = r', 'Circle', 'Centre a, radius r'],
+      ['|z − a| = |z − b|', 'Line', 'Perpendicular bisector of segment from a to b'],
+      ['arg(z − a) = θ', 'Ray', 'From point a at angle θ (not including a)'],
+      ['|z − a| ≤ r', 'Disk', 'Closed disk centre a radius r'],
+    ]},
+    { type: 'steps', heading: 'Sketching a Locus', items: [
+      'Identify the type from the condition (circle, line, ray, region).',
+      'Convert to Cartesian form by writing $z = x+iy$ and expanding.',
+      'Identify centre/radius or gradient/intercept.',
+      'Plot, clearly marking key points and boundary conditions (open/closed).',
+    ]},
+    { type: 'example', question: 'Describe and sketch $|z - 2 - 3i| = \\sqrt{5}$.', steps: [
+      'This has the form $|z - a| = r$ with $a = 2+3i$ and $r = \\sqrt{5}$.',
+      'Locus: circle with centre $(2, 3)$ and radius $\\sqrt{5}$ on the Argand diagram.',
+      'Cartesian: $(x-2)^2 + (y-3)^2 = 5$.',
+    ]},
+    { type: 'tip', body: 'For $\\arg(z-a)=\\theta$: this is a RAY starting at the point $a$ (not including $a$) going in direction $\\theta$. For a HALF-PLANE, conditions like $\\text{Im}(z) > 0$ mean $y > 0$.' },
+  ],
+
+  // ── L4 S1: Integration by Parts and Substitution ─────────────────────────────
   'y12-ext2-l4-s1': [
-    {
-      type: 'text',
-      body: 'Extension 2 integration introduces techniques beyond the standard methods: integration by parts, partial fractions, trigonometric substitution, and reduction formulas. Selecting the right method for a given integral is a key skill — look at the integrand\'s structure and match it to a method.',
-    },
-    {
-      type: 'formula',
-      latex: '\\int u\\,dv = uv - \\int v\\,du',
-      label: 'Integration by parts (IBP)',
-    },
-    {
-      type: 'rules',
-      heading: 'Choosing u and dv in integration by parts (LIATE priority)',
-      items: [
-        'L — Logarithmic functions (ln x, log x)',
-        'I — Inverse trig functions (arctan, arcsin, arccos)',
-        'A — Algebraic functions (polynomials)',
-        'T — Trigonometric functions (sin, cos)',
-        'E — Exponential functions (eˣ)',
-        'Choose u from the left of this list; dv is the rest. This gives a simpler ∫v du.',
-      ],
-    },
-    {
-      type: 'example',
-      question: 'Find ∫x eˣ dx.',
-      steps: [
-        'Choose u = x (algebraic), dv = eˣ dx.',
-        'Then du = dx, v = eˣ.',
-        '∫x eˣ dx = x eˣ − ∫eˣ dx = x eˣ − eˣ + C = eˣ(x − 1) + C.',
-      ],
-    },
-    {
-      type: 'rules',
-      heading: 'Partial fractions — cases',
-      items: [
-        'Distinct linear factors: A/(x−a) + B/(x−b).',
-        'Repeated linear factor: A/(x−a) + B/(x−a)².',
-        'Irreducible quadratic factor: (Ax+B)/(x²+bx+c).',
-        'First perform polynomial long division if deg(numerator) ≥ deg(denominator).',
-      ],
-    },
-    {
-      type: 'example',
-      question: 'Find ∫ 1/[(x+1)(x−2)] dx.',
-      steps: [
-        '1/[(x+1)(x−2)] = A/(x+1) + B/(x−2).',
-        'Multiply out: 1 = A(x−2) + B(x+1).',
-        'Set x = 2: 1 = 3B → B = 1/3.',
-        'Set x = −1: 1 = −3A → A = −1/3.',
-        '∫ = (−1/3)∫1/(x+1)dx + (1/3)∫1/(x−2)dx = (1/3)ln|(x−2)/(x+1)| + C.',
-      ],
-    },
-    {
-      type: 'tip',
-      body: 'For integrals of the form ∫√(a²−x²)dx or ∫1/√(a²−x²)dx, use the substitution x = a sinθ. For ∫1/(a²+x²)dx, use x = a tanθ. These trigonometric substitutions exploit Pythagorean identities to simplify the integrand.',
-    },
+    { type: 'text', body: 'Two fundamental advanced integration techniques: substitution (reverse chain rule) and integration by parts (product rule in reverse).' },
+    { type: 'formula', latex: '\\int u\\,dv = uv - \\int v\\,du', label: 'Integration by Parts' },
+    { type: 'steps', heading: 'Choosing u (LIATE Rule)', items: [
+      '**L**ogarithms: $\\ln x$, $\\log_a x$',
+      '**I**nverse trig: $\\sin^{-1}x$, $\\tan^{-1}x$',
+      '**A**lgebraic: $x^n$, polynomials',
+      '**T**rigonometric: $\\sin x$, $\\cos x$',
+      '**E**xponential: $e^x$, $a^x$',
+      'Choose the first type that appears in your integral as $u$; the rest is $dv$.',
+    ]},
+    { type: 'example', question: 'Find $\\displaystyle\\int x e^x\\,dx$.', steps: [
+      'Let $u = x$ (Algebraic, higher in LIATE), $dv = e^x\\,dx$.',
+      'Then $du = dx$, $v = e^x$.',
+      '$\\int xe^x\\,dx = xe^x - \\int e^x\\,dx = xe^x - e^x + C = e^x(x-1)+C$.',
+    ]},
+    { type: 'example', question: 'Find $\\displaystyle\\int \\ln x\\,dx$.', steps: [
+      'Let $u = \\ln x$, $dv = dx$. Then $du = (1/x)\\,dx$, $v = x$.',
+      '$\\int \\ln x\\,dx = x\\ln x - \\int x\\cdot\\frac{1}{x}\\,dx = x\\ln x - x + C$.',
+    ]},
+    { type: 'tip', body: 'If integration by parts gives $\\int f\\,dx = \\text{something} + k\\int f\\,dx$, collect the integral on the left: $(1-k)\\int f\\,dx = \\text{something}$, then divide.' },
   ],
 
-  // ── L5 S1: Applications of Calculus to Mechanics ──────────────────────────────
+  // ── L4 S2: Partial Fractions and Trig Substitutions ──────────────────────────
+  'y12-ext2-l4-s2': [
+    { type: 'text', body: 'Partial fractions decompose a rational function into simpler pieces that are easy to integrate. Trigonometric substitutions handle integrands involving $\\sqrt{a^2-x^2}$, $\\sqrt{x^2+a^2}$, etc.' },
+    { type: 'rules', heading: 'Partial Fraction Forms', items: [
+      'Distinct linear factors: $\\dfrac{A}{x-a} + \\dfrac{B}{x-b}$',
+      'Repeated linear factor: $\\dfrac{A}{x-a} + \\dfrac{B}{(x-a)^2}$',
+      'Irreducible quadratic: $\\dfrac{Ax+B}{x^2+bx+c}$',
+      'If degree of numerator ≥ degree of denominator, do polynomial long division first.',
+    ]},
+    { type: 'rules', heading: 'Trigonometric Substitutions', items: [
+      '$\\sqrt{a^2-x^2}$: substitute $x = a\\sin\\theta$',
+      '$\\sqrt{a^2+x^2}$ or $a^2+x^2$: substitute $x = a\\tan\\theta$',
+      '$\\sqrt{x^2-a^2}$: substitute $x = a\\sec\\theta$',
+    ]},
+    { type: 'example', question: 'Find $\\displaystyle\\int \\frac{1}{x^2-1}\\,dx$.', steps: [
+      'Partial fractions: $\\dfrac{1}{(x-1)(x+1)} = \\dfrac{A}{x-1}+\\dfrac{B}{x+1}$',
+      'Multiply through: $1 = A(x+1)+B(x-1)$. Set $x=1$: $A=\\tfrac{1}{2}$. Set $x=-1$: $B=-\\tfrac{1}{2}$.',
+      '$\\int \\dfrac{1}{x^2-1}\\,dx = \\tfrac{1}{2}\\ln|x-1| - \\tfrac{1}{2}\\ln|x+1| + C = \\tfrac{1}{2}\\ln\\left|\\dfrac{x-1}{x+1}\\right|+C$',
+    ]},
+    { type: 'tip', body: 'After a trig substitution, always convert back to x at the end. Draw a right triangle labelled with the substitution to find all trig ratios in terms of x.' },
+  ],
+
+  // ── L4 S3: Volumes of Solids of Revolution ───────────────────────────────────
+  'y12-ext2-l4-s3': [
+    { type: 'text', body: 'Rotating a curve about an axis generates a 3D solid. The volume can be found by integrating the area of thin circular cross-sections (disks or washers).' },
+    { type: 'formula', latex: 'V = \\pi\\int_a^b [f(x)]^2\\,dx', label: 'Rotation about x-axis (disk method)' },
+    { type: 'rules', heading: 'Methods', items: [
+      '**Disk method** (rotation about x-axis): $V = \\pi\\int_a^b [f(x)]^2\\,dx$',
+      '**Washer method** (region between $y=f(x)$ and $y=g(x)$, $f\\geq g$): $V = \\pi\\int_a^b \\left([f(x)]^2-[g(x)]^2\\right)dx$',
+      '**Rotation about y-axis**: $V = \\pi\\int_c^d [g(y)]^2\\,dy$ where $x = g(y)$',
+      '**Shell method** (about y-axis): $V = 2\\pi\\int_a^b x f(x)\\,dx$',
+    ]},
+    { type: 'example', question: 'Find the volume when $y = \\sqrt{x}$ is rotated about the x-axis from $x=0$ to $x=4$.', steps: [
+      '$V = \\pi\\int_0^4 (\\sqrt{x})^2\\,dx = \\pi\\int_0^4 x\\,dx$',
+      '$= \\pi\\left[\\dfrac{x^2}{2}\\right]_0^4 = \\pi\\cdot 8 = 8\\pi$',
+    ]},
+    { type: 'tip', body: 'Always sketch the region first. For the washer method, the outer radius is $f(x)$ and the inner radius is $g(x)$ — subtracting the areas gives the washer cross-section $\\pi(f^2-g^2)$.' },
+  ],
+
+  // ── L5 S1: Motion and Forces ─────────────────────────────────────────────────
   'y12-ext2-l5-s1': [
-    {
-      type: 'text',
-      body: 'In mechanics, calculus connects position x, velocity v = dx/dt, and acceleration a = dv/dt = d²x/dt². Acceleration can also be expressed as a = v dv/dx (using the chain rule), which is useful when acceleration depends on position. The equation of motion F = ma ties the mathematics to the physics.',
-    },
-    {
-      type: 'formula',
-      latex: 'v = \\frac{dx}{dt},\\quad a = \\frac{dv}{dt} = v\\,\\frac{dv}{dx} = \\frac{d^2x}{dt^2}',
-      label: 'Kinematic relationships',
-    },
-    {
-      type: 'rules',
-      heading: 'Forms of acceleration and when to use each',
-      items: [
-        'a = dv/dt: use when a is a function of t. Integrate to find v(t), then integrate again for x(t).',
-        'a = v dv/dx: use when a is a function of x (e.g. spring, gravity with air resistance). Integrate to find v²(x), then find t from dt = dx/v.',
-        'Simple harmonic motion: a = −n²x (restoring force), giving x = A cos(nt + φ).',
-      ],
-    },
-    {
-      type: 'formula',
-      latex: 'x = A\\cos(nt + \\varphi),\\quad v^2 = n^2(A^2 - x^2)',
-      label: 'Simple Harmonic Motion (SHM)',
-    },
-    {
-      type: 'example',
-      question: 'A particle moves with a = 6t − 4. At t = 0, v = 2 and x = −1. Find x(t).',
-      steps: [
-        'Integrate a: v = ∫(6t−4) dt = 3t² − 4t + C.',
-        'Apply v(0) = 2: C = 2. So v = 3t² − 4t + 2.',
-        'Integrate v: x = ∫(3t²−4t+2) dt = t³ − 2t² + 2t + D.',
-        'Apply x(0) = −1: D = −1. So x = t³ − 2t² + 2t − 1.',
-      ],
-    },
-    {
-      type: 'example',
-      question: 'A particle has acceleration a = −4x. Find v in terms of x given v = 0 when x = 3.',
-      steps: [
-        'Use a = v dv/dx: v dv/dx = −4x.',
-        'Separate and integrate: ∫v dv = ∫−4x dx → v²/2 = −2x² + C.',
-        'Apply v = 0 when x = 3: 0 = −18 + C → C = 18.',
-        'v² = −4x² + 36 = 4(9 − x²).',
-        'This is SHM with n = 2, amplitude A = 3: v² = n²(A² − x²). ✓',
-      ],
-    },
-    {
-      type: 'tip',
-      body: 'In SHM (a = −n²x), the particle oscillates between x = −A and x = A with period T = 2π/n. Maximum speed is nA (at x = 0, the equilibrium position). Maximum acceleration magnitude is n²A (at x = ±A, the extreme positions).',
-    },
+    { type: 'text', body: "Newton's Second Law F = ma connects the net force on a particle to its acceleration. Calculus lets us solve equations of motion to find position, velocity, and acceleration as functions of time." },
+    { type: 'formula', latex: 'F = ma = m\\frac{dv}{dt} = m\\frac{d^2x}{dt^2}', label: "Newton's Second Law" },
+    { type: 'rules', heading: 'Three Useful Forms of Acceleration', items: [
+      '$a = \\dfrac{dv}{dt}$ — use when force depends on time',
+      '$a = v\\dfrac{dv}{dx}$ — use when force depends on position (e.g. spring, gravity)',
+      '$a = \\dfrac{d^2x}{dt^2}$ — use for second-order ODEs',
+    ]},
+    { type: 'steps', heading: 'Solving a Motion Problem', items: [
+      'Identify the forces and write $F = ma$ as a differential equation.',
+      'Choose the correct form of $a$ (above) to separate variables.',
+      'Integrate and apply initial conditions (e.g. $v = v_0$ at $t = 0$).',
+      'Interpret: find when $v = 0$ (momentarily at rest), maximum speed, position.',
+    ]},
+    { type: 'example', question: 'A particle of mass 1 kg falls under gravity with air resistance $F_r = 2v$. Find $v(t)$ given $v(0)=0$.', steps: [
+      'Net force downward: $F = mg - 2v = 10 - 2v$ (taking down as positive, $g=10$).',
+      '$\\dfrac{dv}{dt} = 10 - 2v$. Separate: $\\dfrac{dv}{10-2v} = dt$.',
+      'Integrate: $-\\tfrac{1}{2}\\ln|10-2v| = t + C$.',
+      'At $t=0$, $v=0$: $C = -\\tfrac{1}{2}\\ln 10$. So $\\ln\\dfrac{10}{10-2v} = 2t$.',
+      '$v = 5(1-e^{-2t})$. Terminal velocity: $v\\to 5$ m/s as $t\\to\\infty$.',
+    ]},
+    { type: 'tip', body: 'Terminal velocity occurs when acceleration = 0, i.e. when net force = 0. Set $F = 0$ in the equation of motion to find it directly without solving the ODE.' },
+  ],
+
+  // ── L5 S2: Simple Harmonic Motion ────────────────────────────────────────────
+  'y12-ext2-l5-s2': [
+    { type: 'text', body: 'Simple Harmonic Motion (SHM) occurs when the restoring force is proportional to displacement from equilibrium and directed towards it. It models springs, pendulums (small angles), and oscillating circuits.' },
+    { type: 'formula', latex: '\\ddot{x} = -n^2 x \\implies x = a\\cos(nt+\\alpha)', label: 'SHM equation and general solution' },
+    { type: 'rules', heading: 'Key SHM Results', items: [
+      'Period: $T = 2\\pi/n$',
+      'Amplitude: $a$ (maximum displacement from equilibrium)',
+      'Velocity: $v^2 = n^2(a^2-x^2)$ — maximum speed $= na$ at $x=0$',
+      'Acceleration: $\\ddot{x} = -n^2x$ — maximum $|a|= n^2a$ at $x=\\pm a$',
+      'The particle oscillates between $x=-a$ and $x=a$.',
+    ]},
+    { type: 'example', question: 'A particle in SHM has amplitude 3 m and period $\\pi$ s. Find: (a) $n$, (b) max speed, (c) $v$ when $x=2$.', steps: [
+      '(a) $T = \\pi \\Rightarrow 2\\pi/n = \\pi \\Rightarrow n = 2$.',
+      '(b) Max speed $= na = 2\\times3 = 6$ m/s (at $x=0$).',
+      '(c) $v^2 = n^2(a^2-x^2) = 4(9-4) = 20$. So $v = 2\\sqrt{5}$ m/s.',
+    ]},
+    { type: 'tip', body: 'To identify SHM from an equation of motion: get it into the form $\\ddot{x} = -n^2(x - c)$. Then $c$ is the equilibrium position and $n$ is the angular frequency. Shift $X = x-c$ and the motion in $X$ is standard SHM.' },
+  ],
+
+  // ── L5 S3: Projectile Motion and Resisted Motion ─────────────────────────────
+  'y12-ext2-l5-s3': [
+    { type: 'text', body: 'Projectile motion assumes no air resistance — horizontal velocity is constant and vertical acceleration is $-g$. Resisted motion adds a drag force opposing the velocity.' },
+    { type: 'rules', heading: 'Projectile Motion Equations', items: [
+      'Horizontal: $\\ddot{x} = 0 \\Rightarrow x = Vt\\cos\\alpha$',
+      'Vertical: $\\ddot{y} = -g \\Rightarrow y = Vt\\sin\\alpha - \\tfrac{1}{2}gt^2$',
+      'Eliminate $t$ for trajectory: $y = x\\tan\\alpha - \\dfrac{gx^2}{2V^2\\cos^2\\alpha}$',
+      'Range: $R = V^2\\sin2\\alpha/g$ (max when $\\alpha=45°$)',
+      'Max height: $H = V^2\\sin^2\\alpha/(2g)$',
+      'Time of flight: $T = 2V\\sin\\alpha/g$',
+    ]},
+    { type: 'example', question: 'A ball is launched at $20$ m/s at $30°$ to the horizontal. Find the range ($g=10$).', steps: [
+      '$R = V^2\\sin2\\alpha/g = 400\\times\\sin60°/10 = 40\\times(\\sqrt{3}/2) = 20\\sqrt{3} \\approx 34.6$ m.',
+    ]},
+    { type: 'steps', heading: 'Resisted Motion (e.g. drag $= -mkv$)', items: [
+      'Write equation of motion: $m\\ddot{x} = -mkv \\Rightarrow \\dot{v} = -kv$.',
+      'Separate and integrate: $\\int dv/v = -k\\int dt \\Rightarrow \\ln v = -kt+C$.',
+      'Apply $v(0)=v_0$: $v = v_0 e^{-kt}$.',
+      'Integrate again for position: $x = (v_0/k)(1-e^{-kt})$.',
+    ]},
+    { type: 'tip', body: 'In resisted motion problems, the particle asymptotically approaches terminal velocity (horizontal) or zero velocity (upward motion). There is no longer a neat closed-form range formula — set $y=0$ numerically or by simultaneous equations.' },
   ],
 }
