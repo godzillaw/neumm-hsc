@@ -91,7 +91,11 @@ export default function MathKeyboardInput({
           <button
             key={btn.insert}
             title={btn.hint}
-            onClick={() => insertAt(btn.insert)}
+            onMouseDown={e => {
+              // Prevent textarea from losing focus/selection when clicking buttons
+              e.preventDefault()
+              insertAt(btn.insert)
+            }}
             disabled={disabled}
             style={{
               padding: '5px 10px', borderRadius: 8, border: '1.5px solid #DDD6FE',
@@ -112,13 +116,15 @@ export default function MathKeyboardInput({
         onChange={e => setLatex(e.target.value)}
         disabled={disabled}
         placeholder={placeholder}
-        rows={3}
+        rows={6}
         style={{
           width: '100%', boxSizing: 'border-box',
-          padding: '12px 14px', borderRadius: 12,
-          border: '2px solid #DDD6FE', fontFamily: 'monospace', fontSize: 14,
+          padding: '14px 16px', borderRadius: 12,
+          border: '2px solid #DDD6FE', fontFamily: 'monospace', fontSize: 15,
           resize: 'vertical', color: '#1F2937', outline: 'none',
           background: disabled ? '#F9F9F9' : 'white',
+          minHeight: 120,
+          lineHeight: 1.6,
         }}
       />
 
