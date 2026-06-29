@@ -652,6 +652,11 @@ const YEAR_11_EXT1_MISSION: Mission = {
           outcomeIds: ['ME11-1'], topicIds: ['ME-F1'],
           explanation: 'A curve can be defined parametrically as x = f(t), y = g(t). Eliminate the parameter t to obtain the Cartesian equation. For example, x = cos t, y = sin t gives x² + y² = 1 (circle). Parametric form is useful for curves that are not functions in Cartesian form.',
         },
+        {
+          stageId: 'y11-ext1-l1-s4', code: '1D', title: 'Inequalities',
+          outcomeIds: ['ME11-2'], topicIds: ['ME-F3'],
+          explanation: 'Solve linear, quadratic, and rational inequalities algebraically and graphically. For quadratic inequalities, find the roots then use a sign diagram or parabola sketch to determine where the expression is positive or negative. For rational inequalities, multiply through carefully avoiding sign errors — or use a sign diagram on the factorised form.',
+        },
       ],
     },
     {
@@ -674,32 +679,22 @@ const YEAR_11_EXT1_MISSION: Mission = {
         },
       ],
     },
-    {
-      levelId: 'y11-ext1-l3', levelNum: 3, title: 'Inequalities', emoji: '📉', color: '#0EA5E9',
-      stages: [
-        {
-          stageId: 'y11-ext1-l3-s1', code: '3A', title: 'Inequalities',
-          outcomeIds: ['ME11-2'], topicIds: ['ME-F3'],
-          explanation: 'Solve linear, quadratic, and rational inequalities algebraically and graphically. For quadratic inequalities, find the roots then use a sign diagram or parabola sketch to determine where the expression is positive or negative. For rational inequalities, multiply through carefully avoiding sign errors — or use a sign diagram on the factorised form.',
-        },
-      ],
-    },
     // ── Area: Trigonometric Functions ────────────────────────────────────────
     {
-      levelId: 'y11-ext1-l4', levelNum: 4, title: 'Further Trigonometry', emoji: '📐', color: '#EC4899',
+      levelId: 'y11-ext1-l3', levelNum: 3, title: 'Further Trigonometry', emoji: '📐', color: '#EC4899',
       stages: [
         {
-          stageId: 'y11-ext1-l4-s1', code: '4A', title: 'Trigonometry in 3D',
+          stageId: 'y11-ext1-l3-s1', code: '3A', title: 'Trigonometry in 3D',
           outcomeIds: ['ME11-3'], topicIds: ['ME-T1'],
           explanation: 'Solve 3D trigonometric problems by identifying right-angled triangles within the figure and working through a sequence of 2D calculations. Draw and label clear diagrams. Bearings, angles of elevation and depression, and cross-sections of 3D solids are common contexts.',
         },
         {
-          stageId: 'y11-ext1-l4-s2', code: '4B', title: 'Further Trigonometric Identities',
+          stageId: 'y11-ext1-l3-s2', code: '3B', title: 'Further Trigonometric Identities',
           outcomeIds: ['ME11-3'], topicIds: ['ME-T1'],
           explanation: 'Compound angle formulas: sin(A±B) = sinA cosB ± cosA sinB; cos(A±B) = cosA cosB ∓ sinA sinB. Double angle formulas: sin2A = 2 sinA cosA; cos2A = cos²A − sin²A = 1 − 2sin²A = 2cos²A − 1. Use these to prove identities and evaluate exact trig values of non-standard angles.',
         },
         {
-          stageId: 'y11-ext1-l4-s3', code: '4C', title: 'Further Trigonometric Equations',
+          stageId: 'y11-ext1-l3-s3', code: '3C', title: 'Further Trigonometric Equations',
           outcomeIds: ['ME11-3'], topicIds: ['ME-T1'],
           explanation: 'Solve equations using compound and double angle identities to reduce to simpler forms. The auxiliary angle method: a sinθ + b cosθ = R sin(θ + φ) where R = √(a²+b²) and tan φ = b/a. Find all solutions in a given interval using the unit circle and periodicity.',
         },
@@ -707,17 +702,32 @@ const YEAR_11_EXT1_MISSION: Mission = {
     },
     // ── Area: Combinatorics ──────────────────────────────────────────────────
     {
-      levelId: 'y11-ext1-l5', levelNum: 5, title: 'Combinatorics', emoji: '🔢', color: '#F59E0B',
+      levelId: 'y11-ext1-l4', levelNum: 4, title: 'Permutations & Combinations', emoji: '🎲', color: '#F59E0B',
       stages: [
         {
-          stageId: 'y11-ext1-l5-s1', code: '5A', title: 'Permutations and Combinations',
+          stageId: 'y11-ext1-l4-s1', code: '4A', title: 'Counting Techniques',
           outcomeIds: ['ME11-5'], topicIds: ['ME-A1'],
-          explanation: 'A permutation is an ordered selection: ⁿPᵣ = n!/(n−r)!. A combination is an unordered selection: ⁿCᵣ = n!/[r!(n−r)!] = C(n,r). Solve counting problems by deciding whether order matters. Include restricted cases (e.g., fixed elements, elements together/apart) by treating them as a unit or using complementary counting.',
+          explanation: 'The multiplication principle: if event A can occur in m ways and event B in n ways, together they occur in m×n ways. Factorial notation: n! = n×(n−1)×…×1. Count arrangements with restrictions by fixing restricted elements first or using complementary counting (total − excluded).',
         },
         {
-          stageId: 'y11-ext1-l5-s2', code: '5B', title: 'The Binomial Theorem',
+          stageId: 'y11-ext1-l4-s2', code: '4B', title: 'Permutations and Combinations',
           outcomeIds: ['ME11-5'], topicIds: ['ME-A1'],
-          explanation: '(x + y)ⁿ = Σ C(n,r) xⁿ⁻ʳ yʳ for r = 0 to n. Pascal\'s triangle provides the binomial coefficients C(n,r). The general term is T(r+1) = C(n,r) xⁿ⁻ʳ yʳ — use this to find a specific term without expanding fully. Key identities: C(n,0)+C(n,1)+...+C(n,n) = 2ⁿ.',
+          explanation: 'A permutation is an ordered selection: ⁿPᵣ = n!/(n−r)!. A combination is an unordered selection: ⁿCᵣ = n!/[r!(n−r)!]. Decide whether order matters to choose the right formula. Solve restricted counting problems (e.g. elements together/apart, at least one from a group) using cases or complementary counting.',
+        },
+      ],
+    },
+    {
+      levelId: 'y11-ext1-l5', levelNum: 5, title: 'The Binomial Theorem', emoji: '🔢', color: '#10B981',
+      stages: [
+        {
+          stageId: 'y11-ext1-l5-s1', code: '5A', title: 'Binomial Expansions and Pascal\'s Triangle',
+          outcomeIds: ['ME11-5'], topicIds: ['ME-A1'],
+          explanation: 'Pascal\'s triangle gives binomial coefficients: row n is the coefficients of (a+b)ⁿ. Each entry is the sum of the two entries above it, and equals C(n,r). Expand (a+b)ⁿ directly from Pascal\'s triangle for small n. Note the symmetry: C(n,r) = C(n,n−r).',
+        },
+        {
+          stageId: 'y11-ext1-l5-s2', code: '5B', title: 'The Binomial Theorem and General Term',
+          outcomeIds: ['ME11-5'], topicIds: ['ME-A1'],
+          explanation: '(x + y)ⁿ = Σ C(n,r) xⁿ⁻ʳ yʳ for r = 0 to n. The general term is T(r+1) = C(n,r) xⁿ⁻ʳ yʳ — use this to find a specific term without expanding fully. Key identities: sum of all coefficients = 2ⁿ (set x=y=1); C(n,0)−C(n,1)+…= 0 (set x=1, y=−1).',
         },
       ],
     },
