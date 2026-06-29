@@ -20,6 +20,7 @@ import type { PracticeQuestion, SubmitResult }         from './actions'
 import type { ChatMessage, ConceptVideo, AssessOpenAnswerResult } from '@/lib/actions/tutor'
 import dynamic from 'next/dynamic'
 import { STAGE_VIDEOS } from '@/lib/stage-videos'
+import { STAGE_CONTENT } from '@/lib/stage-content'
 
 const AreaModelVisual        = dynamic(() => import('@/components/visuals/AreaModelVisual'),        { ssr: false })
 const NumberLineVisual       = dynamic(() => import('@/components/visuals/NumberLineVisual'),       { ssr: false })
@@ -975,24 +976,27 @@ function StageIntroScreen({ stageId, onStart }: { stageId: string; onStart: () =
           </div>
         </div>
 
-        {/* Rich content blocks — or fallback to plain explanation text */}
-        {stage.content && stage.content.length > 0 ? (
-          <div className="space-y-3 mb-4">
-            {stage.content.map((block, i) => (
-              <RenderBlock key={i} block={block} />
-            ))}
-          </div>
-        ) : (
-          <div
-            className="rounded-2xl p-5 mb-4"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
-          >
-            <p className="text-[11px] font-black uppercase tracking-wide mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>
-              What you&apos;ll learn
-            </p>
-            <p className="text-sm leading-relaxed text-white">{stage.explanation}</p>
-          </div>
-        )}
+        {/* Rich content blocks — lookup file → inline → plain explanation fallback */}
+        {(() => {
+          const blocks = STAGE_CONTENT[stage.stageId] ?? stage.content
+          return blocks && blocks.length > 0 ? (
+            <div className="space-y-3 mb-4">
+              {blocks.map((block, i) => (
+                <RenderBlock key={i} block={block} />
+              ))}
+            </div>
+          ) : (
+            <div
+              className="rounded-2xl p-5 mb-4"
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+            >
+              <p className="text-[11px] font-black uppercase tracking-wide mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                What you&apos;ll learn
+              </p>
+              <p className="text-sm leading-relaxed text-white">{stage.explanation}</p>
+            </div>
+          )
+        })()}
 
         {/* Interactive visual — dual coding for supported stages */}
         {STAGE_VISUALS[stage.stageId] && (() => {
